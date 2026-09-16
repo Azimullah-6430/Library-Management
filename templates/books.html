@@ -1,244 +1,314 @@
 {% extends "base.html" %}
 
-{% block title %}Book Catalogue | Crescent Central Library{% endblock %}
+{% block title %}Book Catalogue | Crescent Library{% endblock %}
+
+{% block breadcrumb %}
+Book Catalogue
+{% endblock %}
 
 {% block content %}
 
 <div class="page-header">
+
     <div>
-        <span class="page-eyebrow">LIBRARY CATALOGUE</span>
+        <div class="page-kicker">
+            <i class="bi bi-collection"></i>
+            LIBRARY COLLECTION
+        </div>
+
         <h1>Book Catalogue</h1>
-        <p>Search and manage all books registered in the library.</p>
+
+        <p>
+            Browse and search the complete library collection.
+        </p>
     </div>
 
-    <a href="{{ url_for('add_book') }}" class="btn-primary">
-        <i class="bi bi-camera"></i>
-        Scan New Book
-    </a>
+    <div class="page-header-actions">
+
+        <a
+            href="{{ url_for('add_book') }}"
+            class="btn btn-primary"
+        >
+            <i class="bi bi-upc-scan"></i>
+            Scan New Book
+        </a>
+
+    </div>
+
 </div>
 
-<section class="dashboard-card catalogue-card">
 
-    <div class="catalogue-toolbar">
+<!-- SEARCH AND FILTERS -->
 
-        <form method="GET" action="{{ url_for('books') }}" class="search-form">
+<div class="catalogue-toolbar">
 
-            <div class="search-input-wrapper">
-                <i class="bi bi-search"></i>
+    <form
+        method="GET"
+        action="{{ url_for('books') }}"
+        class="catalogue-search"
+    >
 
-                <input
-                    type="search"
-                    name="search"
-                    value="{{ request.args.get('search', '') }}"
-                    placeholder="Search by title, author, ISBN or Book ID..."
-                    autocomplete="off"
-                >
+        <i class="bi bi-search"></i>
 
-                {% if request.args.get('search') %}
-                <a href="{{ url_for('books') }}" class="clear-search">
-                    <i class="bi bi-x-circle"></i>
-                </a>
-                {% endif %}
-            </div>
+        <input
+            type="text"
+            name="q"
+            value="{{ request.args.get('q', '') }}"
+            placeholder="Search by title, author, ISBN or Book ID..."
+            autocomplete="off"
+            id="bookSearch"
+        >
 
-            <button type="submit" class="btn-primary search-button">
-                Search
-            </button>
+        {% if request.args.get('q') %}
 
-        </form>
+        <a
+            href="{{ url_for('books') }}"
+            class="search-clear"
+            aria-label="Clear search"
+        >
+            <i class="bi bi-x-circle-fill"></i>
+        </a>
 
-        <div class="catalogue-filters">
-
-            <a
-                href="{{ url_for('books') }}"
-                class="filter-button {% if not request.args.get('status') and not request.args.get('category') %}active{% endif %}"
-            >
-                All Books
-            </a>
-
-            <a
-                href="{{ url_for('books', status='available') }}"
-                class="filter-button {% if request.args.get('status') == 'available' %}active{% endif %}"
-            >
-                <i class="bi bi-check-circle"></i>
-                Available
-            </a>
-
-            <a
-                href="{{ url_for('books', status='borrowed') }}"
-                class="filter-button {% if request.args.get('status') == 'borrowed' %}active{% endif %}"
-            >
-                <i class="bi bi-arrow-up-right-circle"></i>
-                Borrowed
-            </a>
-
-        </div>
-
-    </div>
-
-    <div class="catalogue-meta">
-
-        <div>
-            <strong>{{ books|length }}</strong>
-            <span>
-                {% if books|length == 1 %}
-                    book
-                {% else %}
-                    books
-                {% endif %}
-                displayed
-            </span>
-        </div>
-
-        {% if request.args.get('search') %}
-        <div class="active-search">
-            <span>Search:</span>
-            <strong>"{{ request.args.get('search') }}"</strong>
-        </div>
         {% endif %}
 
+        <button
+            type="submit"
+            class="btn btn-primary search-button"
+        >
+            Search
+        </button>
+
+    </form>
+
+
+    <div class="catalogue-filter">
+
+        <select
+            name="category"
+            id="categoryFilter"
+            onchange="applyCategoryFilter(this.value)"
+        >
+
+            <option value="">
+                All Categories
+            </option>
+
+            {% for category in categories %}
+
+            <option
+                value="{{ category }}"
+                {% if request.args.get('category') == category %}selected{% endif %}
+            >
+                {{ category }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
     </div>
+
+</div>
+
+
+<!-- CATALOGUE SUMMARY -->
+
+<div class="catalogue-summary">
+
+    <div>
+
+        <span class="summary-label">
+            BOOKS FOUND
+        </span>
+
+        <strong>
+            {{ books|length }}
+        </strong>
+
+    </div>
+
+    {% if request.args.get('q') %}
+
+    <div class="summary-filter">
+
+        <span>
+            Search:
+        </span>
+
+        <strong>
+            "{{ request.args.get('q') }}"
+        </strong>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- BOOK TABLE -->
+
+<div class="table-card">
 
     {% if books %}
 
     <div class="table-wrapper">
 
-        <table class="library-table catalogue-table">
+        <table class="data-table">
 
             <thead>
+
                 <tr>
-                    <th>Book</th>
-                    <th>Author</th>
-                    <th>ISBN</th>
-                    <th>Category</th>
-                    <th>Publisher</th>
-                    <th>Copies</th>
-                    <th>Status</th>
-                    <th></th>
+
+                    <th>
+                        Book
+                    </th>
+
+                    <th>
+                        Author
+                    </th>
+
+                    <th>
+                        ISBN
+                    </th>
+
+                    <th>
+                        Category
+                    </th>
+
+                    <th>
+                        Copies
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                    </th>
+
                 </tr>
+
             </thead>
+
 
             <tbody>
 
                 {% for book in books %}
 
-                <tr>
+                <tr
+                    class="clickable-row"
+                    data-href="{{ url_for('book_details', book_id=book['Book ID']) }}"
+                    tabindex="0"
+                >
 
-                    <!-- Book -->
                     <td>
-                        <div class="book-cell">
 
-                            {% if book['Front Image'] %}
+                        <div class="book-table-info">
 
-                            <img
-                                src="{{ url_for('uploaded_file', filename=book['Front Image']) }}"
-                                alt="{{ book['Book Title'] }}"
-                                class="book-thumbnail"
-                            >
+                            <div class="book-mini-cover">
 
-                            {% else %}
+                                {% if book.get('Front Image') %}
 
-                            <div class="book-thumbnail placeholder">
-                                <i class="bi bi-book"></i>
-                            </div>
-
-                            {% endif %}
-
-                            <div class="book-main-info">
-
-                                <a
-                                    href="{{ url_for('book_details', book_id=book['Book ID']) }}"
-                                    class="book-title"
+                                <img
+                                    src="{{ url_for('uploaded_cover', filename=book['Front Image']) }}"
+                                    alt=""
+                                    loading="lazy"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                                 >
-                                    {{ book['Book Title']|default('Untitled Book') }}
-                                </a>
 
-                                {% if book['Subtitle'] and book['Subtitle'] != 'Not detected' %}
-                                <span class="book-subtitle">
-                                    {{ book['Subtitle'] }}
-                                </span>
+                                <i
+                                    class="bi bi-book"
+                                    style="display:none;"
+                                ></i>
+
+                                {% else %}
+
+                                <i class="bi bi-book"></i>
+
                                 {% endif %}
 
-                                <span class="book-id">
-                                    {{ book['Book ID'] }}
+                            </div>
+
+
+                            <div class="book-table-text">
+
+                                <strong>
+                                    {{ book.get('Book Title', 'Not detected') }}
+                                </strong>
+
+                                {% if book.get('Subtitle') and book.get('Subtitle') != 'Not detected' %}
+
+                                <span>
+                                    {{ book.get('Subtitle') }}
                                 </span>
+
+                                {% endif %}
+
+                                <small>
+                                    {{ book.get('Book ID', '') }}
+                                </small>
 
                             </div>
 
                         </div>
+
                     </td>
 
-                    <!-- Author -->
+
                     <td>
-                        {% if book['Author'] and book['Author'] != 'Not detected' %}
-                            {{ book['Author'] }}
-                        {% else %}
-                            <span class="muted-text">Not detected</span>
-                        {% endif %}
+                        {{ book.get('Author', 'Not detected') }}
                     </td>
 
-                    <!-- ISBN -->
+
                     <td>
-                        {% if book['ISBN'] and book['ISBN'] != 'Not detected' %}
-                            <span class="isbn-text">
-                                {{ book['ISBN'] }}
-                            </span>
-                        {% else %}
-                            <span class="muted-text">Not detected</span>
-                        {% endif %}
+
+                        <span class="isbn-value">
+                            {{ book.get('ISBN', 'Not detected') }}
+                        </span>
+
                     </td>
 
-                    <!-- Category -->
+
                     <td>
-                        {% if book['Category'] and book['Category'] != 'Not detected' %}
-                            <span class="category-badge">
-                                {{ book['Category'] }}
-                            </span>
-                        {% else %}
-                            <span class="muted-text">Not detected</span>
-                        {% endif %}
+
+                        <span class="category-tag">
+                            {{ book.get('Category', 'Not detected') }}
+                        </span>
+
                     </td>
 
-                    <!-- Publisher -->
-                    <td>
-                        {% if book['Publisher'] and book['Publisher'] != 'Not detected' %}
-                            {{ book['Publisher'] }}
-                        {% else %}
-                            <span class="muted-text">Not detected</span>
-                        {% endif %}
-                    </td>
 
-                    <!-- Copies -->
                     <td>
-                        <div class="copies-cell">
+
+                        <div class="copy-count">
 
                             <strong>
-                                {{ book['Available Copies']|default(0) }}
+                                {{ book.get('Available Copies', 0) }}
                             </strong>
 
                             <span>
-                                / {{ book['Total Copies']|default(0) }}
+                                / {{ book.get('Total Copies', 0) }}
                             </span>
 
                         </div>
+
                     </td>
 
-                    <!-- Status -->
+
                     <td>
 
-                        {% set available = book['Available Copies']|default(0)|int %}
+                        {% if book.get('Available Copies', 0)|int > 0 %}
 
-                        {% if available > 0 %}
-
-                        <span class="status-badge available">
-                            <span></span>
+                        <span class="status-badge status-success">
+                            <span class="status-dot"></span>
                             Available
                         </span>
 
                         {% else %}
 
-                        <span class="status-badge borrowed">
-                            <span></span>
+                        <span class="status-badge status-warning">
+                            <span class="status-dot"></span>
                             Borrowed
                         </span>
 
@@ -246,38 +316,18 @@
 
                     </td>
 
-                    <!-- Actions -->
-                    <td>
 
-                        <div class="table-actions">
+                    <td class="table-action-cell">
 
-                            <a
-                                href="{{ url_for('book_details', book_id=book['Book ID']) }}"
-                                class="table-action"
-                                title="View details"
-                            >
-                                <i class="bi bi-eye"></i>
-                            </a>
-
-                            <a
-                                href="{{ url_for('edit_book', book_id=book['Book ID']) }}"
-                                class="table-action"
-                                title="Edit book"
-                            >
-                                <i class="bi bi-pencil"></i>
-                            </a>
-
-                            <button
-                                type="button"
-                                class="table-action delete-action"
-                                title="Delete book"
-                                data-book-id="{{ book['Book ID'] }}"
-                                data-book-title="{{ book['Book Title'] }}"
-                            >
-                                <i class="bi bi-trash3"></i>
-                            </button>
-
-                        </div>
+                        <a
+                            href="{{ url_for('book_details', book_id=book['Book ID']) }}"
+                            class="icon-button"
+                            title="View book details"
+                            aria-label="View book details"
+                            onclick="event.stopPropagation();"
+                        >
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
 
                     </td>
 
@@ -291,39 +341,59 @@
 
     </div>
 
+
+    <div class="table-footer">
+
+        <span>
+            Showing {{ books|length }} book{% if books|length != 1 %}s{% endif %}
+        </span>
+
+        <span>
+            Crescent College Central Library
+        </span>
+
+    </div>
+
     {% else %}
 
     <div class="empty-state">
 
-        <div class="empty-icon">
-            <i class="bi bi-journal-x"></i>
+        <div class="empty-state-icon">
+            <i class="bi bi-search"></i>
         </div>
 
-        {% if request.args.get('search') %}
+        <h3>
+            No books found
+        </h3>
 
-        <h3>No books found</h3>
+        {% if request.args.get('q') %}
 
         <p>
-            No books matched your search for
-            <strong>"{{ request.args.get('search') }}"</strong>.
+            No books matched "{{ request.args.get('q') }}".
+            Try a different title, author, ISBN or Book ID.
         </p>
 
-        <a href="{{ url_for('books') }}" class="btn-secondary">
+        <a
+            href="{{ url_for('books') }}"
+            class="btn btn-secondary"
+        >
             <i class="bi bi-arrow-counterclockwise"></i>
             Clear Search
         </a>
 
         {% else %}
 
-        <h3>No books registered</h3>
-
         <p>
-            Your library catalogue is empty. Scan your first book to begin.
+            Your library catalogue is currently empty.
+            Scan a book to add it to the collection.
         </p>
 
-        <a href="{{ url_for('add_book') }}" class="btn-primary">
-            <i class="bi bi-camera"></i>
-            Scan First Book
+        <a
+            href="{{ url_for('add_book') }}"
+            class="btn btn-primary"
+        >
+            <i class="bi bi-upc-scan"></i>
+            Scan New Book
         </a>
 
         {% endif %}
@@ -332,121 +402,28 @@
 
     {% endif %}
 
-</section>
-
-
-<!-- Delete Confirmation Modal -->
-<div class="modal-overlay" id="deleteModal">
-
-    <div class="confirmation-modal">
-
-        <button
-            type="button"
-            class="modal-close"
-            id="closeDeleteModal"
-            aria-label="Close"
-        >
-            <i class="bi bi-x-lg"></i>
-        </button>
-
-        <div class="confirmation-icon">
-            <i class="bi bi-trash3"></i>
-        </div>
-
-        <h3>Delete Book?</h3>
-
-        <p>
-            You are about to permanently remove
-            <strong id="deleteBookTitle"></strong>
-            from the library catalogue.
-        </p>
-
-        <p class="warning-text">
-            This action cannot be undone.
-        </p>
-
-        <div class="modal-actions">
-
-            <button
-                type="button"
-                class="btn-secondary"
-                id="cancelDelete"
-            >
-                Cancel
-            </button>
-
-            <form
-                method="POST"
-                id="deleteBookForm"
-                style="display: inline;"
-            >
-                <button type="submit" class="btn-danger">
-                    <i class="bi bi-trash3"></i>
-                    Delete Book
-                </button>
-            </form>
-
-        </div>
-
-    </div>
-
 </div>
 
+{% endblock %}
+
+
+{% block scripts %}
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    const deleteModal = document.getElementById("deleteModal");
-    const closeDeleteModal = document.getElementById("closeDeleteModal");
-    const cancelDelete = document.getElementById("cancelDelete");
-    const deleteBookForm = document.getElementById("deleteBookForm");
-    const deleteBookTitle = document.getElementById("deleteBookTitle");
+function applyCategoryFilter(category) {
 
-    document.querySelectorAll(".delete-action").forEach(function (button) {
+    const url = new URL(window.location.href);
 
-        button.addEventListener("click", function () {
-
-            const bookId = button.dataset.bookId;
-            const bookTitle = button.dataset.bookTitle;
-
-            deleteBookTitle.textContent = bookTitle || "this book";
-
-            deleteBookForm.action =
-                "{{ url_for('delete_book', book_id='BOOK_ID_PLACEHOLDER') }}"
-                    .replace("BOOK_ID_PLACEHOLDER", encodeURIComponent(bookId));
-
-            deleteModal.classList.add("visible");
-            document.body.classList.add("modal-open");
-
-        });
-
-    });
-
-    function closeModal() {
-        deleteModal.classList.remove("visible");
-        document.body.classList.remove("modal-open");
+    if (category) {
+        url.searchParams.set("category", category);
+    } else {
+        url.searchParams.delete("category");
     }
 
-    closeDeleteModal.addEventListener("click", closeModal);
-    cancelDelete.addEventListener("click", closeModal);
+    window.location.href = url.toString();
+}
 
-    deleteModal.addEventListener("click", function (event) {
-
-        if (event.target === deleteModal) {
-            closeModal();
-        }
-
-    });
-
-    document.addEventListener("keydown", function (event) {
-
-        if (event.key === "Escape") {
-            closeModal();
-        }
-
-    });
-
-});
 </script>
 
 {% endblock %}
