@@ -1,117 +1,184 @@
 {% extends "base.html" %}
 
-{% block title %}Login | Crescent Central Library{% endblock %}
+{% block title %}Login | Crescent College Central Library{% endblock %}
 
 {% block auth_content %}
+
 <div class="login-page">
-    <div class="login-container">
 
-        <div class="login-brand">
-            <div class="login-logo">
-                <i class="bi bi-building"></i>
-            </div>
-
-            <div>
-                <h1>Crescent</h1>
-                <p>Central Library</p>
-            </div>
+    <div class="login-brand">
+        <div class="login-brand-mark">
+            <i class="bi bi-book-half"></i>
         </div>
 
-        <div class="login-card">
-            <div class="login-header">
-                <span class="login-label">LIBRARY MANAGEMENT SYSTEM</span>
-                <h2>Welcome back</h2>
-                <p>Sign in to access the library administration portal.</p>
-            </div>
-
-            <form method="POST" action="{{ url_for('login') }}" class="login-form">
-
-                <div class="form-group">
-                    <label for="username">Username</label>
-
-                    <div class="input-wrapper">
-                        <i class="bi bi-person"></i>
-                        <input
-                            type="text"
-                            id="username"
-                            name="username"
-                            placeholder="Enter your username"
-                            autocomplete="username"
-                            required
-                            autofocus
-                        >
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-
-                    <div class="input-wrapper">
-                        <i class="bi bi-lock"></i>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            placeholder="Enter your password"
-                            autocomplete="current-password"
-                            required
-                        >
-
-                        <button
-                            type="button"
-                            class="password-toggle"
-                            id="passwordToggle"
-                            aria-label="Show password"
-                        >
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit" class="login-button">
-                    <span>Sign In</span>
-                    <i class="bi bi-arrow-right"></i>
-                </button>
-
-            </form>
-
-            <div class="login-footer">
-                <i class="bi bi-shield-check"></i>
-                <span>Authorized library personnel only</span>
-            </div>
+        <div>
+            <span class="login-brand-name">CRESCENT</span>
+            <span class="login-brand-subtitle">CENTRAL LIBRARY</span>
         </div>
+    </div>
 
-        <div class="login-bottom">
+    <div class="login-card">
+
+        <div class="login-card-header">
+
+            <span class="section-label">
+                LIBRARY MANAGEMENT SYSTEM
+            </span>
+
+            <h1>
+                Welcome back
+            </h1>
+
             <p>
-                B.S. Abdur Rahman Crescent Institute of Science and Technology
+                Sign in to access the Crescent College Central Library.
             </p>
-            <span>© {{ current_year or 2026 }} Crescent Central Library</span>
+
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                <div class="flash-container">
+
+                    {% for category, message in messages %}
+
+                        <div class="flash-message flash-{{ category }}">
+
+                            <div class="flash-icon">
+
+                                {% if category == 'success' %}
+                                    <i class="bi bi-check-circle-fill"></i>
+                                {% elif category == 'danger' %}
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle-fill"></i>
+                                {% endif %}
+
+                            </div>
+
+                            <span>{{ message }}</span>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <form
+            method="POST"
+            action="{{ url_for('login') }}"
+            class="login-form"
+        >
+
+            <div class="form-group">
+
+                <label for="username">
+                    Username
+                </label>
+
+                <div class="input-wrapper">
+
+                    <i class="bi bi-person input-icon"></i>
+
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                        required
+                        autofocus
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <div class="input-wrapper">
+
+                    <i class="bi bi-lock input-icon"></i>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-password-toggle="password"
+                        aria-label="Show password"
+                    >
+                        <i class="bi bi-eye"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary login-submit"
+            >
+
+                <span>
+                    Sign In
+                </span>
+
+                <i class="bi bi-arrow-right"></i>
+
+            </button>
+
+        </form>
+
+
+        <div class="login-footer">
+
+            <i class="bi bi-shield-check"></i>
+
+            <span>
+                Authorized library personnel only
+            </span>
+
         </div>
 
     </div>
+
+
+    <div class="login-page-footer">
+
+        <span>
+            B.S. Abdur Rahman Crescent Institute of Science and Technology
+        </span>
+
+        <span class="footer-dot">•</span>
+
+        <span>
+            Central Library
+        </span>
+
+    </div>
+
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const toggle = document.getElementById("passwordToggle");
-    const password = document.getElementById("password");
-
-    if (toggle && password) {
-        toggle.addEventListener("click", function () {
-            const isPassword = password.type === "password";
-
-            password.type = isPassword ? "text" : "password";
-
-            toggle.innerHTML = isPassword
-                ? '<i class="bi bi-eye-slash"></i>'
-                : '<i class="bi bi-eye"></i>';
-
-            toggle.setAttribute(
-                "aria-label",
-                isPassword ? "Hide password" : "Show password"
-            );
-        });
-    }
-});
-</script>
 {% endblock %}
