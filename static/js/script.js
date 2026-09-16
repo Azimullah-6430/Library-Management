@@ -1,32 +1,51 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* =====================================================
+    /* =========================================
        MOBILE SIDEBAR
-       ===================================================== */
+    ========================================= */
 
-    const menuButton = document.querySelector(".mobile-menu-button");
     const sidebar = document.querySelector(".sidebar");
     const sidebarOverlay = document.querySelector(".sidebar-overlay");
 
+    const menuButtons = document.querySelectorAll(
+        ".mobile-menu-button, .sidebar-toggle"
+    );
+
     function openSidebar() {
-        if (sidebar) sidebar.classList.add("open");
-        if (sidebarOverlay) sidebarOverlay.classList.add("visible");
+        if (!sidebar) return;
+
+        sidebar.classList.add("open");
+
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.add("active");
+        }
+
+        document.body.style.overflow = "hidden";
     }
 
     function closeSidebar() {
-        if (sidebar) sidebar.classList.remove("open");
-        if (sidebarOverlay) sidebarOverlay.classList.remove("visible");
+        if (!sidebar) return;
+
+        sidebar.classList.remove("open");
+
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove("active");
+        }
+
+        document.body.style.overflow = "";
     }
 
-    if (menuButton) {
-        menuButton.addEventListener("click", function () {
+    menuButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+
             if (sidebar && sidebar.classList.contains("open")) {
                 closeSidebar();
             } else {
                 openSidebar();
             }
+
         });
-    }
+    });
 
     if (sidebarOverlay) {
         sidebarOverlay.addEventListener("click", closeSidebar);
@@ -41,57 +60,47 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    /* =====================================================
+    /* =========================================
        PASSWORD VISIBILITY
-       ===================================================== */
+    ========================================= */
 
     document.querySelectorAll(".password-toggle").forEach(function (button) {
 
         button.addEventListener("click", function () {
 
-            const targetId = button.getAttribute("data-target");
+            const targetId = button.dataset.target;
+
+            if (!targetId) return;
+
             const input = document.getElementById(targetId);
 
             if (!input) return;
 
             if (input.type === "password") {
                 input.type = "text";
-
-                const icon = button.querySelector("i");
-
-                if (icon) {
-                    icon.classList.remove("bi-eye");
-                    icon.classList.add("bi-eye-slash");
-                }
-
+                button.setAttribute("aria-label", "Hide password");
             } else {
                 input.type = "password";
-
-                const icon = button.querySelector("i");
-
-                if (icon) {
-                    icon.classList.remove("bi-eye-slash");
-                    icon.classList.add("bi-eye");
-                }
+                button.setAttribute("aria-label", "Show password");
             }
+
         });
 
     });
 
 
-    /* =====================================================
-       AUTO HIDE FLASH MESSAGES
-       ===================================================== */
+    /* =========================================
+       FLASH MESSAGE AUTO HIDE
+    ========================================= */
 
-    const flashMessages = document.querySelectorAll(".flash-message");
-
-    flashMessages.forEach(function (message) {
+    document.querySelectorAll(".flash-message").forEach(function (message) {
 
         setTimeout(function () {
 
             message.style.opacity = "0";
-            message.style.transform = "translateX(15px)";
-            message.style.transition = "opacity 250ms ease, transform 250ms ease";
+            message.style.transform = "translateX(20px)";
+            message.style.transition =
+                "opacity 0.3s ease, transform 0.3s ease";
 
             setTimeout(function () {
                 message.remove();
@@ -102,48 +111,62 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    /* =====================================================
-       IMAGE UPLOAD PREVIEW
-       ===================================================== */
+    /* =========================================
+       IMAGE PREVIEW
+    ========================================= */
 
-    document.querySelectorAll('input[type="file"]').forEach(function (input) {
+    document.querySelectorAll(
+        'input[type="file"][data-preview]'
+    ).forEach(function (input) {
 
         input.addEventListener("change", function () {
 
-            const file = input.files && input.files[0];
-
-            if (!file) return;
-
-            if (!file.type.startsWith("image/")) {
-                alert("Please select a valid image file.");
-                input.value = "";
-                return;
-            }
-
-            const previewId = input.getAttribute("data-preview");
-
-            if (!previewId) return;
-
+            const previewId = input.dataset.preview;
             const preview = document.getElementById(previewId);
 
             if (!preview) return;
 
             const image = preview.querySelector("img");
 
-            if (!image) return;
+            if (!input.files || !input.files.length) {
+                preview.hidden = true;
+
+                if (image) {
+                    image.src = "";
+                }
+
+                return;
+            }
+
+            const file = input.files[0];
+
+            if (!file.type.startsWith("image/")) {
+                alert("Please select a valid image file.");
+                input.value = "";
+                preview.hidden = true;
+                return;
+            }
 
             const reader = new FileReader();
 
             reader.onload = function (event) {
 
-                image.src = event.target.result;
+                if (image) {
+                    image.src = event.target.result;
+                }
 
-                preview.classList.add("visible");
+                preview.hidden = false;
 
-                const uploadBox = input.closest(".upload-box");
+                const uploadBox =
+                    input.closest(".upload-box");
 
                 if (uploadBox) {
-                    uploadBox.classList.add("has-image");
+                    const content =
+                        uploadBox.querySelector(".upload-content");
+
+                    if (content) {
+                        content.style.display = "none";
+                    }
                 }
 
             };
@@ -155,9 +178,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    /* =====================================================
+    /* =========================================
        REMOVE IMAGE
-       ===================================================== */
+    ========================================= */
 
     document.querySelectorAll(".remove-image").forEach(function (button) {
 
@@ -166,31 +189,43 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault();
             event.stopPropagation();
 
-            const previewId = button.getAttribute("data-preview");
+            const inputId = button.dataset.input;
+            const previewId = button.dataset.preview;
 
-            const preview = document.getElementById(previewId);
+            const input =
+                inputId ? document.getElementById(inputId) : null;
 
-            if (!preview) return;
-
-            const inputId = preview.getAttribute("data-input");
-            const input = document.getElementById(inputId);
+            const preview =
+                previewId ? document.getElementById(previewId) : null;
 
             if (input) {
                 input.value = "";
             }
 
-            preview.classList.remove("visible");
+            if (preview) {
 
-            const image = preview.querySelector("img");
+                preview.hidden = true;
 
-            if (image) {
-                image.removeAttribute("src");
-            }
+                const image = preview.querySelector("img");
 
-            const uploadBox = preview.closest(".upload-box");
+                if (image) {
+                    image.src = "";
+                }
 
-            if (uploadBox) {
-                uploadBox.classList.remove("has-image");
+                const uploadBox =
+                    preview.closest(".upload-box");
+
+                if (uploadBox) {
+
+                    const content =
+                        uploadBox.querySelector(".upload-content");
+
+                    if (content) {
+                        content.style.display = "";
+                    }
+
+                }
+
             }
 
         });
@@ -198,9 +233,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    /* =====================================================
-       DRAG AND DROP IMAGE UPLOAD
-       ===================================================== */
+    /* =========================================
+       DRAG & DROP UPLOAD
+    ========================================= */
 
     document.querySelectorAll(".upload-box").forEach(function (box) {
 
@@ -208,35 +243,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!input) return;
 
-        ["dragenter", "dragover"].forEach(function (eventName) {
+        box.addEventListener("dragover", function (event) {
 
-            box.addEventListener(eventName, function (event) {
+            event.preventDefault();
 
-                event.preventDefault();
-                event.stopPropagation();
-
-                box.style.borderColor = "var(--navy-700)";
-                box.style.background = "#f5f8fb";
-
-            });
+            box.classList.add("dragover");
 
         });
 
-        ["dragleave", "drop"].forEach(function (eventName) {
+        box.addEventListener("dragleave", function (event) {
 
-            box.addEventListener(eventName, function (event) {
+            event.preventDefault();
 
-                event.preventDefault();
-                event.stopPropagation();
-
-                box.style.borderColor = "";
-                box.style.background = "";
-
-            });
+            box.classList.remove("dragover");
 
         });
 
         box.addEventListener("drop", function (event) {
+
+            event.preventDefault();
+
+            box.classList.remove("dragover");
 
             const files = event.dataTransfer.files;
 
@@ -257,14 +284,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 input.files = dataTransfer.files;
 
-                input.dispatchEvent(new Event("change", {
-                    bubbles: true
-                }));
+                input.dispatchEvent(
+                    new Event("change", {
+                        bubbles: true
+                    })
+                );
 
             } catch (error) {
 
-                console.warn(
-                    "Browser does not allow programmatic file assignment.",
+                console.error(
+                    "Unable to process dropped image:",
                     error
                 );
 
@@ -272,60 +301,133 @@ document.addEventListener("DOMContentLoaded", function () {
 
         });
 
+        box.addEventListener("click", function (event) {
+
+            if (
+                event.target.closest(".remove-image") ||
+                event.target.closest(".upload-browse")
+            ) {
+                return;
+            }
+
+            input.click();
+
+        });
+
     });
 
 
-    /* =====================================================
-       CONFIRM DELETE ACTIONS
-       ===================================================== */
+    /* =========================================
+       DELETE CONFIRMATION
+    ========================================= */
 
-    document.querySelectorAll("[data-confirm-delete]").forEach(function (button) {
+    document.querySelectorAll("[data-confirm-delete]").forEach(
+        function (element) {
 
-        button.addEventListener("click", function (event) {
+            element.addEventListener("click", function (event) {
 
-            const message =
-                button.getAttribute("data-confirm-delete") ||
-                "Are you sure you want to delete this book?";
+                const message =
+                    element.dataset.confirmDelete ||
+                    "Are you sure you want to delete this book?";
 
-            if (!window.confirm(message)) {
+                if (!window.confirm(message)) {
+                    event.preventDefault();
+                }
+
+            });
+
+        }
+    );
+
+
+    /* =========================================
+       MODAL DELETE CONFIRMATION
+    ========================================= */
+
+    document.querySelectorAll(".confirm-delete").forEach(
+        function (button) {
+
+            button.addEventListener("click", function (event) {
+
                 event.preventDefault();
-            }
 
-        });
+                const modalId = button.dataset.modal;
 
-    });
+                if (!modalId) return;
+
+                const modal =
+                    document.getElementById(modalId);
+
+                if (modal) {
+                    modal.classList.add("active");
+                }
+
+            });
+
+        }
+    );
+
+    document.querySelectorAll(".modal-overlay").forEach(
+        function (modal) {
+
+            modal.addEventListener("click", function (event) {
+
+                if (event.target === modal) {
+                    modal.classList.remove("active");
+                }
+
+            });
+
+        }
+    );
+
+    document.querySelectorAll("[data-close-modal]").forEach(
+        function (button) {
+
+            button.addEventListener("click", function () {
+
+                const modal =
+                    button.closest(".modal-overlay");
+
+                if (modal) {
+                    modal.classList.remove("active");
+                }
+
+            });
+
+        }
+    );
 
 
-    /* =====================================================
-       SEARCH INPUT CLEAR
-       ===================================================== */
+    /* =========================================
+       SEARCH CLEAR
+    ========================================= */
 
-    document.querySelectorAll(".clear-search").forEach(function (button) {
+    document.querySelectorAll("[data-clear-search]").forEach(
+        function (button) {
 
-        button.addEventListener("click", function () {
+            button.addEventListener("click", function () {
 
-            const targetId = button.getAttribute("data-target");
+                const targetId =
+                    button.dataset.clearSearch;
 
-            const input = document.getElementById(targetId);
+                const input =
+                    document.getElementById(targetId);
 
-            if (!input) return;
+                if (!input) return;
 
-            input.value = "";
+                input.value = "";
+                input.focus();
 
-            const form = input.closest("form");
+            });
 
-            if (form) {
-                form.submit();
-            }
-
-        });
-
-    });
+        }
+    );
 
 
-    /* =====================================================
-       SEARCH KEYBOARD SHORTCUT
-       ===================================================== */
+    /* =========================================
+       KEYBOARD SEARCH SHORTCUT
+    ========================================= */
 
     document.addEventListener("keydown", function (event) {
 
@@ -335,31 +437,54 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
 
             const searchInput =
-                document.querySelector(".search-input-wrapper input");
+                document.querySelector(
+                    'input[type="search"], .search-input'
+                );
 
             if (searchInput) {
+
                 event.preventDefault();
+
                 searchInput.focus();
+                searchInput.select();
+
             }
+
+        }
+
+        if (event.key === "Escape") {
+
+            closeSidebar();
+
+            document.querySelectorAll(".modal-overlay.active")
+                .forEach(function (modal) {
+                    modal.classList.remove("active");
+                });
 
         }
 
     });
 
 
-    /* =====================================================
+    /* =========================================
        PREVENT DOUBLE FORM SUBMISSION
-       ===================================================== */
+    ========================================= */
 
     document.querySelectorAll("form").forEach(function (form) {
 
         form.addEventListener("submit", function () {
 
-            if (form.dataset.submitting === "true") {
+            if (
+                form.dataset.preventDoubleSubmit === "false"
+            ) {
                 return;
             }
 
-            form.dataset.submitting = "true";
+            if (form.dataset.submitted === "true") {
+                return;
+            }
+
+            form.dataset.submitted = "true";
 
             const submitButtons =
                 form.querySelectorAll(
@@ -368,25 +493,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
             submitButtons.forEach(function (button) {
 
-                button.disabled = true;
+                if (!button.disabled) {
 
-                const originalText =
-                    button.innerHTML || button.value;
+                    button.dataset.originalText =
+                        button.textContent;
 
-                button.dataset.originalText = originalText;
+                    button.disabled = true;
 
-                if (button.tagName.toLowerCase() === "button") {
-
-                    if (!button.querySelector(".button-loader")) {
-
-                        button.innerHTML =
-                            '<i class="bi bi-arrow-repeat spin"></i> ' +
-                            "Processing...";
-
+                    if (button.tagName === "BUTTON") {
+                        button.textContent = "Processing...";
                     }
 
-                } else {
-                    button.value = "Processing...";
                 }
 
             });
@@ -396,37 +513,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    /* =====================================================
-       SMOOTH SCROLL FOR INTERNAL ANCHORS
-       ===================================================== */
-
-    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
-
-        link.addEventListener("click", function (event) {
-
-            const targetId = link.getAttribute("href");
-
-            if (!targetId || targetId === "#") return;
-
-            const target = document.querySelector(targetId);
-
-            if (!target) return;
-
-            event.preventDefault();
-
-            target.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-
-        });
-
-    });
-
-
-    /* =====================================================
+    /* =========================================
        RESPONSIVE SIDEBAR RESET
-       ===================================================== */
+    ========================================= */
 
     window.addEventListener("resize", function () {
 
@@ -437,61 +526,56 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    /* =====================================================
+    /* =========================================
        IMAGE ERROR HANDLING
-       ===================================================== */
+    ========================================= */
 
     document.querySelectorAll("img").forEach(function (image) {
 
         image.addEventListener("error", function () {
 
-            if (image.dataset.errorHandled === "true") {
-                return;
-            }
-
-            image.dataset.errorHandled = "true";
-
-            image.style.display = "none";
-
-            const parent = image.parentElement;
-
-            if (parent && !parent.querySelector(".image-error-placeholder")) {
-
-                const placeholder =
-                    document.createElement("div");
-
-                placeholder.className =
-                    "image-error-placeholder large-image-placeholder";
-
-                placeholder.innerHTML =
-                    '<i class="bi bi-image"></i>' +
-                    '<span>Image unavailable</span>';
-
-                parent.appendChild(placeholder);
-
-            }
+            image.classList.add("image-load-error");
 
         });
 
     });
 
 
-    /* =====================================================
+    /* =========================================
        TABLE ROW KEYBOARD ACCESS
-       ===================================================== */
+    ========================================= */
 
-    document.querySelectorAll(".library-table tbody tr").forEach(function (row) {
-
-        const link = row.querySelector("a");
-
-        if (!link) return;
+    document.querySelectorAll(
+        "tr[data-href]"
+    ).forEach(function (row) {
 
         row.setAttribute("tabindex", "0");
 
+        row.addEventListener("click", function () {
+
+            const url = row.dataset.href;
+
+            if (url) {
+                window.location.href = url;
+            }
+
+        });
+
         row.addEventListener("keydown", function (event) {
 
-            if (event.key === "Enter") {
-                link.click();
+            if (
+                event.key === "Enter" ||
+                event.key === " "
+            ) {
+
+                event.preventDefault();
+
+                const url = row.dataset.href;
+
+                if (url) {
+                    window.location.href = url;
+                }
+
             }
 
         });
@@ -499,20 +583,27 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    /* =====================================================
-       TOOLTIP INITIALIZATION
-       ===================================================== */
+    /* =========================================
+       ACCESSIBILITY
+    ========================================= */
 
-    document.querySelectorAll("[title]").forEach(function (element) {
+    document.querySelectorAll(
+        "[title]"
+    ).forEach(function (element) {
 
-        element.addEventListener("mouseenter", function () {
+        if (!element.getAttribute("aria-label")) {
 
-            element.setAttribute(
-                "aria-label",
-                element.getAttribute("title")
-            );
+            const title =
+                element.getAttribute("title");
 
-        });
+            if (title) {
+                element.setAttribute(
+                    "aria-label",
+                    title
+                );
+            }
+
+        }
 
     });
 
