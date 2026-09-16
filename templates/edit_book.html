@@ -1,346 +1,763 @@
-```html
 {% extends "base.html" %}
 
-{% block title %}Edit Book{% endblock %}
+{% block title %}
+Crescent College Library | Edit Book
+{% endblock %}
 
-{% block page_title %}Edit Book{% endblock %}
+{% block page_title %}
+Edit Book
+{% endblock %}
 
 {% block content %}
 
-<div class="section-card">
+<!-- =========================================================
+     PAGE INTRO
+========================================================== -->
 
-    <div class="section-header">
-        <div>
-            <h2>Edit Book Information</h2>
-            <p class="section-description">
-                Update the information for this book.
-            </p>
+<section class="page-intro">
+
+    <div>
+
+        <span class="welcome-label">
+            CRESCENT COLLEGE CENTRAL LIBRARY
+        </span>
+
+        <h2>
+            Edit Book
+        </h2>
+
+        <p>
+            Update the catalogue information for this library book.
+        </p>
+
+    </div>
+
+    <div>
+
+        <a href="{{ url_for('book_details', book_id=book.book_id) }}"
+           class="btn btn-secondary">
+
+            ← Back to Details
+
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     BOOK IDENTIFICATION
+========================================================== -->
+
+<section class="section-card book-edit-header">
+
+    <div class="edit-book-identity">
+
+        <div class="edit-book-cover">
+
+            {% if book.cover %}
+
+                <img
+                    src="{{ url_for('uploaded_cover', filename=book.cover) }}"
+                    alt="{{ book.title }}"
+                >
+
+            {% else %}
+
+                <div class="cover-placeholder">
+                    📚
+                </div>
+
+            {% endif %}
+
         </div>
 
-        <span class="badge badge-info">
-            {{ book.book_id }}
-        </span>
+
+        <div>
+
+            <span class="book-id-label">
+                BOOK ID
+            </span>
+
+            <h2>
+                {{ book.book_id }}
+            </h2>
+
+            <p>
+                {{ book.title }}
+            </p>
+
+        </div>
+
     </div>
 
 
-    <form method="POST"
-          action="{{ url_for('edit_book', book_id=book.book_id) }}"
-          enctype="multipart/form-data">
+    <div class="edit-book-status">
 
-        <div class="form-grid">
+        <span>
+            Current Copies
+        </span>
 
-            <!-- Book Title -->
-            <div class="form-group full-width">
+        <strong>
+            {{ book.copies }}
+        </strong>
 
-                <label for="title">
-                    Book Title <span class="required">*</span>
-                </label>
+        <small>
+            {{ book.available }} available
+        </small>
 
-                <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    class="form-control"
-                    value="{{ book.title }}"
-                    placeholder="Enter book title"
-                    required
-                >
+    </div>
 
-            </div>
+</section>
 
 
-            <!-- Author -->
-            <div class="form-group">
+<!-- =========================================================
+     EDIT FORM
+========================================================== -->
 
-                <label for="author">
-                    Author <span class="required">*</span>
-                </label>
+<section class="section-card">
 
-                <input
-                    type="text"
-                    id="author"
-                    name="author"
-                    class="form-control"
-                    value="{{ book.author }}"
-                    placeholder="Enter author name"
-                    required
-                >
+    <div class="section-header">
 
-            </div>
+        <div>
 
+            <h2>
+                Book Information
+            </h2>
 
-            <!-- ISBN -->
-            <div class="form-group">
-
-                <label for="isbn">
-                    ISBN
-                </label>
-
-                <input
-                    type="text"
-                    id="isbn"
-                    name="isbn"
-                    class="form-control"
-                    value="{{ book.isbn }}"
-                    placeholder="Enter ISBN"
-                >
-
-            </div>
-
-
-            <!-- Category -->
-            <div class="form-group">
-
-                <label for="category">
-                    Category
-                </label>
-
-                <select
-                    id="category"
-                    name="category"
-                    class="form-control"
-                >
-
-                    <option value="">
-                        Select category
-                    </option>
-
-                    <option value="Computer Science"
-                        {% if book.category == "Computer Science" %}selected{% endif %}>
-                        Computer Science
-                    </option>
-
-                    <option value="Information Technology"
-                        {% if book.category == "Information Technology" %}selected{% endif %}>
-                        Information Technology
-                    </option>
-
-                    <option value="Engineering"
-                        {% if book.category == "Engineering" %}selected{% endif %}>
-                        Engineering
-                    </option>
-
-                    <option value="Mathematics"
-                        {% if book.category == "Mathematics" %}selected{% endif %}>
-                        Mathematics
-                    </option>
-
-                    <option value="Science"
-                        {% if book.category == "Science" %}selected{% endif %}>
-                        Science
-                    </option>
-
-                    <option value="Management"
-                        {% if book.category == "Management" %}selected{% endif %}>
-                        Management
-                    </option>
-
-                    <option value="Literature"
-                        {% if book.category == "Literature" %}selected{% endif %}>
-                        Literature
-                    </option>
-
-                    <option value="History"
-                        {% if book.category == "History" %}selected{% endif %}>
-                        History
-                    </option>
-
-                    <option value="Biography"
-                        {% if book.category == "Biography" %}selected{% endif %}>
-                        Biography
-                    </option>
-
-                    <option value="Other"
-                        {% if book.category == "Other" %}selected{% endif %}>
-                        Other
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <!-- Publisher -->
-            <div class="form-group">
-
-                <label for="publisher">
-                    Publisher
-                </label>
-
-                <input
-                    type="text"
-                    id="publisher"
-                    name="publisher"
-                    class="form-control"
-                    value="{{ book.publisher }}"
-                    placeholder="Enter publisher"
-                >
-
-            </div>
-
-
-            <!-- Publication Year -->
-            <div class="form-group">
-
-                <label for="year">
-                    Publication Year
-                </label>
-
-                <input
-                    type="number"
-                    id="year"
-                    name="year"
-                    class="form-control"
-                    value="{{ book.year }}"
-                    min="1000"
-                    max="2100"
-                    placeholder="e.g. 2024"
-                >
-
-            </div>
-
-
-            <!-- Total Copies -->
-            <div class="form-group">
-
-                <label for="copies">
-                    Total Copies <span class="required">*</span>
-                </label>
-
-                <input
-                    type="number"
-                    id="copies"
-                    name="copies"
-                    class="form-control"
-                    value="{{ book.copies }}"
-                    min="1"
-                    required
-                >
-
-                <small style="color: var(--muted); margin-top: 5px;">
-                    Current available copies: {{ book.available }}
-                </small>
-
-            </div>
-
-
-            <!-- Shelf -->
-            <div class="form-group">
-
-                <label for="shelf">
-                    Shelf Number
-                </label>
-
-                <input
-                    type="text"
-                    id="shelf"
-                    name="shelf"
-                    class="form-control"
-                    value="{{ book.shelf }}"
-                    placeholder="e.g. A-12"
-                >
-
-            </div>
+            <p>
+                Modify the information below and save your changes.
+            </p>
 
         </div>
 
+        <div class="required-note">
 
-        <!-- Existing Cover -->
-        <div class="cover-upload-section">
+            <span>*</span>
+            Required fields
 
-            <div class="section-header">
+        </div>
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="{{ url_for('edit_book', book_id=book.book_id) }}"
+        enctype="multipart/form-data"
+        id="editBookForm"
+    >
+
+
+        <!-- =================================================
+             BASIC INFORMATION
+        ================================================== -->
+
+        <div class="form-section">
+
+            <div class="form-section-title">
+
+                <span class="form-section-icon">
+                    📚
+                </span>
 
                 <div>
-                    <h2>Book Cover</h2>
 
-                    <p class="section-description">
-                        Replace the existing cover if required.
+                    <h3>
+                        Basic Information
+                    </h3>
+
+                    <p>
+                        Bibliographic information for this book.
                     </p>
+
                 </div>
 
             </div>
 
 
-            <div class="upload-area">
+            <div class="form-grid">
 
-                {% if book.cover %}
 
-                <div class="preview-container"
-                     style="display: block;">
+                <!-- TITLE -->
 
-                    <img
-                        src="{{ url_for('uploaded_cover', filename=book.cover) }}"
-                        alt="{{ book.title }} cover"
-                        id="coverPreview"
+                <div class="form-group full-width">
+
+                    <label for="title">
+
+                        Book Title
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        class="form-control"
+                        value="{{ book.title }}"
+                        maxlength="200"
+                        required
+                        autocomplete="off"
                     >
 
                 </div>
 
-                {% else %}
 
-                <div class="upload-icon">
-                    📚
+                <!-- AUTHOR -->
+
+                <div class="form-group">
+
+                    <label for="author">
+
+                        Author
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="author"
+                        name="author"
+                        class="form-control"
+                        value="{{ book.author }}"
+                        maxlength="150"
+                        required
+                        autocomplete="off"
+                    >
+
                 </div>
 
-                <h3>
-                    No Cover Uploaded
-                </h3>
+
+                <!-- ISBN -->
+
+                <div class="form-group">
+
+                    <label for="isbn">
+                        ISBN
+                    </label>
+
+                    <input
+                        type="text"
+                        id="isbn"
+                        name="isbn"
+                        class="form-control"
+                        value="{{ book.isbn }}"
+                        maxlength="30"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- CATEGORY -->
+
+                <div class="form-group">
+
+                    <label for="category">
+                        Category
+                    </label>
+
+                    <input
+                        type="text"
+                        id="category"
+                        name="category"
+                        class="form-control"
+                        list="categoryOptions"
+                        value="{{ book.category }}"
+                        maxlength="100"
+                        autocomplete="off"
+                    >
+
+                    {% if categories %}
+
+                    <datalist id="categoryOptions">
+
+                        {% for category in categories %}
+
+                        <option value="{{ category }}"></option>
+
+                        {% endfor %}
+
+                    </datalist>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- PUBLISHER -->
+
+                <div class="form-group">
+
+                    <label for="publisher">
+                        Publisher
+                    </label>
+
+                    <input
+                        type="text"
+                        id="publisher"
+                        name="publisher"
+                        class="form-control"
+                        value="{{ book.publisher }}"
+                        maxlength="150"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- YEAR -->
+
+                <div class="form-group">
+
+                    <label for="year">
+                        Publication Year
+                    </label>
+
+                    <input
+                        type="number"
+                        id="year"
+                        name="year"
+                        class="form-control"
+                        value="{{ book.year }}"
+                        min="1"
+                        max="2100"
+                    >
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             LIBRARY INFORMATION
+        ================================================== -->
+
+        <div class="form-section">
+
+            <div class="form-section-title">
+
+                <span class="form-section-icon">
+                    🏛️
+                </span>
+
+                <div>
+
+                    <h3>
+                        Library Information
+                    </h3>
+
+                    <p>
+                        Update physical copy and shelf information.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-grid">
+
+
+                <!-- TOTAL COPIES -->
+
+                <div class="form-group">
+
+                    <label for="copies">
+
+                        Total Copies
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <input
+                        type="number"
+                        id="copies"
+                        name="copies"
+                        class="form-control"
+                        value="{{ book.copies }}"
+                        min="1"
+                        max="10000"
+                        required
+                    >
+
+                    <small class="form-help">
+                        Total number of physical copies owned.
+                    </small>
+
+                </div>
+
+
+                <!-- SHELF -->
+
+                <div class="form-group">
+
+                    <label for="shelf">
+                        Shelf Number
+                    </label>
+
+                    <input
+                        type="text"
+                        id="shelf"
+                        name="shelf"
+                        class="form-control"
+                        value="{{ book.shelf }}"
+                        maxlength="50"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 COPY STATUS
+            ================================================== -->
+
+            <div class="copy-status-panel">
+
+                <div class="copy-status-item">
+
+                    <span class="copy-status-label">
+                        Total
+                    </span>
+
+                    <strong id="totalCopiesDisplay">
+                        {{ book.copies }}
+                    </strong>
+
+                </div>
+
+
+                <div class="copy-status-divider">
+                    |
+                </div>
+
+
+                <div class="copy-status-item">
+
+                    <span class="copy-status-label">
+                        Available
+                    </span>
+
+                    <strong id="availableCopiesDisplay">
+                        {{ book.available }}
+                    </strong>
+
+                </div>
+
+
+                <div class="copy-status-divider">
+                    |
+                </div>
+
+
+                <div class="copy-status-item">
+
+                    <span class="copy-status-label">
+                        Borrowed
+                    </span>
+
+                    <strong id="borrowedCopiesDisplay">
+                        {{ book.borrowed }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="availability-notice">
+
+                <div class="availability-notice-icon">
+                    ℹ
+                </div>
+
+                <div>
+
+                    <strong>
+                        Copy management
+                    </strong>
+
+                    <p>
+                        The system preserves the current borrowed
+                        count when the total number of copies is
+                        changed. Total copies cannot be reduced
+                        below the number of currently borrowed copies.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             COVER IMAGE
+        ================================================== -->
+
+        <div class="form-section">
+
+            <div class="form-section-title">
+
+                <span class="form-section-icon">
+                    🖼️
+                </span>
+
+                <div>
+
+                    <h3>
+                        Book Cover
+                    </h3>
+
+                    <p>
+                        Replace the existing cover if required.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="cover-upload-section">
+
+
+                {% if book.cover %}
+
+                <div class="current-cover-notice">
+
+                    <div class="current-cover-image">
+
+                        <img
+                            src="{{ url_for('uploaded_cover', filename=book.cover) }}"
+                            alt="Current book cover"
+                        >
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Current cover
+                        </strong>
+
+                        <p>
+                            Upload a new image below to replace it.
+                        </p>
+
+                    </div>
+
+                </div>
 
                 {% endif %}
 
 
-                <div style="margin-top: 20px;">
+                <label
+                    for="cover"
+                    class="upload-area"
+                    id="uploadArea"
+                >
 
-                    <label
-                        for="cover"
-                        class="btn btn-secondary"
-                    >
-                        Choose New Cover
-                    </label>
+                    <div class="upload-icon">
+                        🖼️
+                    </div>
+
+                    <div class="upload-text">
+
+                        <strong>
+                            Click to select a new cover
+                        </strong>
+
+                        <span>
+                            PNG, JPG, JPEG or WEBP
+                        </span>
+
+                        <small>
+                            Maximum size: 5 MB
+                        </small>
+
+                    </div>
 
                     <input
                         type="file"
                         id="cover"
                         name="cover"
-                        accept="image/png,image/jpeg,image/webp"
+                        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                         hidden
                     >
+
+                </label>
+
+
+                <!-- NEW IMAGE PREVIEW -->
+
+                <div
+                    class="preview-container"
+                    id="previewContainer"
+                    style="display:none;"
+                >
+
+                    <div class="preview-image-wrapper">
+
+                        <img
+                            id="imagePreview"
+                            src=""
+                            alt="New book cover preview"
+                        >
+
+                    </div>
+
+
+                    <div class="preview-details">
+
+                        <strong>
+                            New Cover
+                        </strong>
+
+                        <span id="fileName">
+                            No file selected
+                        </span>
+
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            id="removeImageButton"
+                        >
+                            Remove
+                        </button>
+
+                    </div>
 
                 </div>
 
 
                 <div
-                    id="fileName"
-                    class="file-name"
+                    class="upload-error"
+                    id="uploadError"
+                    style="display:none;"
                 ></div>
+
 
             </div>
 
         </div>
 
 
-        <!-- Actions -->
+        <!-- =================================================
+             ACTIONS
+        ================================================== -->
+
         <div class="form-actions">
 
             <a
-                href="{{ url_for('books') }}"
+                href="{{ url_for('book_details', book_id=book.book_id) }}"
                 class="btn btn-secondary"
             >
                 Cancel
             </a>
 
+
             <button
                 type="submit"
                 class="btn btn-primary"
+                id="saveBookButton"
             >
+
+                <span>
+                    ✓
+                </span>
+
                 Save Changes
+
             </button>
 
         </div>
 
+
     </form>
 
-</div>
+</section>
+
+
+<!-- =========================================================
+     EDIT INFORMATION
+========================================================== -->
+
+<section class="section-card edit-information-card">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Record Information
+            </h2>
+
+            <p>
+                Information maintained by the library system.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="record-info-grid">
+
+
+        <div class="record-info-item">
+
+            <span>
+                Book ID
+            </span>
+
+            <strong>
+                {{ book.book_id }}
+            </strong>
+
+        </div>
+
+
+        <div class="record-info-item">
+
+            <span>
+                Date Added
+            </span>
+
+            <strong>
+                {{ book.date_added }}
+            </strong>
+
+        </div>
+
+
+        <div class="record-info-item">
+
+            <span>
+                Borrowed Copies
+            </span>
+
+            <strong>
+                {{ book.borrowed }}
+            </strong>
+
+        </div>
+
+
+    </div>
+
+</section>
+
 
 {% endblock %}
 
@@ -349,110 +766,489 @@
 
 <script>
 
-    const coverInput =
-        document.getElementById("cover");
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    const fileName =
-        document.getElementById("fileName");
-
-    const previewContainer =
-        document.querySelector(".preview-container");
-
-    const coverPreview =
-        document.getElementById("coverPreview");
+        const form =
+            document.getElementById(
+                "editBookForm"
+            );
 
 
-    if (coverInput) {
-
-        coverInput.addEventListener(
-            "change",
-            function () {
-
-                const file = this.files[0];
-
-                if (!file) {
-
-                    fileName.textContent = "";
-
-                    return;
-                }
+        const coverInput =
+            document.getElementById(
+                "cover"
+            );
 
 
-                const allowedTypes = [
-                    "image/png",
-                    "image/jpeg",
-                    "image/webp"
-                ];
+        const previewContainer =
+            document.getElementById(
+                "previewContainer"
+            );
 
 
-                if (!allowedTypes.includes(file.type)) {
-
-                    alert(
-                        "Please select a PNG, JPG, JPEG or WEBP image."
-                    );
-
-                    this.value = "";
-
-                    fileName.textContent = "";
-
-                    return;
-                }
+        const imagePreview =
+            document.getElementById(
+                "imagePreview"
+            );
 
 
-                fileName.textContent =
-                    "Selected: " + file.name;
+        const fileName =
+            document.getElementById(
+                "fileName"
+            );
 
 
-                const reader =
-                    new FileReader();
+        const uploadError =
+            document.getElementById(
+                "uploadError"
+            );
 
 
-                reader.onload =
-                    function (event) {
+        const uploadArea =
+            document.getElementById(
+                "uploadArea"
+            );
 
-                        if (coverPreview) {
 
-                            coverPreview.src =
+        const removeButton =
+            document.getElementById(
+                "removeImageButton"
+            );
+
+
+        const copiesInput =
+            document.getElementById(
+                "copies"
+            );
+
+
+        const totalDisplay =
+            document.getElementById(
+                "totalCopiesDisplay"
+            );
+
+
+        const availableDisplay =
+            document.getElementById(
+                "availableCopiesDisplay"
+            );
+
+
+        const borrowedDisplay =
+            document.getElementById(
+                "borrowedCopiesDisplay"
+            );
+
+
+        const saveButton =
+            document.getElementById(
+                "saveBookButton"
+            );
+
+
+        const allowedTypes = [
+            "image/png",
+            "image/jpeg",
+            "image/webp"
+        ];
+
+
+        const maxSize =
+            5 * 1024 * 1024;
+
+
+        const currentBorrowed =
+            Number(
+                "{{ book.borrowed|default(0) }}"
+            );
+
+
+        const currentAvailable =
+            Number(
+                "{{ book.available|default(0) }}"
+            );
+
+
+        function showError(message) {
+
+            if (!uploadError) {
+                return;
+            }
+
+            uploadError.textContent =
+                message;
+
+            uploadError.style.display =
+                "block";
+
+        }
+
+
+        function clearError() {
+
+            if (!uploadError) {
+                return;
+            }
+
+            uploadError.textContent =
+                "";
+
+            uploadError.style.display =
+                "none";
+
+        }
+
+
+        /* =================================================
+           COVER VALIDATION
+        ================================================== */
+
+        if (coverInput) {
+
+            coverInput.addEventListener(
+                "change",
+                function () {
+
+                    clearError();
+
+
+                    const file =
+                        coverInput.files[0];
+
+
+                    if (!file) {
+                        return;
+                    }
+
+
+                    if (
+                        !allowedTypes.includes(
+                            file.type
+                        )
+                    ) {
+
+                        showError(
+                            "Please select a PNG, JPG, JPEG or WEBP image."
+                        );
+
+                        coverInput.value =
+                            "";
+
+                        return;
+                    }
+
+
+                    if (
+                        file.size > maxSize
+                    ) {
+
+                        showError(
+                            "Image size must not exceed 5 MB."
+                        );
+
+                        coverInput.value =
+                            "";
+
+                        return;
+                    }
+
+
+                    const reader =
+                        new FileReader();
+
+
+                    reader.onload =
+                        function (event) {
+
+                            imagePreview.src =
                                 event.target.result;
+
+
+                            fileName.textContent =
+                                `${file.name} • ${(file.size / 1024).toFixed(1)} KB`;
+
 
                             previewContainer.style.display =
-                                "block";
+                                "flex";
 
-                        } else {
 
-                            const newImage =
-                                document.createElement("img");
-
-                            newImage.id =
-                                "coverPreview";
-
-                            newImage.src =
-                                event.target.result;
-
-                            newImage.alt =
-                                "Book cover preview";
-
-                            previewContainer.innerHTML = "";
-
-                            previewContainer.appendChild(
-                                newImage
+                            uploadArea.classList.add(
+                                "has-file"
                             );
 
-                            previewContainer.style.display =
-                                "block";
-                        }
-
-                    };
+                        };
 
 
-                reader.readAsDataURL(file);
+                    reader.readAsDataURL(
+                        file
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           REMOVE NEW COVER
+        ================================================== */
+
+        if (removeButton) {
+
+            removeButton.addEventListener(
+                "click",
+                function () {
+
+                    coverInput.value =
+                        "";
+
+                    imagePreview.src =
+                        "";
+
+                    fileName.textContent =
+                        "No file selected";
+
+                    previewContainer.style.display =
+                        "none";
+
+                    uploadArea.classList.remove(
+                        "has-file"
+                    );
+
+                    clearError();
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           COPY CALCULATION
+        ================================================== */
+
+        function updateCopyDisplay() {
+
+            if (!copiesInput) {
+                return;
+            }
+
+
+            let total =
+                parseInt(
+                    copiesInput.value,
+                    10
+                );
+
+
+            if (
+                isNaN(total)
+                ||
+                total < 1
+            ) {
+
+                total = 0;
 
             }
-        );
+
+
+            /*
+             * Borrowed copies cannot disappear when
+             * editing the total number of copies.
+             */
+
+            const borrowed =
+                currentBorrowed;
+
+
+            const available =
+                Math.max(
+                    0,
+                    total - borrowed
+                );
+
+
+            if (totalDisplay) {
+
+                totalDisplay.textContent =
+                    total;
+
+            }
+
+
+            if (availableDisplay) {
+
+                availableDisplay.textContent =
+                    available;
+
+            }
+
+
+            if (borrowedDisplay) {
+
+                borrowedDisplay.textContent =
+                    borrowed;
+
+            }
+
+
+            /*
+             * Prevent the user from setting total copies
+             * below the number currently borrowed.
+             */
+
+            if (
+                total > 0
+                &&
+                total < borrowed
+            ) {
+
+                copiesInput.setCustomValidity(
+                    `Total copies cannot be less than ${borrowed}, because ${borrowed} copy/copies are currently borrowed.`
+                );
+
+            } else {
+
+                copiesInput.setCustomValidity(
+                    ""
+                );
+
+            }
+
+        }
+
+
+        if (copiesInput) {
+
+            copiesInput.addEventListener(
+                "input",
+                updateCopyDisplay
+            );
+
+        }
+
+
+        updateCopyDisplay();
+
+
+        /* =================================================
+           FORM SUBMISSION
+        ================================================== */
+
+        if (form) {
+
+            form.addEventListener(
+                "submit",
+                function (event) {
+
+                    const title =
+                        document.getElementById(
+                            "title"
+                        );
+
+
+                    const author =
+                        document.getElementById(
+                            "author"
+                        );
+
+
+                    if (
+                        !title
+                        ||
+                        !title.value.trim()
+                    ) {
+
+                        event.preventDefault();
+
+                        if (title) {
+                            title.focus();
+                        }
+
+                        return;
+
+                    }
+
+
+                    if (
+                        !author
+                        ||
+                        !author.value.trim()
+                    ) {
+
+                        event.preventDefault();
+
+                        if (author) {
+                            author.focus();
+                        }
+
+                        return;
+
+                    }
+
+
+                    const total =
+                        parseInt(
+                            copiesInput.value,
+                            10
+                        );
+
+
+                    if (
+                        isNaN(total)
+                        ||
+                        total < 1
+                    ) {
+
+                        event.preventDefault();
+
+                        copiesInput.focus();
+
+                        return;
+
+                    }
+
+
+                    if (
+                        total < currentBorrowed
+                    ) {
+
+                        event.preventDefault();
+
+                        copiesInput.focus();
+
+                        alert(
+                            `Total copies cannot be less than the ${currentBorrowed} currently borrowed copy/copies.`
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (saveButton) {
+
+                        saveButton.disabled =
+                            true;
+
+                        saveButton.innerHTML =
+                            `
+                            <span>⏳</span>
+                            Saving Changes...
+                            `;
+
+                    }
+
+                }
+            );
+
+        }
 
     }
+);
 
 </script>
 
 {% endblock %}
-```
