@@ -2,18 +2,29 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
+    <meta name="theme-color"
+          content="#111827">
+
+    <meta name="description"
+          content="Crescent College Library Management System">
+
     <title>
         {% block title %}
-        Library Management System
+        Crescent College Library
         {% endblock %}
     </title>
 
-    <!-- Google Font -->
+
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
+
     <link rel="preconnect"
           href="https://fonts.googleapis.com">
 
@@ -21,10 +32,14 @@
           href="https://fonts.gstatic.com"
           crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
           rel="stylesheet">
 
-    <!-- Main CSS -->
+
+    <!-- =====================================================
+         MAIN CSS
+    ====================================================== -->
+
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
 
@@ -33,199 +48,291 @@
 
 <body>
 
-    <!-- =========================================
-         SIDEBAR
-    ========================================== -->
+    <!-- =====================================================
+         APPLICATION LAYOUT
+    ====================================================== -->
 
-    <aside class="sidebar">
-
-        <div class="sidebar-logo">
-
-            <div class="logo-icon">
-                📚
-            </div>
-
-            <div>
-                <h2>LibraCore</h2>
-                <span>Library Management</span>
-            </div>
-
-        </div>
+    <div class="app-layout">
 
 
-        <!-- Navigation -->
+        <!-- =================================================
+             SIDEBAR
+        ================================================== -->
 
-        <nav class="sidebar-nav">
-
-            <p class="nav-title">
-                MAIN MENU
-            </p>
-
-
-            <a href="{{ url_for('index') }}"
-               class="nav-link">
-
-                <span class="nav-icon">
-                    🏠
-                </span>
-
-                <span>
-                    Dashboard
-                </span>
-
-            </a>
+        <aside class="sidebar"
+               id="sidebar">
 
 
-            <a href="{{ url_for('books') }}"
-               class="nav-link">
+            <!-- ---------------------------------------------
+                 COLLEGE / APPLICATION BRAND
+            ---------------------------------------------- -->
 
-                <span class="nav-icon">
+            <div class="sidebar-logo">
+
+                <div class="logo-icon">
                     📚
-                </span>
-
-                <span>
-                    All Books
-                </span>
-
-            </a>
-
-
-            <a href="{{ url_for('add_book') }}"
-               class="nav-link">
-
-                <span class="nav-icon">
-                    ➕
-                </span>
-
-                <span>
-                    Add Book
-                </span>
-
-            </a>
-
-
-            <p class="nav-title second-title">
-                MANAGEMENT
-            </p>
-
-
-            <a href="#"
-               class="nav-link disabled-link">
-
-                <span class="nav-icon">
-                    👥
-                </span>
-
-                <span>
-                    Members
-                </span>
-
-            </a>
-
-
-            <a href="#"
-               class="nav-link disabled-link">
-
-                <span class="nav-icon">
-                    🔄
-                </span>
-
-                <span>
-                    Issue / Return
-                </span>
-
-            </a>
-
-
-            <a href="#"
-               class="nav-link disabled-link">
-
-                <span class="nav-icon">
-                    📊
-                </span>
-
-                <span>
-                    Reports
-                </span>
-
-            </a>
-
-        </nav>
-
-
-        <!-- Sidebar Bottom -->
-
-        <div class="sidebar-bottom">
-
-            <div class="librarian-card">
-
-                <div class="librarian-avatar">
-                    L
                 </div>
 
-                <div class="librarian-info">
+                <div class="logo-text">
 
-                    <strong>
-                        Librarian
-                    </strong>
+                    <h2>
+                        Crescent Library
+                    </h2>
 
                     <span>
-                        Administrator
+                        B.S. Abdur Rahman
+                        Crescent Institute
                     </span>
 
                 </div>
 
             </div>
 
-        </div>
 
-    </aside>
+            <!-- ---------------------------------------------
+                 NAVIGATION
+            ---------------------------------------------- -->
 
-
-
-    <!-- =========================================
-         MAIN CONTENT
-    ========================================== -->
-
-    <main class="main-content">
+            <nav class="sidebar-nav">
 
 
-        <!-- TOP HEADER -->
-
-        <header class="top-header">
-
-            <div>
-
-                <h1>
-                    {% block page_title %}
-                    Library Dashboard
-                    {% endblock %}
-                </h1>
-
-                <p class="page-subtitle">
-                    Manage your library efficiently
+                <p class="nav-title">
+                    MAIN MENU
                 </p>
 
-            </div>
+
+                <!-- Dashboard -->
+
+                <a href="{{ url_for('index') }}"
+                   class="nav-link
+                   {% if request.endpoint in ['index', 'dashboard_alias'] %}
+                   active
+                   {% endif %}">
+
+                    <span class="nav-icon">
+                        🏠
+                    </span>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
 
 
-            <div class="header-actions">
+                <!-- All Books -->
 
-                <div class="header-date">
-                    📅
-                    <span id="currentDate"></span>
-                </div>
+                <a href="{{ url_for('books') }}"
+                   class="nav-link
+                   {% if request.endpoint in ['books', 'category_books', 'available_books', 'borrowed_books'] %}
+                   active
+                   {% endif %}">
 
-                <div class="profile">
+                    <span class="nav-icon">
+                        📚
+                    </span>
 
-                    <div class="profile-avatar">
-                        L
+                    <span>
+                        All Books
+                    </span>
+
+                </a>
+
+
+                <!-- Add Book -->
+
+                <a href="{{ url_for('add_book') }}"
+                   class="nav-link
+                   {% if request.endpoint == 'add_book' %}
+                   active
+                   {% endif %}">
+
+                    <span class="nav-icon">
+                        ➕
+                    </span>
+
+                    <span>
+                        Add Book
+                    </span>
+
+                </a>
+
+
+                <!-- -----------------------------------------
+                     MANAGEMENT
+                ------------------------------------------ -->
+
+                <p class="nav-title second-title">
+                    MANAGEMENT
+                </p>
+
+
+                <!-- Members -->
+
+                <a href="#"
+                   class="nav-link disabled-link"
+                   title="Members module coming soon">
+
+                    <span class="nav-icon">
+                        👥
+                    </span>
+
+                    <span>
+                        Members
+                    </span>
+
+                    <small>
+                        Soon
+                    </small>
+
+                </a>
+
+
+                <!-- Issue / Return -->
+
+                <a href="#"
+                   class="nav-link disabled-link"
+                   title="Issue and Return module coming soon">
+
+                    <span class="nav-icon">
+                        🔄
+                    </span>
+
+                    <span>
+                        Issue / Return
+                    </span>
+
+                    <small>
+                        Soon
+                    </small>
+
+                </a>
+
+
+                <!-- Reports -->
+
+                <a href="#"
+                   class="nav-link disabled-link"
+                   title="Reports module coming soon">
+
+                    <span class="nav-icon">
+                        📊
+                    </span>
+
+                    <span>
+                        Reports
+                    </span>
+
+                    <small>
+                        Soon
+                    </small>
+
+                </a>
+
+
+                <!-- -----------------------------------------
+                     QUICK FILTERS
+                ------------------------------------------ -->
+
+                <p class="nav-title second-title">
+                    QUICK ACCESS
+                </p>
+
+
+                <a href="{{ url_for('available_books') }}"
+                   class="nav-link">
+
+                    <span class="nav-icon">
+                        ✅
+                    </span>
+
+                    <span>
+                        Available Books
+                    </span>
+
+                </a>
+
+
+                <a href="{{ url_for('borrowed_books') }}"
+                   class="nav-link">
+
+                    <span class="nav-icon">
+                        📖
+                    </span>
+
+                    <span>
+                        Borrowed Books
+                    </span>
+
+                </a>
+
+
+            </nav>
+
+
+            <!-- =================================================
+                 SIDEBAR BOTTOM
+            ================================================== -->
+
+            <div class="sidebar-bottom">
+
+
+                <!-- Library identity -->
+
+                <div class="library-info-card">
+
+                    <div class="library-info-icon">
+                        🎓
                     </div>
 
-                    <div class="profile-info">
+                    <div>
 
                         <strong>
-                            Librarian
+                            Crescent College
+                        </strong>
+
+                        <span>
+                            Central Library
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Librarian -->
+
+                <div class="librarian-card">
+
+                    <div class="librarian-avatar">
+
+                        {% if session.get('username') %}
+
+                            {{ session.get('username')[0]|upper }}
+
+                        {% else %}
+
+                            L
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="librarian-info">
+
+                        <strong>
+
+                            {% if session.get('username') %}
+
+                                {{ session.get('username')|capitalize }}
+
+                            {% else %}
+
+                                Librarian
+
+                            {% endif %}
+
                         </strong>
 
                         <span>
@@ -234,65 +341,445 @@
 
                     </div>
 
+
+                    {% if session.get('logged_in') %}
+
+                        <a href="{{ url_for('logout') }}"
+                           class="logout-button"
+                           title="Logout">
+
+                            ↪
+
+                        </a>
+
+                    {% endif %}
+
                 </div>
+
 
             </div>
 
-        </header>
+
+        </aside>
 
 
 
-        <!-- =========================================
-             PAGE CONTENT
-        ========================================== -->
+        <!-- =====================================================
+             MAIN CONTENT
+        ====================================================== -->
 
-        <section class="page-content">
-
-            {% block content %}
-
-            {% endblock %}
-
-        </section>
+        <main class="main-content">
 
 
-    </main>
+            <!-- =================================================
+                 TOP HEADER
+            ================================================== -->
+
+            <header class="top-header">
+
+
+                <!-- Mobile menu -->
+
+                <button type="button"
+                        class="mobile-menu-button"
+                        id="mobileMenuButton"
+                        aria-label="Open navigation">
+
+                    ☰
+
+                </button>
+
+
+                <!-- Page heading -->
+
+                <div class="header-title-area">
+
+                    <h1>
+
+                        {% block page_title %}
+
+                            Library Dashboard
+
+                        {% endblock %}
+
+                    </h1>
+
+
+                    <p class="page-subtitle">
+
+                        Crescent College Central Library
+
+                    </p>
+
+                </div>
+
+
+                <!-- Header actions -->
+
+                <div class="header-actions">
+
+
+                    <!-- Current date -->
+
+                    <div class="header-date">
+
+                        <span class="header-date-icon">
+                            📅
+                        </span>
+
+                        <span id="currentDate">
+                            Loading...
+                        </span>
+
+                    </div>
+
+
+                    <!-- Profile -->
+
+                    <div class="profile">
+
+                        <div class="profile-avatar">
+
+                            {% if session.get('username') %}
+
+                                {{ session.get('username')[0]|upper }}
+
+                            {% else %}
+
+                                L
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="profile-info">
+
+                            <strong>
+
+                                {% if session.get('username') %}
+
+                                    {{ session.get('username')|capitalize }}
+
+                                {% else %}
+
+                                    Librarian
+
+                                {% endif %}
+
+                            </strong>
+
+
+                            <span>
+                                Administrator
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+            </header>
 
 
 
-    <!-- =========================================
+            <!-- =================================================
+                 FLASH MESSAGES
+            ================================================== -->
+
+            <div class="flash-container">
+
+                {% with messages =
+                    get_flashed_messages(
+                        with_categories=true
+                    )
+                %}
+
+                    {% if messages %}
+
+                        {% for category, message in messages %}
+
+                            <div class="alert
+                                alert-{{ category }}"
+                                role="alert">
+
+                                <span class="alert-icon">
+
+                                    {% if category == 'success' %}
+
+                                        ✓
+
+                                    {% elif category == 'danger' %}
+
+                                        !
+
+                                    {% elif category == 'warning' %}
+
+                                        ⚠
+
+                                    {% else %}
+
+                                        ℹ
+
+                                    {% endif %}
+
+                                </span>
+
+
+                                <span class="alert-message">
+
+                                    {{ message }}
+
+                                </span>
+
+
+                                <button type="button"
+                                        class="alert-close"
+                                        aria-label="Close">
+
+                                    ×
+
+                                </button>
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endwith %}
+
+            </div>
+
+
+
+            <!-- =================================================
+                 PAGE CONTENT
+            ================================================== -->
+
+            <section class="page-content">
+
+                {% block content %}
+
+                {% endblock %}
+
+            </section>
+
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <footer class="app-footer">
+
+                <div>
+
+                    <strong>
+                        Crescent College Library
+                    </strong>
+
+                    <span>
+                        &nbsp;•&nbsp;
+                        B.S. Abdur Rahman Crescent
+                        Institute of Science and Technology
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    Library Management System
+
+                </div>
+
+            </footer>
+
+
+        </main>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
          JAVASCRIPT
-    ========================================== -->
+    ====================================================== -->
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+
+    <!-- =====================================================
+         BASE PAGE SCRIPT
+    ====================================================== -->
 
     <script>
 
-        // Display current date
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
 
-        const dateElement =
-            document.getElementById("currentDate");
 
-        if (dateElement) {
+                /* ==========================================
+                   CURRENT DATE
+                =========================================== */
 
-            const today = new Date();
+                const dateElement =
+                    document.getElementById(
+                        "currentDate"
+                    );
 
-            const options = {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            };
 
-            dateElement.textContent =
-                today.toLocaleDateString(
-                    "en-IN",
-                    options
+                if (dateElement) {
+
+                    const today =
+                        new Date();
+
+
+                    const options = {
+
+                        day: "2-digit",
+
+                        month: "short",
+
+                        year: "numeric"
+
+                    };
+
+
+                    dateElement.textContent =
+                        today.toLocaleDateString(
+                            "en-IN",
+                            options
+                        );
+
+                }
+
+
+
+                /* ==========================================
+                   MOBILE SIDEBAR
+                =========================================== */
+
+                const menuButton =
+                    document.getElementById(
+                        "mobileMenuButton"
+                    );
+
+                const sidebar =
+                    document.getElementById(
+                        "sidebar"
+                    );
+
+
+                if (
+                    menuButton
+                    && sidebar
+                ) {
+
+                    menuButton.addEventListener(
+                        "click",
+                        function () {
+
+                            sidebar.classList.toggle(
+                                "mobile-open"
+                            );
+
+                        }
+                    );
+
+                }
+
+
+
+                /* ==========================================
+                   CLOSE SIDEBAR WHEN LINK IS CLICKED
+                =========================================== */
+
+                const navigationLinks =
+                    document.querySelectorAll(
+                        ".sidebar-nav .nav-link"
+                    );
+
+
+                navigationLinks.forEach(
+                    function (link) {
+
+                        link.addEventListener(
+                            "click",
+                            function () {
+
+                                if (sidebar) {
+
+                                    sidebar.classList.remove(
+                                        "mobile-open"
+                                    );
+
+                                }
+
+                            }
+                        );
+
+                    }
                 );
-        }
+
+
+
+                /* ==========================================
+                   FLASH MESSAGE CLOSE
+                =========================================== */
+
+                const closeButtons =
+                    document.querySelectorAll(
+                        ".alert-close"
+                    );
+
+
+                closeButtons.forEach(
+                    function (button) {
+
+                        button.addEventListener(
+                            "click",
+                            function () {
+
+                                const alert =
+                                    button.closest(
+                                        ".alert"
+                                    );
+
+
+                                if (alert) {
+
+                                    alert.remove();
+
+                                }
+
+                            }
+                        );
+
+                    }
+                );
+
+
+            }
+        );
 
     </script>
 
 
+    <!-- =====================================================
+         PAGE-SPECIFIC SCRIPTS
+    ====================================================== -->
+
     {% block scripts %}
 
     {% endblock %}
+
 
 </body>
 
