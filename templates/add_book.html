@@ -1,1354 +1,599 @@
 {% extends "base.html" %}
 
-
-{% block title %}
-Crescent College Library | Add Book
-{% endblock %}
-
-
-{% block page_title %}
-Add New Book
-{% endblock %}
-
+{% block title %}AI Book Scanner | Crescent Central Library{% endblock %}
 
 {% block content %}
 
-
-<!-- =========================================================
-     PAGE INTRO
-========================================================== -->
-
-<section class="page-intro">
-
+<div class="page-header">
     <div>
-
-        <span class="welcome-label">
-            CRESCENT COLLEGE CENTRAL LIBRARY
-        </span>
-
-        <h2>
-            Add New Book
-        </h2>
-
-        <p>
-            Add a new title to the library catalogue with
-            complete bibliographic and shelf information.
-        </p>
-
+        <span class="page-eyebrow">AI BOOK REGISTRATION</span>
+        <h1>Scan New Book</h1>
+        <p>Upload the front and back images of a book to automatically extract its details.</p>
     </div>
 
+    <a href="{{ url_for('books') }}" class="btn-secondary">
+        <i class="bi bi-arrow-left"></i>
+        Back to Catalogue
+    </a>
+</div>
 
-    <div>
+<form id="bookScanForm" method="POST" action="{{ url_for('add_book') }}" enctype="multipart/form-data">
 
-        <a href="{{ url_for('books') }}"
-           class="btn btn-secondary">
+    <input type="hidden" name="extracted_data" id="extractedData">
 
-            ← Back to Catalogue
+    <div class="scanner-layout">
 
-        </a>
+        <!-- Upload Section -->
+        <section class="dashboard-card scanner-card">
 
-    </div>
+            <div class="card-header">
+                <div>
+                    <span class="card-eyebrow">STEP 01</span>
+                    <h2>Upload Book Images</h2>
+                </div>
 
-</section>
+                <div class="scanner-step-icon">
+                    <i class="bi bi-camera"></i>
+                </div>
+            </div>
 
-
-
-<!-- =========================================================
-     ADD BOOK FORM
-========================================================== -->
-
-<section class="section-card">
-
-
-    <div class="section-header">
-
-        <div>
-
-            <h2>
-                Book Information
-            </h2>
-
-            <p>
-                Enter the details of the book you want to
-                add to the Crescent College library.
+            <p class="section-description">
+                Upload clear images of both sides of the book. The AI scanner will
+                identify available bibliographic information automatically.
             </p>
 
-        </div>
+            <div class="upload-grid">
 
-
-        <div class="required-note">
-
-            <span>
-                *
-            </span>
-
-            Required fields
-
-        </div>
-
-    </div>
-
-
-
-    <form
-        method="POST"
-        action="{{ url_for('add_book') }}"
-        enctype="multipart/form-data"
-        id="addBookForm"
-    >
-
-
-        <!-- =================================================
-             BASIC INFORMATION
-        ================================================== -->
-
-        <div class="form-section">
-
-
-            <div class="form-section-title">
-
-                <span class="form-section-icon">
-                    📚
-                </span>
-
-                <div>
-
-                    <h3>
-                        Basic Information
-                    </h3>
-
-                    <p>
-                        Main identification details of the book.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="form-grid">
-
-
-                <!-- =========================================
-                     BOOK TITLE
-                ========================================== -->
-
-                <div class="form-group full-width">
-
-                    <label for="title">
-
-                        Book Title
-
-                        <span class="required">
-                            *
-                        </span>
-
-                    </label>
-
-
-                    <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        class="form-control"
-                        placeholder="Enter the complete book title"
-                        value="{{ request.form.get('title', '') }}"
-                        maxlength="200"
-                        required
-                        autocomplete="off"
-                    >
-
-
-                    <small class="form-help">
-                        Enter the official title as printed on
-                        the book.
-                    </small>
-
-                </div>
-
-
-
-                <!-- =========================================
-                     AUTHOR
-                ========================================== -->
-
-                <div class="form-group">
-
-                    <label for="author">
-
-                        Author
-
-                        <span class="required">
-                            *
-                        </span>
-
-                    </label>
-
-
-                    <input
-                        type="text"
-                        id="author"
-                        name="author"
-                        class="form-control"
-                        placeholder="e.g. Andrew S. Tanenbaum"
-                        value="{{ request.form.get('author', '') }}"
-                        maxlength="150"
-                        required
-                        autocomplete="off"
-                    >
-
-                </div>
-
-
-
-                <!-- =========================================
-                     ISBN
-                ========================================== -->
-
-                <div class="form-group">
-
-                    <label for="isbn">
-
-                        ISBN
-
-                    </label>
-
-
-                    <input
-                        type="text"
-                        id="isbn"
-                        name="isbn"
-                        class="form-control"
-                        placeholder="e.g. 9780132350884"
-                        value="{{ request.form.get('isbn', '') }}"
-                        maxlength="30"
-                        autocomplete="off"
-                    >
-
-
-                    <small class="form-help">
-                        Optional.
-                    </small>
-
-                </div>
-
-
-
-                <!-- =========================================
-                     CATEGORY
-                ========================================== -->
-
-                <div class="form-group">
-
-                    <label for="category">
-
-                        Category
-
-                    </label>
-
-
-                    <input
-                        type="text"
-                        id="category"
-                        name="category"
-                        class="form-control"
-                        list="categoryOptions"
-                        placeholder="e.g. Computer Science"
-                        value="{{ request.form.get('category', '') }}"
-                        maxlength="100"
-                        autocomplete="off"
-                    >
-
-
-                    {% if categories %}
-
-                        <datalist id="categoryOptions">
-
-                            {% for category in categories %}
-
-                                <option value="{{ category }}">
-                                </option>
-
-                            {% endfor %}
-
-                        </datalist>
-
-                    {% endif %}
-
-
-                    <small class="form-help">
-                        Choose an existing category or enter
-                        a new one.
-                    </small>
-
-                </div>
-
-
-
-                <!-- =========================================
-                     PUBLISHER
-                ========================================== -->
-
-                <div class="form-group">
-
-                    <label for="publisher">
-
-                        Publisher
-
-                    </label>
-
-
-                    <input
-                        type="text"
-                        id="publisher"
-                        name="publisher"
-                        class="form-control"
-                        placeholder="e.g. Pearson"
-                        value="{{ request.form.get('publisher', '') }}"
-                        maxlength="150"
-                        autocomplete="off"
-                    >
-
-                </div>
-
-
-
-                <!-- =========================================
-                     PUBLICATION YEAR
-                ========================================== -->
-
-                <div class="form-group">
-
-                    <label for="year">
-
-                        Publication Year
-
-                    </label>
-
-
-                    <input
-                        type="number"
-                        id="year"
-                        name="year"
-                        class="form-control"
-                        placeholder="e.g. 2024"
-                        value="{{ request.form.get('year', '') }}"
-                        min="1"
-                        max="{{ current_year|default(2100) }}"
-                    >
-
-
-                    <small class="form-help">
-                        Optional.
-                    </small>
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-
-
-
-        <!-- =================================================
-             LIBRARY INFORMATION
-        ================================================== -->
-
-        <div class="form-section">
-
-
-            <div class="form-section-title">
-
-                <span class="form-section-icon">
-                    🏛️
-                </span>
-
-                <div>
-
-                    <h3>
-                        Library Information
-                    </h3>
-
-                    <p>
-                        Specify the number of copies and
-                        physical shelf location.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="form-grid">
-
-
-                <!-- =========================================
-                     NUMBER OF COPIES
-                ========================================== -->
-
-                <div class="form-group">
-
-                    <label for="copies">
-
-                        Total Copies
-
-                        <span class="required">
-                            *
-                        </span>
-
-                    </label>
-
-
-                    <input
-                        type="number"
-                        id="copies"
-                        name="copies"
-                        class="form-control"
-                        placeholder="e.g. 5"
-                        value="{{ request.form.get('copies', '') }}"
-                        min="1"
-                        max="10000"
-                        required
-                    >
-
-
-                    <small class="form-help">
-                        Number of physical copies owned by
-                        the library.
-                    </small>
-
-                </div>
-
-
-
-                <!-- =========================================
-                     SHELF NUMBER
-                ========================================== -->
-
-                <div class="form-group">
-
-                    <label for="shelf">
-
-                        Shelf Number
-
-                    </label>
-
-
-                    <input
-                        type="text"
-                        id="shelf"
-                        name="shelf"
-                        class="form-control"
-                        placeholder="e.g. CS-A-12"
-                        value="{{ request.form.get('shelf', '') }}"
-                        maxlength="50"
-                        autocomplete="off"
-                    >
-
-
-                    <small class="form-help">
-                        Enter the physical shelf/rack location.
-                    </small>
-
-                </div>
-
-
-            </div>
-
-
-
-            <!-- =================================================
-                 AVAILABILITY INFORMATION
-            ================================================== -->
-
-            <div class="availability-notice">
-
-                <div class="availability-notice-icon">
-                    ✓
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Initial availability
-                    </strong>
-
-                    <p>
-                        When a new book is added, all entered
-                        copies are automatically marked as
-                        available. Issue/return tracking will
-                        be added in the circulation module.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-        </div>
-
-
-
-        <!-- =================================================
-             BOOK COVER
-        ================================================== -->
-
-        <div class="form-section">
-
-
-            <div class="form-section-title">
-
-                <span class="form-section-icon">
-                    🖼️
-                </span>
-
-                <div>
-
-                    <h3>
-                        Book Cover
-                    </h3>
-
-                    <p>
-                        Upload an optional cover image for
-                        easier identification.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="cover-upload-section">
-
-
-                <label
-                    for="cover"
-                    class="upload-area"
-                    id="uploadArea"
-                >
-
-
-                    <div class="upload-icon">
-                        🖼️
-                    </div>
-
-
-                    <div class="upload-text">
-
-                        <strong>
-                            Click to upload a book cover
-                        </strong>
-
-                        <span>
-                            PNG, JPG, JPEG or WEBP
-                        </span>
-
-                        <small>
-                            Maximum size: 5 MB
-                        </small>
-
-                    </div>
-
+                <!-- Front Image -->
+                <div class="upload-box" id="frontUploadBox">
 
                     <input
                         type="file"
-                        id="cover"
-                        name="cover"
-                        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                        id="frontImage"
+                        name="front_image"
+                        accept="image/jpeg,image/png,image/webp"
                         hidden
+                        required
                     >
 
-                </label>
+                    <label for="frontImage" class="upload-content">
 
+                        <div class="upload-icon">
+                            <i class="bi bi-image"></i>
+                        </div>
 
+                        <strong>Front Cover</strong>
 
-                <!-- Image preview -->
-
-                <div
-                    class="preview-container"
-                    id="previewContainer"
-                    style="display:none;"
-                >
-
-                    <div class="preview-image-wrapper">
-
-                        <img
-                            id="imagePreview"
-                            src=""
-                            alt="Book cover preview"
-                        >
-
-                    </div>
-
-
-                    <div class="preview-details">
-
-                        <strong>
-                            Selected Cover
-                        </strong>
-
-
-                        <span id="fileName">
-                            No file selected
+                        <span>
+                            Drag & drop or click to browse
                         </span>
 
+                        <small>
+                            JPG, PNG or WEBP
+                        </small>
 
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            id="removeImageButton"
-                        >
+                    </label>
 
-                            Remove
-
+                    <div class="image-preview" id="frontPreview">
+                        <img src="" alt="Front cover preview">
+                        <button type="button" class="remove-image" data-target="frontImage">
+                            <i class="bi bi-x"></i>
                         </button>
-
                     </div>
 
                 </div>
 
+                <!-- Back Image -->
+                <div class="upload-box" id="backUploadBox">
 
-                <!-- Upload error -->
+                    <input
+                        type="file"
+                        id="backImage"
+                        name="back_image"
+                        accept="image/jpeg,image/png,image/webp"
+                        hidden
+                        required
+                    >
 
-                <div
-                    class="upload-error"
-                    id="uploadError"
-                    style="display:none;"
-                >
+                    <label for="backImage" class="upload-content">
+
+                        <div class="upload-icon">
+                            <i class="bi bi-card-image"></i>
+                        </div>
+
+                        <strong>Back Cover</strong>
+
+                        <span>
+                            Drag & drop or click to browse
+                        </span>
+
+                        <small>
+                            JPG, PNG or WEBP
+                        </small>
+
+                    </label>
+
+                    <div class="image-preview" id="backPreview">
+                        <img src="" alt="Back cover preview">
+                        <button type="button" class="remove-image" data-target="backImage">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+
                 </div>
 
+            </div>
+
+            <div class="scanner-notice">
+                <i class="bi bi-info-circle"></i>
+
+                <div>
+                    <strong>For better extraction</strong>
+                    <p>
+                        Ensure the ISBN, publisher information and price on the
+                        back cover are clearly visible.
+                    </p>
+                </div>
+            </div>
+
+            <div class="scanner-actions">
+
+                <button type="button" id="scanButton" class="btn-primary scanner-button">
+                    <i class="bi bi-stars"></i>
+                    <span>Scan Book with AI</span>
+                </button>
+
+                <button type="button" id="resetButton" class="btn-secondary">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Reset
+                </button>
 
             </div>
 
+        </section>
 
-        </div>
+        <!-- Detection Section -->
+        <section class="dashboard-card detection-card">
 
+            <div class="card-header">
+                <div>
+                    <span class="card-eyebrow">STEP 02</span>
+                    <h2>Detected Information</h2>
+                </div>
 
+                <div class="scan-status" id="scanStatus">
+                    <span class="status-indicator"></span>
+                    Waiting for scan
+                </div>
+            </div>
 
-        <!-- =================================================
-             FORM ACTIONS
-        ================================================== -->
+            <div id="scanLoader" class="scan-loader">
 
-        <div class="form-actions">
+                <div class="loader-ring"></div>
 
+                <h3>Analyzing book images</h3>
 
-            <a
-                href="{{ url_for('books') }}"
-                class="btn btn-secondary"
-            >
+                <p>
+                    Extracting title, author, ISBN, publisher and other available
+                    information...
+                </p>
 
-                Cancel
+            </div>
 
-            </a>
+            <div id="emptyDetection" class="detection-empty">
 
+                <div class="empty-icon">
+                    <i class="bi bi-stars"></i>
+                </div>
 
-            <button
-                type="reset"
-                class="btn btn-outline"
-                id="resetFormButton"
-            >
+                <h3>Book information will appear here</h3>
 
-                Clear Form
+                <p>
+                    Upload both images and click
+                    <strong>Scan Book with AI</strong>.
+                </p>
 
-            </button>
+            </div>
 
+            <div id="detectedInformation" class="detected-information">
 
-            <button
-                type="submit"
-                class="btn btn-primary"
-                id="submitBookButton"
-            >
+                <div class="detection-grid">
 
-                <span class="button-icon">
-                    ✓
-                </span>
+                    <div class="detected-field">
+                        <label>Book Title</label>
+                        <div class="detected-value" id="detectedTitle">Not detected</div>
+                    </div>
 
-                Add Book
+                    <div class="detected-field">
+                        <label>Author</label>
+                        <div class="detected-value" id="detectedAuthor">Not detected</div>
+                    </div>
 
-            </button>
+                    <div class="detected-field">
+                        <label>Subtitle</label>
+                        <div class="detected-value" id="detectedSubtitle">Not detected</div>
+                    </div>
 
+                    <div class="detected-field">
+                        <label>ISBN</label>
+                        <div class="detected-value" id="detectedISBN">Not detected</div>
+                    </div>
 
-        </div>
+                    <div class="detected-field">
+                        <label>Publisher</label>
+                        <div class="detected-value" id="detectedPublisher">Not detected</div>
+                    </div>
 
+                    <div class="detected-field">
+                        <label>Publication Year</label>
+                        <div class="detected-value" id="detectedYear">Not detected</div>
+                    </div>
 
-    </form>
+                    <div class="detected-field">
+                        <label>Edition</label>
+                        <div class="detected-value" id="detectedEdition">Not detected</div>
+                    </div>
 
+                    <div class="detected-field">
+                        <label>Category</label>
+                        <div class="detected-value" id="detectedCategory">Not detected</div>
+                    </div>
 
-</section>
+                    <div class="detected-field">
+                        <label>Price</label>
+                        <div class="detected-value" id="detectedPrice">Not detected</div>
+                    </div>
 
+                </div>
 
+                <div class="scan-summary">
 
-<!-- =========================================================
-     DATA FLOW INFORMATION
-========================================================== -->
+                    <div>
+                        <i class="bi bi-check-circle"></i>
 
-<section class="section-card">
+                        <div>
+                            <strong>Automatic registration</strong>
+                            <span>
+                                The detected information will be stored in the
+                                library Excel catalogue.
+                            </span>
+                        </div>
+                    </div>
 
+                    <span class="ai-badge">
+                        <i class="bi bi-stars"></i>
+                        AI Scanned
+                    </span>
 
-    <div class="section-header">
+                </div>
 
-        <div>
+            </div>
 
-            <h2>
-                What happens after you add a book?
-            </h2>
-
-            <p>
-                The system automatically handles the
-                following steps.
-            </p>
-
-        </div>
+        </section>
 
     </div>
 
+    <!-- Save Section -->
+    <section class="dashboard-card save-card">
 
-    <div class="process-flow">
+        <div class="save-information">
 
-
-        <div class="process-step">
-
-            <div class="process-number">
-                1
+            <div class="save-icon">
+                <i class="bi bi-database-check"></i>
             </div>
 
             <div>
+                <span class="card-eyebrow">STEP 03</span>
+                <h2>Save to Library</h2>
 
-                <strong>
-                    Generate Book ID
-                </strong>
-
-                <span>
-                    A unique LIBxxxx ID is generated
-                    automatically.
-                </span>
-
+                <p>
+                    A unique Book ID will be generated automatically. New books
+                    are registered with one available copy.
+                </p>
             </div>
 
         </div>
 
+        <button
+            type="submit"
+            id="saveButton"
+            class="btn-primary save-button"
+            disabled
+        >
+            <i class="bi bi-check2-circle"></i>
+            Save Book to Library
+        </button>
 
-        <div class="process-arrow">
-            →
-        </div>
+    </section>
 
-
-        <div class="process-step">
-
-            <div class="process-number">
-                2
-            </div>
-
-            <div>
-
-                <strong>
-                    Save Cover
-                </strong>
-
-                <span>
-                    The uploaded image is validated and
-                    stored securely.
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <div class="process-arrow">
-            →
-        </div>
-
-
-        <div class="process-step">
-
-            <div class="process-number">
-                3
-            </div>
-
-            <div>
-
-                <strong>
-                    Save Catalogue
-                </strong>
-
-                <span>
-                    Book details are stored in the Excel
-                    library database.
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <div class="process-arrow">
-            →
-        </div>
-
-
-        <div class="process-step">
-
-            <div class="process-number">
-                4
-            </div>
-
-            <div>
-
-                <strong>
-                    Catalogue Updated
-                </strong>
-
-                <span>
-                    The new book immediately appears in
-                    the dashboard and catalogue.
-                </span>
-
-            </div>
-
-        </div>
-
-
-    </div>
-
-
-</section>
-
-
-{% endblock %}
-
-
-
-{% block scripts %}
+</form>
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+    const form = document.getElementById("bookScanForm");
 
+    const frontInput = document.getElementById("frontImage");
+    const backInput = document.getElementById("backImage");
 
-        /* =================================================
-           ELEMENTS
-        ================================================== */
+    const frontBox = document.getElementById("frontUploadBox");
+    const backBox = document.getElementById("backUploadBox");
 
-        const form =
-            document.getElementById(
-                "addBookForm"
-            );
+    const frontPreview = document.getElementById("frontPreview");
+    const backPreview = document.getElementById("backPreview");
 
+    const scanButton = document.getElementById("scanButton");
+    const resetButton = document.getElementById("resetButton");
+    const saveButton = document.getElementById("saveButton");
 
-        const coverInput =
-            document.getElementById(
-                "cover"
-            );
+    const scanLoader = document.getElementById("scanLoader");
+    const emptyDetection = document.getElementById("emptyDetection");
+    const detectedInformation = document.getElementById("detectedInformation");
 
+    const scanStatus = document.getElementById("scanStatus");
+    const extractedData = document.getElementById("extractedData");
 
-        const previewContainer =
-            document.getElementById(
-                "previewContainer"
-            );
+    let scannedSuccessfully = false;
 
+    function showPreview(input, preview, box) {
 
-        const imagePreview =
-            document.getElementById(
-                "imagePreview"
-            );
-
-
-        const fileName =
-            document.getElementById(
-                "fileName"
-            );
-
-
-        const uploadError =
-            document.getElementById(
-                "uploadError"
-            );
-
-
-        const uploadArea =
-            document.getElementById(
-                "uploadArea"
-            );
-
-
-        const removeButton =
-            document.getElementById(
-                "removeImageButton"
-            );
-
-
-        const resetButton =
-            document.getElementById(
-                "resetFormButton"
-            );
-
-
-        const submitButton =
-            document.getElementById(
-                "submitBookButton"
-            );
-
-
-        /* =================================================
-           IMAGE VALIDATION
-        ================================================== */
-
-        const allowedTypes = [
-            "image/png",
-            "image/jpeg",
-            "image/webp"
-        ];
-
-
-        const maxSize =
-            5 * 1024 * 1024;
-
-
-        function showUploadError(message) {
-
-            if (!uploadError) {
-                return;
-            }
-
-
-            uploadError.textContent =
-                message;
-
-
-            uploadError.style.display =
-                "block";
-
+        if (!input.files || !input.files[0]) {
+            return;
         }
 
+        const file = input.files[0];
 
-        function clearUploadError() {
-
-            if (!uploadError) {
-                return;
-            }
-
-
-            uploadError.textContent =
-                "";
-
-
-            uploadError.style.display =
-                "none";
-
+        if (!file.type.startsWith("image/")) {
+            input.value = "";
+            return;
         }
 
+        const reader = new FileReader();
 
-        /* =================================================
-           COVER SELECTION
-        ================================================== */
+        reader.onload = function (event) {
 
-        if (coverInput) {
+            const image = preview.querySelector("img");
 
-            coverInput.addEventListener(
-                "change",
-                function () {
+            image.src = event.target.result;
 
-                    clearUploadError();
+            box.classList.add("has-image");
+            preview.classList.add("visible");
+        };
 
-
-                    const file =
-                        coverInput.files[0];
-
-
-                    if (!file) {
-
-                        return;
-
-                    }
-
-
-                    /* File type */
-
-                    if (
-                        !allowedTypes.includes(
-                            file.type
-                        )
-                    ) {
-
-                        showUploadError(
-                            "Please select a PNG, JPG, JPEG or WEBP image."
-                        );
-
-
-                        coverInput.value =
-                            "";
-
-
-                        return;
-
-                    }
-
-
-                    /* File size */
-
-                    if (
-                        file.size > maxSize
-                    ) {
-
-                        showUploadError(
-                            "Image size must not exceed 5 MB."
-                        );
-
-
-                        coverInput.value =
-                            "";
-
-
-                        return;
-
-                    }
-
-
-                    /* Preview */
-
-                    const reader =
-                        new FileReader();
-
-
-                    reader.onload =
-                        function (event) {
-
-                            if (imagePreview) {
-
-                                imagePreview.src =
-                                    event.target.result;
-
-                            }
-
-
-                            if (fileName) {
-
-                                fileName.textContent =
-                                    `${file.name} • ${(file.size / 1024).toFixed(1)} KB`;
-
-                            }
-
-
-                            if (previewContainer) {
-
-                                previewContainer.style.display =
-                                    "flex";
-
-                            }
-
-
-                            if (uploadArea) {
-
-                                uploadArea.classList.add(
-                                    "has-file"
-                                );
-
-                            }
-
-                        };
-
-
-                    reader.readAsDataURL(
-                        file
-                    );
-
-                }
-            );
-
-        }
-
-
-        /* =================================================
-           REMOVE IMAGE
-        ================================================== */
-
-        if (removeButton) {
-
-            removeButton.addEventListener(
-                "click",
-                function () {
-
-                    if (coverInput) {
-
-                        coverInput.value =
-                            "";
-
-                    }
-
-
-                    if (imagePreview) {
-
-                        imagePreview.src =
-                            "";
-
-                    }
-
-
-                    if (fileName) {
-
-                        fileName.textContent =
-                            "No file selected";
-
-                    }
-
-
-                    if (previewContainer) {
-
-                        previewContainer.style.display =
-                            "none";
-
-                    }
-
-
-                    if (uploadArea) {
-
-                        uploadArea.classList.remove(
-                            "has-file"
-                        );
-
-                    }
-
-
-                    clearUploadError();
-
-                }
-            );
-
-        }
-
-
-        /* =================================================
-           RESET
-        ================================================== */
-
-        if (resetButton) {
-
-            resetButton.addEventListener(
-                "click",
-                function () {
-
-                    setTimeout(
-                        function () {
-
-                            if (previewContainer) {
-
-                                previewContainer.style.display =
-                                    "none";
-
-                            }
-
-
-                            if (imagePreview) {
-
-                                imagePreview.src =
-                                    "";
-
-                            }
-
-
-                            if (fileName) {
-
-                                fileName.textContent =
-                                    "No file selected";
-
-                            }
-
-
-                            if (uploadArea) {
-
-                                uploadArea.classList.remove(
-                                    "has-file"
-                                );
-
-                            }
-
-
-                            clearUploadError();
-
-                        },
-                        50
-                    );
-
-                }
-            );
-
-        }
-
-
-        /* =================================================
-           FORM SUBMISSION
-        ================================================== */
-
-        if (form) {
-
-            form.addEventListener(
-                "submit",
-                function (event) {
-
-                    const title =
-                        document.getElementById(
-                            "title"
-                        );
-
-
-                    const author =
-                        document.getElementById(
-                            "author"
-                        );
-
-
-                    const copies =
-                        document.getElementById(
-                            "copies"
-                        );
-
-
-                    let valid = true;
-
-
-                    /* Title */
-
-                    if (
-                        !title
-                        ||
-                        !title.value.trim()
-                    ) {
-
-                        valid = false;
-
-                        if (title) {
-                            title.focus();
-                        }
-
-                    }
-
-
-                    /* Author */
-
-                    else if (
-                        !author
-                        ||
-                        !author.value.trim()
-                    ) {
-
-                        valid = false;
-
-                        if (author) {
-                            author.focus();
-                        }
-
-                    }
-
-
-                    /* Copies */
-
-                    else if (
-                        !copies
-                        ||
-                        parseInt(
-                            copies.value,
-                            10
-                        ) < 1
-                    ) {
-
-                        valid = false;
-
-                        if (copies) {
-                            copies.focus();
-                        }
-
-                    }
-
-
-                    if (!valid) {
-
-                        event.preventDefault();
-
-                        return;
-
-                    }
-
-
-                    /* Prevent double submission */
-
-                    if (submitButton) {
-
-                        submitButton.disabled =
-                            true;
-
-
-                        submitButton.innerHTML =
-                            `
-                            <span>
-                                ⏳
-                            </span>
-                            Adding Book...
-                            `;
-
-                    }
-
-                }
-            );
-
-        }
-
-
-        /* =================================================
-           YEAR VALIDATION
-        ================================================== */
-
-        const yearInput =
-            document.getElementById(
-                "year"
-            );
-
-
-        if (yearInput) {
-
-            yearInput.addEventListener(
-                "input",
-                function () {
-
-                    const currentYear =
-                        new Date().getFullYear();
-
-
-                    if (
-                        parseInt(
-                            yearInput.value,
-                            10
-                        )
-                        >
-                        currentYear
-                    ) {
-
-                        yearInput.setCustomValidity(
-                            "Publication year cannot be in the future."
-                        );
-
-                    } else {
-
-                        yearInput.setCustomValidity(
-                            ""
-                        );
-
-                    }
-
-                }
-            );
-
-        }
-
-
+        reader.readAsDataURL(file);
     }
-);
 
+    frontInput.addEventListener("change", function () {
+        showPreview(frontInput, frontPreview, frontBox);
+        scannedSuccessfully = false;
+        saveButton.disabled = true;
+    });
+
+    backInput.addEventListener("change", function () {
+        showPreview(backInput, backPreview, backBox);
+        scannedSuccessfully = false;
+        saveButton.disabled = true;
+    });
+
+    document.querySelectorAll(".remove-image").forEach(function (button) {
+
+        button.addEventListener("click", function (event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetId = button.dataset.target;
+            const input = document.getElementById(targetId);
+
+            if (targetId === "frontImage") {
+                frontBox.classList.remove("has-image");
+                frontPreview.classList.remove("visible");
+                frontPreview.querySelector("img").src = "";
+            }
+
+            if (targetId === "backImage") {
+                backBox.classList.remove("has-image");
+                backPreview.classList.remove("visible");
+                backPreview.querySelector("img").src = "";
+            }
+
+            input.value = "";
+
+            scannedSuccessfully = false;
+            saveButton.disabled = true;
+        });
+
+    });
+
+    function updateDetectedField(id, value) {
+
+        const element = document.getElementById(id);
+
+        if (!element) {
+            return;
+        }
+
+        if (
+            value === null ||
+            value === undefined ||
+            String(value).trim() === "" ||
+            String(value).toLowerCase() === "null"
+        ) {
+            element.textContent = "Not detected";
+            element.classList.add("not-detected");
+        } else {
+            element.textContent = value;
+            element.classList.remove("not-detected");
+        }
+    }
+
+    function displayDetectedData(data) {
+
+        updateDetectedField("detectedTitle", data.title);
+        updateDetectedField("detectedAuthor", data.author);
+        updateDetectedField("detectedSubtitle", data.subtitle);
+        updateDetectedField("detectedISBN", data.isbn);
+        updateDetectedField("detectedPublisher", data.publisher);
+        updateDetectedField("detectedYear", data.year);
+        updateDetectedField("detectedEdition", data.edition);
+        updateDetectedField("detectedCategory", data.category);
+        updateDetectedField("detectedPrice", data.price);
+
+        extractedData.value = JSON.stringify(data);
+
+        detectedInformation.classList.add("visible");
+        emptyDetection.classList.add("hidden");
+
+        scanLoader.classList.remove("visible");
+
+        scanStatus.classList.add("success");
+        scanStatus.innerHTML =
+            '<span class="status-indicator"></span> Scan completed';
+
+        scannedSuccessfully = true;
+        saveButton.disabled = false;
+    }
+
+    function showScanError(message) {
+
+        scanLoader.classList.remove("visible");
+        detectedInformation.classList.remove("visible");
+        emptyDetection.classList.remove("hidden");
+
+        scanStatus.classList.remove("success");
+        scanStatus.classList.add("error");
+
+        scanStatus.innerHTML =
+            '<span class="status-indicator"></span> Scan failed';
+
+        alert(message || "Unable to scan the book. Please try again.");
+
+        scannedSuccessfully = false;
+        saveButton.disabled = true;
+    }
+
+    scanButton.addEventListener("click", async function () {
+
+        if (!frontInput.files || !frontInput.files[0]) {
+            alert("Please upload the front cover image.");
+            return;
+        }
+
+        if (!backInput.files || !backInput.files[0]) {
+            alert("Please upload the back cover image.");
+            return;
+        }
+
+        const formData = new FormData();
+
+        formData.append("front_image", frontInput.files[0]);
+        formData.append("back_image", backInput.files[0]);
+
+        scanButton.disabled = true;
+
+        scanButton.innerHTML =
+            '<i class="bi bi-arrow-repeat spin"></i>' +
+            '<span>Scanning...</span>';
+
+        scanLoader.classList.add("visible");
+        emptyDetection.classList.add("hidden");
+        detectedInformation.classList.remove("visible");
+
+        scanStatus.classList.remove("success", "error");
+        scanStatus.innerHTML =
+            '<span class="status-indicator"></span> Processing';
+
+        try {
+
+            const response = await fetch("{{ url_for('scan_book') }}", {
+                method: "POST",
+                body: formData
+            });
+
+            let result;
+
+            try {
+                result = await response.json();
+            } catch (jsonError) {
+                throw new Error("The server returned an invalid response.");
+            }
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.error ||
+                    result.message ||
+                    "Book scanning failed."
+                );
+            }
+
+            const data = result.data || result.book || result;
+
+            displayDetectedData(data);
+
+        } catch (error) {
+
+            console.error("Book scan error:", error);
+
+            showScanError(
+                error.message ||
+                "Unable to scan the book. Please check the images and try again."
+            );
+
+        } finally {
+
+            scanButton.disabled = false;
+
+            scanButton.innerHTML =
+                '<i class="bi bi-stars"></i>' +
+                '<span>Scan Book with AI</span>';
+        }
+
+    });
+
+    resetButton.addEventListener("click", function () {
+
+        form.reset();
+
+        frontBox.classList.remove("has-image");
+        backBox.classList.remove("has-image");
+
+        frontPreview.classList.remove("visible");
+        backPreview.classList.remove("visible");
+
+        frontPreview.querySelector("img").src = "";
+        backPreview.querySelector("img").src = "";
+
+        detectedInformation.classList.remove("visible");
+        emptyDetection.classList.remove("hidden");
+        scanLoader.classList.remove("visible");
+
+        scanStatus.classList.remove("success", "error");
+        scanStatus.innerHTML =
+            '<span class="status-indicator"></span> Waiting for scan';
+
+        extractedData.value = "";
+
+        scannedSuccessfully = false;
+        saveButton.disabled = true;
+    });
+
+    form.addEventListener("submit", function (event) {
+
+        if (!scannedSuccessfully || !extractedData.value) {
+            event.preventDefault();
+
+            alert("Please scan the book successfully before saving.");
+            return;
+        }
+
+        saveButton.disabled = true;
+
+        saveButton.innerHTML =
+            '<i class="bi bi-arrow-repeat spin"></i>' +
+            '<span>Saving...</span>';
+    });
+
+});
 </script>
 
 {% endblock %}
