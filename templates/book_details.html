@@ -1,0 +1,428 @@
+```html
+{% extends "base.html" %}
+
+{% block title %}Book Details{% endblock %}
+
+{% block page_title %}Book Details{% endblock %}
+
+{% block content %}
+
+<!-- Back Button -->
+<div style="margin-bottom: 20px;">
+
+    <a href="{{ url_for('books') }}" class="btn btn-secondary">
+        ← Back to All Books
+    </a>
+
+</div>
+
+
+<div class="section-card">
+
+    <div class="book-details">
+
+        <!-- ================================
+             BOOK COVER
+        ================================= -->
+
+        <div>
+
+            <div class="book-details-cover">
+
+                {% if book.cover %}
+
+                <img
+                    src="{{ url_for('uploaded_cover', filename=book.cover) }}"
+                    alt="{{ book.title }} cover"
+                >
+
+                {% else %}
+
+                <div
+                    class="book-cover-placeholder"
+                    style="
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    "
+                >
+                    📚
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================
+             BOOK INFORMATION
+        ================================= -->
+
+        <div class="book-details-info">
+
+            <div
+                style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 15px;
+                    margin-bottom: 8px;
+                "
+            >
+
+                <h2>
+                    {{ book.title }}
+                </h2>
+
+                <span class="badge badge-info">
+                    {{ book.book_id }}
+                </span>
+
+            </div>
+
+
+            <div class="author">
+                by {{ book.author }}
+            </div>
+
+
+            <!-- Availability -->
+
+            {% if book.available|int > 0 %}
+
+            <span class="badge badge-success">
+                {{ book.available }} Available
+            </span>
+
+            {% else %}
+
+            <span class="badge badge-danger">
+                Currently Unavailable
+            </span>
+
+            {% endif %}
+
+
+            <!-- Details -->
+
+            <div
+                class="details-list"
+                style="margin-top: 25px;"
+            >
+
+                <!-- ISBN -->
+
+                <div class="detail-item">
+
+                    <label>
+                        ISBN
+                    </label>
+
+                    <span>
+                        {{ book.isbn or "Not provided" }}
+                    </span>
+
+                </div>
+
+
+                <!-- Category -->
+
+                <div class="detail-item">
+
+                    <label>
+                        Category
+                    </label>
+
+                    <span>
+                        {{ book.category or "General" }}
+                    </span>
+
+                </div>
+
+
+                <!-- Publisher -->
+
+                <div class="detail-item">
+
+                    <label>
+                        Publisher
+                    </label>
+
+                    <span>
+                        {{ book.publisher or "Not provided" }}
+                    </span>
+
+                </div>
+
+
+                <!-- Publication Year -->
+
+                <div class="detail-item">
+
+                    <label>
+                        Publication Year
+                    </label>
+
+                    <span>
+                        {{ book.year or "Not provided" }}
+                    </span>
+
+                </div>
+
+
+                <!-- Total Copies -->
+
+                <div class="detail-item">
+
+                    <label>
+                        Total Copies
+                    </label>
+
+                    <span>
+                        {{ book.copies }}
+                    </span>
+
+                </div>
+
+
+                <!-- Available Copies -->
+
+                <div class="detail-item">
+
+                    <label>
+                        Available Copies
+                    </label>
+
+                    <span>
+                        {{ book.available }}
+                    </span>
+
+                </div>
+
+
+                <!-- Borrowed Copies -->
+
+                <div class="detail-item">
+
+                    <label>
+                        Borrowed Copies
+                    </label>
+
+                    <span>
+                        {{ book.copies|int - book.available|int }}
+                    </span>
+
+                </div>
+
+
+                <!-- Shelf -->
+
+                <div class="detail-item">
+
+                    <label>
+                        Shelf Number
+                    </label>
+
+                    <span>
+                        {{ book.shelf or "Not assigned" }}
+                    </span>
+
+                </div>
+
+
+                <!-- Date Added -->
+
+                <div class="detail-item">
+
+                    <label>
+                        Date Added
+                    </label>
+
+                    <span>
+                        {{ book.date_added or "Not available" }}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- Action Buttons -->
+
+            <div
+                style="
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid var(--border);
+                "
+            >
+
+                <a
+                    href="{{ url_for('edit_book', book_id=book.book_id) }}"
+                    class="btn btn-primary"
+                >
+                    ✏️ Edit Book
+                </a>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="window.print()"
+                >
+                    🖨️ Print Details
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================================
+     BOOK SUMMARY
+================================= -->
+
+<div class="section-card">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Book Summary
+            </h2>
+
+            <p class="section-description">
+                Current inventory information for this book.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+        <!-- Total Copies -->
+
+        <div class="stat-card">
+
+            <div class="stat-card-header">
+
+                <span class="stat-card-title">
+                    Total Copies
+                </span>
+
+                <div class="stat-icon">
+                    📚
+                </div>
+
+            </div>
+
+            <div class="stat-value">
+                {{ book.copies }}
+            </div>
+
+            <div class="stat-description">
+                Registered copies
+            </div>
+
+        </div>
+
+
+        <!-- Available -->
+
+        <div class="stat-card">
+
+            <div class="stat-card-header">
+
+                <span class="stat-card-title">
+                    Available
+                </span>
+
+                <div class="stat-icon">
+                    ✓
+                </div>
+
+            </div>
+
+            <div class="stat-value">
+                {{ book.available }}
+            </div>
+
+            <div class="stat-description">
+                Ready for borrowing
+            </div>
+
+        </div>
+
+
+        <!-- Borrowed -->
+
+        <div class="stat-card">
+
+            <div class="stat-card-header">
+
+                <span class="stat-card-title">
+                    Borrowed
+                </span>
+
+                <div class="stat-icon">
+                    ↗
+                </div>
+
+            </div>
+
+            <div class="stat-value">
+                {{ book.copies|int - book.available|int }}
+            </div>
+
+            <div class="stat-description">
+                Currently borrowed
+            </div>
+
+        </div>
+
+
+        <!-- Shelf -->
+
+        <div class="stat-card">
+
+            <div class="stat-card-header">
+
+                <span class="stat-card-title">
+                    Shelf
+                </span>
+
+                <div class="stat-icon">
+                    🗄️
+                </div>
+
+            </div>
+
+            <div class="stat-value">
+                {{ book.shelf or "—" }}
+            </div>
+
+            <div class="stat-description">
+                Storage location
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+```
