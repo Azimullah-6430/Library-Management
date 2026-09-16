@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+        Library Management System
+        {% endblock %}
+    </title>
+
+    <!-- Google Font -->
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+    <!-- =========================================
+         SIDEBAR
+    ========================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+
+            <div class="logo-icon">
+                📚
+            </div>
+
+            <div>
+                <h2>LibraCore</h2>
+                <span>Library Management</span>
+            </div>
+
+        </div>
+
+
+        <!-- Navigation -->
+
+        <nav class="sidebar-nav">
+
+            <p class="nav-title">
+                MAIN MENU
+            </p>
+
+
+            <a href="{{ url_for('index') }}"
+               class="nav-link">
+
+                <span class="nav-icon">
+                    🏠
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <a href="{{ url_for('books') }}"
+               class="nav-link">
+
+                <span class="nav-icon">
+                    📚
+                </span>
+
+                <span>
+                    All Books
+                </span>
+
+            </a>
+
+
+            <a href="{{ url_for('add_book') }}"
+               class="nav-link">
+
+                <span class="nav-icon">
+                    ➕
+                </span>
+
+                <span>
+                    Add Book
+                </span>
+
+            </a>
+
+
+            <p class="nav-title second-title">
+                MANAGEMENT
+            </p>
+
+
+            <a href="#"
+               class="nav-link disabled-link">
+
+                <span class="nav-icon">
+                    👥
+                </span>
+
+                <span>
+                    Members
+                </span>
+
+            </a>
+
+
+            <a href="#"
+               class="nav-link disabled-link">
+
+                <span class="nav-icon">
+                    🔄
+                </span>
+
+                <span>
+                    Issue / Return
+                </span>
+
+            </a>
+
+
+            <a href="#"
+               class="nav-link disabled-link">
+
+                <span class="nav-icon">
+                    📊
+                </span>
+
+                <span>
+                    Reports
+                </span>
+
+            </a>
+
+        </nav>
+
+
+        <!-- Sidebar Bottom -->
+
+        <div class="sidebar-bottom">
+
+            <div class="librarian-card">
+
+                <div class="librarian-avatar">
+                    L
+                </div>
+
+                <div class="librarian-info">
+
+                    <strong>
+                        Librarian
+                    </strong>
+
+                    <span>
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =========================================
+         MAIN CONTENT
+    ========================================== -->
+
+    <main class="main-content">
+
+
+        <!-- TOP HEADER -->
+
+        <header class="top-header">
+
+            <div>
+
+                <h1>
+                    {% block page_title %}
+                    Library Dashboard
+                    {% endblock %}
+                </h1>
+
+                <p class="page-subtitle">
+                    Manage your library efficiently
+                </p>
+
+            </div>
+
+
+            <div class="header-actions">
+
+                <div class="header-date">
+                    📅
+                    <span id="currentDate"></span>
+                </div>
+
+                <div class="profile">
+
+                    <div class="profile-avatar">
+                        L
+                    </div>
+
+                    <div class="profile-info">
+
+                        <strong>
+                            Librarian
+                        </strong>
+
+                        <span>
+                            Administrator
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================
+             PAGE CONTENT
+        ========================================== -->
+
+        <section class="page-content">
+
+            {% block content %}
+
+            {% endblock %}
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =========================================
+         JAVASCRIPT
+    ========================================== -->
+
+    <script>
+
+        // Display current date
+
+        const dateElement =
+            document.getElementById("currentDate");
+
+        if (dateElement) {
+
+            const today = new Date();
+
+            const options = {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            };
+
+            dateElement.textContent =
+                today.toLocaleDateString(
+                    "en-IN",
+                    options
+                );
+        }
+
+    </script>
+
+
+    {% block scripts %}
+
+    {% endblock %}
+
+</body>
+
+</html>
