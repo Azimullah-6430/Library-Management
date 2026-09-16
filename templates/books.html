@@ -1,0 +1,271 @@
+```html
+{% extends "base.html" %}
+
+{% block title %}All Books{% endblock %}
+
+{% block page_title %}All Books{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="welcome-section">
+
+    <div>
+        <h2>Library Collection</h2>
+
+        <p>
+            Browse and manage all books currently registered in the library.
+        </p>
+    </div>
+
+    <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+        + Add New Book
+    </a>
+
+</div>
+
+
+<!-- Search Section -->
+<div class="section-card">
+
+    <div class="search-container">
+
+        <div class="search-box">
+
+            <span class="search-icon">🔍</span>
+
+            <input
+                type="text"
+                id="bookSearch"
+                placeholder="Search by title, author, ISBN or category..."
+                autocomplete="off"
+            >
+
+        </div>
+
+    </div>
+
+
+    <!-- Books Grid -->
+    {% if books %}
+
+    <div class="book-grid" id="bookGrid">
+
+        {% for book in books %}
+
+        <div
+            class="book-card"
+            data-title="{{ book.title|lower }}"
+            data-author="{{ book.author|lower }}"
+            data-isbn="{{ book.isbn|lower }}"
+            data-category="{{ book.category|lower }}"
+        >
+
+            <!-- Book Cover -->
+            <div class="book-cover">
+
+                {% if book.cover %}
+
+                <img
+                    src="{{ url_for('uploaded_cover', filename=book.cover) }}"
+                    alt="{{ book.title }} cover"
+                >
+
+                {% else %}
+
+                <div class="book-cover-placeholder">
+                    📚
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- Book Information -->
+            <div class="book-info">
+
+                <div class="book-title"
+                     title="{{ book.title }}">
+                    {{ book.title }}
+                </div>
+
+                <div class="book-author">
+                    by {{ book.author }}
+                </div>
+
+
+                <div class="book-meta">
+
+                    <span>
+                        {{ book.category or "General" }}
+                    </span>
+
+                    {% if book.available|int > 0 %}
+
+                    <span class="badge badge-success">
+                        Available
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge badge-danger">
+                        Unavailable
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="book-meta">
+
+                    <span>
+                        {{ book.available }} / {{ book.copies }} copies
+                    </span>
+
+                    <span>
+                        {{ book.shelf or "—" }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- No Search Results -->
+    <div
+        id="noSearchResults"
+        class="empty-state"
+        style="display: none;"
+    >
+
+        <div class="empty-state-icon">
+            🔍
+        </div>
+
+        <h3>No Books Found</h3>
+
+        <p>
+            No books match your search. Try a different title, author,
+            ISBN or category.
+        </p>
+
+    </div>
+
+
+    {% else %}
+
+    <!-- No Books in Library -->
+    <div class="empty-state">
+
+        <div class="empty-state-icon">
+            📚
+        </div>
+
+        <h3>No Books Added Yet</h3>
+
+        <p>
+            Your library collection is currently empty.
+            Add your first book to get started.
+        </p>
+
+        <a
+            href="{{ url_for('add_book') }}"
+            class="btn btn-primary"
+        >
+            + Add First Book
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+    const searchInput = document.getElementById("bookSearch");
+    const bookGrid = document.getElementById("bookGrid");
+    const noSearchResults = document.getElementById("noSearchResults");
+
+    if (searchInput && bookGrid) {
+
+        searchInput.addEventListener("input", function () {
+
+            const searchValue = this.value
+                .trim()
+                .toLowerCase();
+
+            const bookCards =
+                bookGrid.querySelectorAll(".book-card");
+
+            let visibleBooks = 0;
+
+
+            bookCards.forEach(function (card) {
+
+                const title =
+                    card.dataset.title || "";
+
+                const author =
+                    card.dataset.author || "";
+
+                const isbn =
+                    card.dataset.isbn || "";
+
+                const category =
+                    card.dataset.category || "";
+
+
+                const matches =
+                    title.includes(searchValue) ||
+                    author.includes(searchValue) ||
+                    isbn.includes(searchValue) ||
+                    category.includes(searchValue);
+
+
+                if (matches) {
+
+                    card.style.display = "";
+
+                    visibleBooks++;
+
+                } else {
+
+                    card.style.display = "none";
+
+                }
+
+            });
+
+
+            if (visibleBooks === 0) {
+
+                noSearchResults.style.display = "block";
+
+            } else {
+
+                noSearchResults.style.display = "none";
+
+            }
+
+        });
+
+    }
+
+</script>
+
+{% endblock %}
+```
