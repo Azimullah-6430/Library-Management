@@ -1,202 +1,46 @@
+# utils/image_manager.py
+
 import os
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from PIL import Image, ImageOps
 
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
-
-BASE_DIR = os.path.dirname(
-    os.path.dirname(
-        os.path.abspath(__file__)
-    )
-)
-
-UPLOAD_FOLDER = os.path.join(
-    BASE_DIR,
-    "uploads",
-    "book_covers"
-)
-
-ALLOWED_EXTENSIONS = {
-    "jpg",
-    "jpeg",
-    "png",
-    "webp",
-}
-
-MAX_FILE_SIZE = 10 * 1024 * 1024
-
-MAX_IMAGE_DIMENSION = 2400
-
-
-# ============================================================
-# DIRECTORY
-# ============================================================
-
-os.makedirs(
-    UPLOAD_FOLDER,
-    exist_ok=True
-)
-
-
-# ============================================================
-# IMAGE MANAGER
-# ============================================================
-
 class ImageManager:
+    ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+    MAX_IMAGE_SIZE = 2400
 
-    def __init__(
-        self,
-        upload_folder: str = UPLOAD_FOLDER
-    ):
+    def __init__(self, upload_folder="uploads/book_covers"):
         self.upload_folder = upload_folder
+        os.makedirs(self.upload_folder, exist_ok=True)
 
-        os.makedirs(
-            self.upload_folder,
-            exist_ok=True
-        )
-
-    # ========================================================
-    # VALID EXTENSION
-    # ========================================================
-
-    def allowed_file(
-        self,
-        filename: str
-    ) -> bool:
-
-        if not filename:
+    def allowed_file(self, filename):
+        if not filename or "." not in filename:
             return False
 
-        if "." not in filename:
-            return False
+        extension = filename.rsplit(".", 1)[1].lower()
+        return extension in self.ALLOWED_EXTENSIONS
 
-        extension = (
-            filename
-            .rsplit(".", 1)[1]
-            .lower()
-        )
+    def normalize_image(self, image):
+        image = ImageOps.exif_transpose(image)
 
-        return extension in ALLOWED_EXTENSIONS
-
-    # ========================================================
-    # VALID IMAGE
-    # ========================================================
-
-    def validate_image(
-        self,
-        file
-    ) -> bool:
-
-        if file is None:
-            return False
-
-        filename = getattr(
-            file,
-            "filename",
-            ""
-        )
-
-        if not self.allowed_file(
-            filename
-        ):
-            return False
-
-        try:
-
-            file.seek(0)
-
-            image = Image.open(
-                file
-            )
-
-            image.verify()
-
-            file.seek(0)
-
-            return True
-
-        except Exception:
-
-            try:
-                file.seek(0)
-            except Exception:
-                pass
-
-            return False
-
-    # ========================================================
-    # IMAGE NORMALIZATION
-    # ========================================================
-
-    def normalize_image(
-        self,
-        image: Image.Image
-    ) -> Image.Image:
-
-        image = ImageOps.exif_transpose(
-            image
-        )
-
-        if image.mode in (
-            "RGBA",
-            "LA",
-        ):
-
-            background = Image.new(
-                "RGB",
-                image.size,
-                "white"
-            )
-
-            if image.mode == "RGBA":
-
-                background.paste(
-                    image,
-                    mask=image.getchannel(
-                        "A"
-                    )
-                )
-
-            else:
-
-                background.paste(
-                    image,
-                    mask=image.getchannel(
-                        "A"
-                    )
-                )
-
+        if image.mode in ("RGBA", "LA"):
+            background = Image.new("RGB", image.size, "white")
+            alpha = image.getchannel("A")
+            background.paste(image, mask=alpha)
             image = background
-
-        else:
-
-            image = image.convert(
-                "RGB"
-            )
+        elif image.mode != "RGB":
+            image = image.convert("RGB")
 
         width, height = image.size
 
-        if max(
-            width,
-            height
-        ) > MAX_IMAGE_DIMENSION:
-
-            scale = (
-                MAX_IMAGE_DIMENSION
-                / max(width, height)
-            )
-
+        if max(width, height) > self.MAX_IMAGE_SIZE:
+            scale = self.MAX_IMAGE_SIZE / max(width, height)
             new_size = (
                 int(width * scale),
-                int(height * scale)
+                int(height * scale),
             )
-
             image = image.resize(
                 new_size,
                 Image.Resampling.LANCZOS
@@ -204,379 +48,73 @@ class ImageManager:
 
         return image
 
-    # ========================================================
-    # SAVE BOOK IMAGE
-    # ========================================================
+    def save_image(self, file_storage, book_id, image_type):
+        if not file_storage or not file_storage.filename:
+            return ""
 
-    def save_book_image(
-        self,
-        file,
-        book_id: str,
-        side: str
-    ) -> Optional[str]:
-
-        if file is None:
-            return None
-
-        if not self.validate_image(
-            file
-        ):
+        if not self.allowed_file(file_storage.filename):
             raise ValueError(
-                "Invalid book image."
+                "Unsupported image format. "
+                "Use JPG, JPEG, PNG, or WEBP."
             )
 
-        side = str(
-            side or ""
-        ).strip().lower()
-
-        if side not in (
-            "front",
-            "back",
-        ):
-
-            raise ValueError(
-                "Image side must be front or back."
-            )
-
-        safe_book_id = (
-            str(book_id)
-            .strip()
-            .replace(" ", "_")
-        )
-
-        timestamp = datetime.now().strftime(
-            "%Y%m%d%H%M%S"
-        )
-
-        unique_id = uuid.uuid4().hex[:8]
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = uuid.uuid4().hex[:10]
 
         filename = (
-            f"{safe_book_id}_"
-            f"{side}_"
-            f"{timestamp}_"
-            f"{unique_id}.jpg"
-        )
-
-        output_path = os.path.join(
-            self.upload_folder,
-            filename
-        )
-
-        try:
-
-            file.seek(0)
-
-            image = Image.open(
-                file
-            )
-
-            image = self.normalize_image(
-                image
-            )
-
-            image.save(
-                output_path,
-                format="JPEG",
-                quality=92,
-                optimize=True
-            )
-
-            return filename
-
-        except Exception as error:
-
-            if os.path.exists(
-                output_path
-            ):
-
-                try:
-                    os.remove(
-                        output_path
-                    )
-                except Exception:
-                    pass
-
-            raise ValueError(
-                f"Unable to save image: {error}"
-            )
-
-    # ========================================================
-    # SAVE FROM PATH
-    # ========================================================
-
-    def save_image_from_path(
-        self,
-        source_path: str,
-        book_id: str,
-        side: str
-    ) -> Optional[str]:
-
-        if not source_path:
-            return None
-
-        if not os.path.exists(
-            source_path
-        ):
-            raise FileNotFoundError(
-                "Source image was not found."
-            )
-
-        side = str(
-            side or ""
-        ).strip().lower()
-
-        if side not in (
-            "front",
-            "back",
-        ):
-
-            raise ValueError(
-                "Image side must be front or back."
-            )
-
-        safe_book_id = (
-            str(book_id)
-            .strip()
-            .replace(" ", "_")
-        )
-
-        timestamp = datetime.now().strftime(
-            "%Y%m%d%H%M%S"
-        )
-
-        unique_id = uuid.uuid4().hex[:8]
-
-        filename = (
-            f"{safe_book_id}_"
-            f"{side}_"
-            f"{timestamp}_"
-            f"{unique_id}.jpg"
-        )
-
-        output_path = os.path.join(
-            self.upload_folder,
-            filename
-        )
-
-        try:
-
-            image = Image.open(
-                source_path
-            )
-
-            image = self.normalize_image(
-                image
-            )
-
-            image.save(
-                output_path,
-                format="JPEG",
-                quality=92,
-                optimize=True
-            )
-
-            return filename
-
-        except Exception as error:
-
-            if os.path.exists(
-                output_path
-            ):
-
-                try:
-                    os.remove(
-                        output_path
-                    )
-                except Exception:
-                    pass
-
-            raise ValueError(
-                f"Unable to save image: {error}"
-            )
-
-    # ========================================================
-    # DELETE IMAGE
-    # ========================================================
-
-    def delete_image(
-        self,
-        filename: str
-    ) -> bool:
-
-        if not filename:
-            return False
-
-        # Prevent directory traversal.
-        safe_name = os.path.basename(
-            filename
+            f"{book_id}_{image_type}_"
+            f"{timestamp}_{unique_id}.jpg"
         )
 
         file_path = os.path.join(
             self.upload_folder,
-            safe_name
+            filename
         )
 
-        if not os.path.exists(
-            file_path
-        ):
+        image = Image.open(file_storage)
+        image = self.normalize_image(image)
+
+        image.save(
+            file_path,
+            format="JPEG",
+            quality=92,
+            optimize=True
+        )
+
+        return filename
+
+    def save_uploaded_image(self, file_storage, book_id, image_type):
+        return self.save_image(
+            file_storage,
+            book_id,
+            image_type
+        )
+
+    def delete_image(self, filename):
+        if not filename:
             return False
 
-        try:
+        file_path = os.path.join(
+            self.upload_folder,
+            os.path.basename(filename)
+        )
 
-            os.remove(
-                file_path
-            )
-
+        if os.path.exists(file_path):
+            os.remove(file_path)
             return True
 
-        except Exception:
+        return False
 
-            return False
-
-    # ========================================================
-    # GET IMAGE PATH
-    # ========================================================
-
-    def get_image_path(
-        self,
-        filename: str
-    ) -> Optional[str]:
-
+    def get_image_path(self, filename):
         if not filename:
             return None
 
-        safe_name = os.path.basename(
-            filename
-        )
-
         file_path = os.path.join(
             self.upload_folder,
-            safe_name
+            os.path.basename(filename)
         )
 
-        if not os.path.exists(
-            file_path
-        ):
-            return None
+        return file_path if os.path.exists(file_path) else None
 
-        return file_path
-
-    # ========================================================
-    # IMAGE EXISTS
-    # ========================================================
-
-    def image_exists(
-        self,
-        filename: str
-    ) -> bool:
-
-        return (
-            self.get_image_path(
-                filename
-            )
-            is not None
-        )
-
-    # ========================================================
-    # DELETE BOOK IMAGES
-    # ========================================================
-
-    def delete_book_images(
-        self,
-        front_image: str = "",
-        back_image: str = ""
-    ) -> None:
-
-        if front_image:
-
-            self.delete_image(
-                front_image
-            )
-
-        if back_image:
-
-            self.delete_image(
-                back_image
-            )
-
-
-# ============================================================
-# GLOBAL INSTANCE
-# ============================================================
 
 image_manager = ImageManager()
-
-
-# ============================================================
-# COMPATIBILITY FUNCTIONS
-# ============================================================
-
-def allowed_file(
-    filename: str
-) -> bool:
-
-    return image_manager.allowed_file(
-        filename
-    )
-
-
-def validate_image(
-    file
-) -> bool:
-
-    return image_manager.validate_image(
-        file
-    )
-
-
-def save_book_image(
-    file,
-    book_id: str,
-    side: str
-) -> Optional[str]:
-
-    return image_manager.save_book_image(
-        file,
-        book_id,
-        side
-    )
-
-
-def save_image_from_path(
-    source_path: str,
-    book_id: str,
-    side: str
-) -> Optional[str]:
-
-    return image_manager.save_image_from_path(
-        source_path,
-        book_id,
-        side
-    )
-
-
-def delete_image(
-    filename: str
-) -> bool:
-
-    return image_manager.delete_image(
-        filename
-    )
-
-
-def get_image_path(
-    filename: str
-) -> Optional[str]:
-
-    return image_manager.get_image_path(
-        filename
-    )
-
-
-def image_exists(
-    filename: str
-) -> bool:
-
-    return image_manager.image_exists(
-        filename
-    )
