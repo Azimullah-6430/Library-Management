@@ -1,69 +1,96 @@
 {% extends "base.html" %}
 
+
 {% block title %}
-Library Dashboard
+Crescent College Library | Dashboard
 {% endblock %}
+
 
 {% block page_title %}
 Library Dashboard
 {% endblock %}
 
+
 {% block content %}
 
-<!-- =====================================================
+
+<!-- =========================================================
      WELCOME SECTION
-====================================================== -->
+========================================================== -->
 
-<div class="section-card">
+<section class="welcome-section">
 
-    <div class="section-header">
+    <div class="welcome-content">
 
-        <div>
+        <div class="welcome-text">
+
+            <span class="welcome-label">
+                CRESCENT COLLEGE CENTRAL LIBRARY
+            </span>
 
             <h2>
-                Welcome, Librarian 👋
+                Welcome back, Librarian 👋
             </h2>
 
             <p>
-                Here's an overview of your library.
+                Manage your library collection, monitor book
+                availability, and keep your catalogue organized
+                from one place.
             </p>
 
         </div>
 
-        <a href="{{ url_for('add_book') }}"
-           class="btn btn-primary">
 
-            ➕ Add New Book
+        <div class="welcome-action">
 
-        </a>
+            <a href="{{ url_for('add_book') }}"
+               class="btn btn-primary">
+
+                <span>
+                    ＋
+                </span>
+
+                Add New Book
+
+            </a>
+
+        </div>
 
     </div>
 
-</div>
+</section>
 
 
-<!-- =====================================================
-     STATISTICS
-====================================================== -->
 
-<div class="stats-grid">
+<!-- =========================================================
+     LIBRARY STATISTICS
+========================================================== -->
+
+<section class="stats-grid">
 
 
-    <!-- Total Books -->
+    <!-- =====================================================
+         TOTAL BOOK TITLES
+    ====================================================== -->
 
     <div class="stat-card">
 
         <div class="stat-info">
 
-            <span>
-                Total Books
+            <span class="stat-label">
+                Total Book Titles
             </span>
 
             <h3>
-                {{ total_books }}
+                {{ total_books|default(0) }}
             </h3>
 
+            <small>
+                Unique books in catalogue
+            </small>
+
         </div>
+
 
         <div class="stat-icon">
             📚
@@ -72,21 +99,29 @@ Library Dashboard
     </div>
 
 
-    <!-- Total Copies -->
+
+    <!-- =====================================================
+         TOTAL COPIES
+    ====================================================== -->
 
     <div class="stat-card">
 
         <div class="stat-info">
 
-            <span>
+            <span class="stat-label">
                 Total Copies
             </span>
 
             <h3>
-                {{ total_copies }}
+                {{ total_copies|default(0) }}
             </h3>
 
+            <small>
+                Physical copies
+            </small>
+
         </div>
+
 
         <div class="stat-icon">
             📖
@@ -95,21 +130,29 @@ Library Dashboard
     </div>
 
 
-    <!-- Available Copies -->
+
+    <!-- =====================================================
+         AVAILABLE COPIES
+    ====================================================== -->
 
     <div class="stat-card">
 
         <div class="stat-info">
 
-            <span>
+            <span class="stat-label">
                 Available Copies
             </span>
 
             <h3>
-                {{ available_copies }}
+                {{ available_copies|default(0) }}
             </h3>
 
+            <small>
+                Ready for issue
+            </small>
+
         </div>
+
 
         <div class="stat-icon">
             ✅
@@ -118,21 +161,29 @@ Library Dashboard
     </div>
 
 
-    <!-- Borrowed Copies -->
+
+    <!-- =====================================================
+         BORROWED COPIES
+    ====================================================== -->
 
     <div class="stat-card">
 
         <div class="stat-info">
 
-            <span>
+            <span class="stat-label">
                 Borrowed Copies
             </span>
 
             <h3>
-                {{ borrowed_copies }}
+                {{ borrowed_copies|default(0) }}
             </h3>
 
+            <small>
+                Currently issued
+            </small>
+
         </div>
+
 
         <div class="stat-icon">
             🔄
@@ -140,15 +191,151 @@ Library Dashboard
 
     </div>
 
-</div>
+
+</section>
 
 
 
-<!-- =====================================================
-     RECENT BOOKS
-====================================================== -->
+<!-- =========================================================
+     LIBRARY STATUS SUMMARY
+========================================================== -->
 
-<div class="section-card">
+<section class="section-card">
+
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Library Overview
+            </h2>
+
+            <p>
+                Current status of your book collection.
+            </p>
+
+        </div>
+
+
+        <a href="{{ url_for('books') }}"
+           class="btn btn-secondary">
+
+            View Catalogue
+
+        </a>
+
+    </div>
+
+
+    <div class="dashboard-summary-grid">
+
+
+        <!-- Available -->
+
+        <div class="summary-item">
+
+            <div class="summary-icon">
+                🟢
+            </div>
+
+            <div>
+
+                <span>
+                    Available
+                </span>
+
+                <strong>
+                    {{ available_copies|default(0) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- Borrowed -->
+
+        <div class="summary-item">
+
+            <div class="summary-icon">
+                🟠
+            </div>
+
+            <div>
+
+                <span>
+                    Borrowed
+                </span>
+
+                <strong>
+                    {{ borrowed_copies|default(0) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- Titles -->
+
+        <div class="summary-item">
+
+            <div class="summary-icon">
+                🔵
+            </div>
+
+            <div>
+
+                <span>
+                    Book Titles
+                </span>
+
+                <strong>
+                    {{ total_books|default(0) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- Total -->
+
+        <div class="summary-item">
+
+            <div class="summary-icon">
+                📦
+            </div>
+
+            <div>
+
+                <span>
+                    All Copies
+                </span>
+
+                <strong>
+                    {{ total_copies|default(0) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- =========================================================
+     RECENTLY ADDED BOOKS
+========================================================== -->
+
+<section class="section-card">
+
 
     <div class="section-header">
 
@@ -159,135 +346,223 @@ Library Dashboard
             </h2>
 
             <p>
-                Books recently added to your library.
+                Latest books added to the Crescent College
+                library catalogue.
             </p>
 
         </div>
 
+
         <a href="{{ url_for('books') }}"
            class="btn btn-secondary">
 
-            View All
+            View All Books
 
         </a>
 
     </div>
+
 
 
     {% if books %}
 
-    <div class="book-grid">
 
-        {% for book in books[-4:]|reverse %}
-
-        <div class="book-card">
+        <div class="book-grid">
 
 
-            <!-- Book Cover -->
-
-            {% if book.cover %}
-
-            <img
-                src="{{ url_for(
-                    'uploaded_cover',
-                    filename=book.cover
-                ) }}"
-                alt="{{ book.title }}"
-                class="book-cover"
-            >
-
-            {% else %}
-
-            <div class="no-cover">
-                📚
-            </div>
-
-            {% endif %}
+            {% for book in books[-4:]|reverse %}
 
 
-            <!-- Book Information -->
-
-            <div class="book-info">
-
-                <h3>
-                    {{ book.title }}
-                </h3>
-
-                <p class="book-author">
-                    {{ book.author }}
-                </p>
+                <article class="book-card">
 
 
-                <div class="book-meta">
+                    <!-- =====================================
+                         BOOK COVER
+                    ====================================== -->
 
-                    <span class="book-id">
-                        {{ book.book_id }}
-                    </span>
+                    <div class="book-cover-wrapper">
+
+                        {% if book.cover %}
+
+                            <img
+                                src="{{ url_for(
+                                    'uploaded_cover',
+                                    filename=book.cover
+                                ) }}"
+                                alt="Cover of {{ book.title }}"
+                                class="book-cover"
+                                loading="lazy"
+                            >
+
+                        {% else %}
+
+                            <div class="no-cover">
+
+                                <span>
+                                    📚
+                                </span>
+
+                                <small>
+                                    No Cover
+                                </small>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
 
 
-                    {% if book.available_copies|int > 0 %}
 
-                    <span class="available">
-                        ● Available
-                    </span>
+                    <!-- =====================================
+                         BOOK INFORMATION
+                    ====================================== -->
 
-                    {% else %}
+                    <div class="book-info">
 
-                    <span class="badge badge-danger">
-                        Unavailable
-                    </span>
 
-                    {% endif %}
+                        <div class="book-id-row">
 
-                </div>
+                            <span class="book-id">
+                                {{ book.book_id }}
+                            </span>
 
-            </div>
+
+                            {% if book.available|int > 0 %}
+
+                                <span class="available">
+                                    ● Available
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge badge-danger">
+                                    Unavailable
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <h3 title="{{ book.title }}">
+                            {{ book.title }}
+                        </h3>
+
+
+                        <p class="book-author">
+                            {{ book.author }}
+                        </p>
+
+
+                        {% if book.category %}
+
+                            <span class="book-category">
+                                {{ book.category }}
+                            </span>
+
+                        {% endif %}
+
+
+                        <!-- Book copy information -->
+
+                        <div class="book-copy-info">
+
+                            <span>
+                                Total:
+                                <strong>
+                                    {{ book.copies|default(0) }}
+                                </strong>
+                            </span>
+
+
+                            <span>
+                                Available:
+                                <strong>
+                                    {{ book.available|default(0) }}
+                                </strong>
+                            </span>
+
+                        </div>
+
+
+                        <!-- View details -->
+
+                        <a href="{{ url_for(
+                            'book_details',
+                            book_id=book.book_id
+                        ) }}"
+                           class="book-view-link">
+
+                            View Details
+                            <span>→</span>
+
+                        </a>
+
+
+                    </div>
+
+
+                </article>
+
+
+            {% endfor %}
+
 
         </div>
-
-        {% endfor %}
-
-    </div>
 
 
     {% else %}
 
-    <!-- Empty Library -->
 
-    <div class="empty-state">
+        <!-- =================================================
+             EMPTY LIBRARY
+        ================================================== -->
 
-        <div class="empty-state-icon">
-            📚
+        <div class="empty-state">
+
+
+            <div class="empty-state-icon">
+                📚
+            </div>
+
+
+            <h3>
+                Your library catalogue is empty
+            </h3>
+
+
+            <p>
+                No books have been added yet.
+                Start building the Crescent College
+                library catalogue by adding your first book.
+            </p>
+
+
+            <a href="{{ url_for('add_book') }}"
+               class="btn btn-primary">
+
+                ＋ Add Your First Book
+
+            </a>
+
+
         </div>
 
-        <h3>
-            No books added yet
-        </h3>
-
-        <p>
-            Start building your library by adding your first book.
-        </p>
-
-        <a href="{{ url_for('add_book') }}"
-           class="btn btn-primary">
-
-            ➕ Add Your First Book
-
-        </a>
-
-    </div>
 
     {% endif %}
 
-</div>
+
+</section>
 
 
 
-<!-- =====================================================
+<!-- =========================================================
      QUICK ACTIONS
-====================================================== -->
+========================================================== -->
 
-<div class="section-card">
+<section class="section-card">
+
 
     <div class="section-header">
 
@@ -306,56 +581,256 @@ Library Dashboard
     </div>
 
 
-    <div style="
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-    ">
+
+    <div class="quick-actions-grid">
 
 
-        <!-- Add Book -->
+        <!-- =================================================
+             ADD BOOK
+        ================================================== -->
 
         <a href="{{ url_for('add_book') }}"
-           class="btn btn-secondary"
-           style="padding: 18px;">
+           class="quick-action-card">
 
-            📕
-            <span>
-                Add Book
+            <div class="quick-action-icon">
+                ➕
+            </div>
+
+            <div>
+
+                <strong>
+                    Add Book
+                </strong>
+
+                <span>
+                    Add a new book to the catalogue
+                </span>
+
+            </div>
+
+            <span class="quick-action-arrow">
+                →
             </span>
 
         </a>
 
 
-        <!-- View Books -->
+
+        <!-- =================================================
+             BROWSE BOOKS
+        ================================================== -->
 
         <a href="{{ url_for('books') }}"
-           class="btn btn-secondary"
-           style="padding: 18px;">
+           class="quick-action-card">
 
-            📚
-            <span>
-                Browse Books
+            <div class="quick-action-icon">
+                📚
+            </div>
+
+            <div>
+
+                <strong>
+                    Browse Books
+                </strong>
+
+                <span>
+                    View and search the complete catalogue
+                </span>
+
+            </div>
+
+            <span class="quick-action-arrow">
+                →
             </span>
 
         </a>
 
 
-        <!-- Future Issue -->
+
+        <!-- =================================================
+             AVAILABLE BOOKS
+        ================================================== -->
+
+        <a href="{{ url_for('available_books') }}"
+           class="quick-action-card">
+
+            <div class="quick-action-icon">
+                ✅
+            </div>
+
+            <div>
+
+                <strong>
+                    Available Books
+                </strong>
+
+                <span>
+                    View books currently available
+                </span>
+
+            </div>
+
+            <span class="quick-action-arrow">
+                →
+            </span>
+
+        </a>
+
+
+
+        <!-- =================================================
+             BORROWED BOOKS
+        ================================================== -->
+
+        <a href="{{ url_for('borrowed_books') }}"
+           class="quick-action-card">
+
+            <div class="quick-action-icon">
+                🔄
+            </div>
+
+            <div>
+
+                <strong>
+                    Borrowed Books
+                </strong>
+
+                <span>
+                    View books with issued copies
+                </span>
+
+            </div>
+
+            <span class="quick-action-arrow">
+                →
+            </span>
+
+        </a>
+
+
+
+        <!-- =================================================
+             ISSUE / RETURN
+        ================================================== -->
 
         <a href="#"
-           class="btn btn-secondary disabled-link"
-           style="padding: 18px;">
+           class="quick-action-card disabled-action"
+           onclick="return false;">
 
-            🔄
-            <span>
-                Issue / Return
+            <div class="quick-action-icon">
+                🔁
+            </div>
+
+            <div>
+
+                <strong>
+                    Issue / Return
+                </strong>
+
+                <span>
+                    Library circulation module
+                </span>
+
+            </div>
+
+            <span class="coming-soon">
+                Soon
             </span>
 
         </a>
+
+
+
+        <!-- =================================================
+             REPORTS
+        ================================================== -->
+
+        <a href="#"
+           class="quick-action-card disabled-action"
+           onclick="return false;">
+
+            <div class="quick-action-icon">
+                📊
+            </div>
+
+            <div>
+
+                <strong>
+                    Reports
+                </strong>
+
+                <span>
+                    Library reports and analytics
+                </span>
+
+            </div>
+
+            <span class="coming-soon">
+                Soon
+            </span>
+
+        </a>
+
 
     </div>
 
-</div>
+
+</section>
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        /*
+         * Dashboard animation.
+         * Cards appear smoothly when the page loads.
+         */
+
+        const cards =
+            document.querySelectorAll(
+                ".stat-card, .book-card, .quick-action-card"
+            );
+
+
+        cards.forEach(
+            function (card, index) {
+
+                card.style.opacity = "0";
+
+                card.style.transform =
+                    "translateY(10px)";
+
+
+                setTimeout(
+                    function () {
+
+                        card.style.transition =
+                            "opacity 0.35s ease, transform 0.35s ease";
+
+                        card.style.opacity = "1";
+
+                        card.style.transform =
+                            "translateY(0)";
+
+                    },
+                    index * 50
+                );
+
+            }
+        );
+
+    }
+);
+
+</script>
 
 {% endblock %}
