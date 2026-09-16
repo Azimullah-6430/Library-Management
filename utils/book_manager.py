@@ -1,543 +1,763 @@
-"""
-Book Manager
-------------
-Main book-management logic for the
-Crescent College Library Management System.
-"""
-
-import os
+import re
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .excel_manager import (
-    get_all_books,
-    add_book,
-    find_book,
-    update_book,
-    delete_book,
-    get_statistics
-)
+from utils.excel_manager import excel_manager
 
-from .image_manager import (
-    save_image,
-    delete_image
-)
 
+# ============================================================
+# BOOK MANAGER
+# ============================================================
 
 class BookManager:
-    """
-    Handles all book-related operations.
-    """
 
-    def __init__(self, excel_file, upload_folder):
-        self.excel_file = excel_file
-        self.upload_folder = upload_folder
+    def __init__(self):
+        self.excel = excel_manager
 
-    # ---------------------------------------------------------
-    # GET ALL BOOKS
-    # ---------------------------------------------------------
+    # ========================================================
+    # GENERATE BOOK ID
+    # ========================================================
 
-    def get_books(self):
-        """
-        Return all books from the Crescent College library.
-        """
+    def generate_book_id(
+        self
+    ) -> str:
 
-        return get_all_books(self.excel_file)
+        books = self.get_all_books()
 
-    # ---------------------------------------------------------
-    # GET SINGLE BOOK
-    # ---------------------------------------------------------
+        highest_number = 0
 
-    def get_book(self, book_id):
-        """
-        Find a book using its Book ID / Accession Number.
-        """
+        for book in books:
 
-        return find_book(
-            self.excel_file,
-            book_id
-        )
-
-    # ---------------------------------------------------------
-    # ADD NEW BOOK
-    # ---------------------------------------------------------
-
-    def create_book(
-        self,
-        book_id,
-        title,
-        author,
-        isbn="",
-        category="",
-        publisher="",
-        year="",
-        copies=1,
-        shelf="",
-        cover_file=None
-    ):
-        """
-        Create and store a new book.
-
-        Returns:
-            tuple:
-                (True, book, message)
-            or
-                (False, None, error_message)
-        """
-
-        # Validate title
-        if not title or not title.strip():
-            return False, None, "Book title is required."
-
-        # Validate author
-        if not author or not author.strip():
-            return False, None, "Author name is required."
-
-        # Validate copies
-        try:
-            copies = int(copies)
-
-            if copies < 1:
-                return False, None, "Number of copies must be at least 1."
-
-        except (ValueError, TypeError):
-            return False, None, "Number of copies must be a valid number."
-
-        # Check whether Book ID already exists
-        existing_book = self.get_book(book_id)
-
-        if existing_book:
-            return False, None, "A book with this ID already exists."
-
-        cover_filename = ""
-
-        # Save cover image if uploaded
-        if cover_file and cover_file.filename:
-
-            success, filename, message = save_image(
-                cover_file,
-                self.upload_folder
-            )
-
-            if not success:
-                return False, None, message
-
-            cover_filename = filename
-
-        # Current date
-        date_added = datetime.now().strftime("%Y-%m-%d")
-
-        # Create book dictionary
-        book = {
-            "book_id": book_id,
-            "title": title.strip(),
-            "author": author.strip(),
-            "isbn": isbn.strip() if isbn else "",
-            "category": category.strip() if category else "",
-            "publisher": publisher.strip() if publisher else "",
-            "year": year,
-            "copies": copies,
-            "available": copies,
-            "shelf": shelf.strip() if shelf else "",
-            "cover": cover_filename,
-            "date_added": date_added
-        }
-
-        try:
-            # Save to Excel
-            add_book(
-                self.excel_file,
-                book
-            )
-
-        except Exception as error:
-
-            # If Excel save fails, remove uploaded image
-            if cover_filename:
-                delete_image(
-                    cover_filename,
-                    self.upload_folder
+            book_id = str(
+                book.get(
+                    "id",
+                    ""
                 )
+            ).strip().upper()
 
-            return False, None, f"Unable to save book: {error}"
-
-        return True, book, "Book added successfully."
-
-    # ---------------------------------------------------------
-    # UPDATE BOOK
-    # ---------------------------------------------------------
-
-    def edit_book(
-        self,
-        book_id,
-        title,
-        author,
-        isbn="",
-        category="",
-        publisher="",
-        year="",
-        copies=1,
-        shelf="",
-        cover_file=None
-    ):
-        """
-        Update an existing book.
-
-        The available-copy count is adjusted based on
-        the change in total copies.
-        """
-
-        # Find existing book
-        existing_book = self.get_book(book_id)
-
-        if not existing_book:
-            return False, None, "Book not found."
-
-        # Validate title
-        if not title or not title.strip():
-            return False, None, "Book title is required."
-
-        # Validate author
-        if not author or not author.strip():
-            return False, None, "Author name is required."
-
-        # Validate copies
-        try:
-            copies = int(copies)
-
-            if copies < 1:
-                return False, None, "Number of copies must be at least 1."
-
-        except (ValueError, TypeError):
-            return False, None, "Number of copies must be a valid number."
-
-        # Existing total copies
-        old_total = int(existing_book.get("copies", 0))
-
-        # Existing available copies
-        old_available = int(existing_book.get("available", 0))
-
-        # Calculate borrowed copies
-        borrowed_copies = old_total - old_available
-
-        # New total cannot be less than currently borrowed copies
-        if copies < borrowed_copies:
-            return (
-                False,
-                None,
-                f"Cannot reduce total copies below {borrowed_copies} "
-                f"because those copies are currently borrowed."
-            )
-
-        # Calculate new available copies
-        new_available = copies - borrowed_copies
-
-        # Keep existing cover by default
-        cover_filename = existing_book.get("cover", "")
-
-        # Track old cover
-        old_cover_filename = cover_filename
-
-        # If librarian uploaded a new cover
-        if cover_file and cover_file.filename:
-
-            success, filename, message = save_image(
-                cover_file,
-                self.upload_folder
-            )
-
-            if not success:
-                return False, None, message
-
-            cover_filename = filename
-
-        # Updated book dictionary
-        updated_book = {
-            "book_id": book_id,
-            "title": title.strip(),
-            "author": author.strip(),
-            "isbn": isbn.strip() if isbn else "",
-            "category": category.strip() if category else "",
-            "publisher": publisher.strip() if publisher else "",
-            "year": year,
-            "copies": copies,
-            "available": new_available,
-            "shelf": shelf.strip() if shelf else "",
-            "cover": cover_filename,
-            "date_added": existing_book.get("date_added", "")
-        }
-
-        try:
-
-            success = update_book(
-                self.excel_file,
-                book_id,
-                updated_book
-            )
-
-            if not success:
-
-                # Remove newly uploaded image if Excel update fails
-                if (
-                    cover_filename
-                    and cover_filename != old_cover_filename
-                ):
-                    delete_image(
-                        cover_filename,
-                        self.upload_folder
-                    )
-
-                return False, None, "Unable to update the book."
-
-        except Exception as error:
-
-            # Remove newly uploaded image if something goes wrong
-            if (
-                cover_filename
-                and cover_filename != old_cover_filename
-            ):
-                delete_image(
-                    cover_filename,
-                    self.upload_folder
-                )
-
-            return False, None, f"Unable to update book: {error}"
-
-        # Delete old cover after successful update
-        if (
-            old_cover_filename
-            and old_cover_filename != cover_filename
-        ):
-            delete_image(
-                old_cover_filename,
-                self.upload_folder
-            )
-
-        return True, updated_book, "Book updated successfully."
-
-    # ---------------------------------------------------------
-    # DELETE BOOK
-    # ---------------------------------------------------------
-
-    def remove_book(self, book_id):
-        """
-        Delete a book and its associated cover image.
-        """
-
-        book = self.get_book(book_id)
-
-        if not book:
-            return False, "Book not found."
-
-        # Do not allow deletion if copies are currently borrowed
-        total_copies = int(book.get("copies", 0))
-        available_copies = int(book.get("available", 0))
-
-        borrowed_copies = total_copies - available_copies
-
-        if borrowed_copies > 0:
-            return (
-                False,
-                "This book cannot be deleted because "
-                f"{borrowed_copies} copy/copies are currently borrowed."
-            )
-
-        try:
-
-            success = delete_book(
-                self.excel_file,
+            match = re.search(
+                r"(\d+)$",
                 book_id
             )
 
-            if not success:
-                return False, "Unable to delete the book."
+            if match:
+
+                number = int(
+                    match.group(1)
+                )
+
+                highest_number = max(
+                    highest_number,
+                    number
+                )
+
+        return (
+            f"LIB-{highest_number + 1:05d}"
+        )
+
+    # ========================================================
+    # GET ALL BOOKS
+    # ========================================================
+
+    def get_all_books(
+        self
+    ) -> List[Dict[str, Any]]:
+
+        return self.excel.get_all_books()
+
+    # ========================================================
+    # GET BOOK
+    # ========================================================
+
+    def get_book(
+        self,
+        book_id: str
+    ) -> Optional[Dict[str, Any]]:
+
+        return self.excel.get_book_by_id(
+            book_id
+        )
+
+    # ========================================================
+    # GET BOOK BY ISBN
+    # ========================================================
+
+    def get_book_by_isbn(
+        self,
+        isbn: str
+    ) -> Optional[Dict[str, Any]]:
+
+        return self.excel.get_book_by_isbn(
+            self.clean_isbn(isbn)
+        )
+
+    # ========================================================
+    # CLEAN ISBN
+    # ========================================================
+
+    def clean_isbn(
+        self,
+        isbn: Any
+    ) -> str:
+
+        if isbn is None:
+            return ""
+
+        return re.sub(
+            r"[^0-9Xx]",
+            "",
+            str(isbn)
+        ).upper()
+
+    # ========================================================
+    # CLEAN VALUE
+    # ========================================================
+
+    def clean_value(
+        self,
+        value: Any,
+        default: str = ""
+    ) -> str:
+
+        if value is None:
+            return default
+
+        value = str(
+            value
+        ).strip()
+
+        if not value:
+            return default
+
+        return value
+
+    # ========================================================
+    # NORMALIZE SCANNED DATA
+    # ========================================================
+
+    def normalize_scanned_data(
+        self,
+        data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+
+        if not isinstance(
+            data,
+            dict
+        ):
+            data = {}
+
+        return {
+            "title": self.clean_value(
+                data.get("title"),
+                "Not detected"
+            ),
+            "author": self.clean_value(
+                data.get("author"),
+                "Not detected"
+            ),
+            "subtitle": self.clean_value(
+                data.get("subtitle"),
+                "Not detected"
+            ),
+            "isbn": self.clean_isbn(
+                data.get("isbn")
+            ) or "Not detected",
+            "category": self.clean_value(
+                data.get("category"),
+                "Not detected"
+            ),
+            "publisher": self.clean_value(
+                data.get("publisher"),
+                "Not detected"
+            ),
+            "year": self.clean_value(
+                data.get("year"),
+                "Not detected"
+            ),
+            "edition": self.clean_value(
+                data.get("edition"),
+                "Not detected"
+            ),
+            "price": self.clean_value(
+                data.get("price"),
+                "Not detected"
+            ),
+        }
+
+    # ========================================================
+    # CHECK REQUIRED SCAN
+    # ========================================================
+
+    def validate_scanned_data(
+        self,
+        data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+
+        normalized = self.normalize_scanned_data(
+            data
+        )
+
+        # At least the title should be detected.
+        # The application should not silently create
+        # completely empty book records.
+        title = normalized.get(
+            "title",
+            ""
+        )
+
+        if (
+            not title
+            or title.lower() == "not detected"
+        ):
+
+            return {
+                "valid": False,
+                "data": normalized,
+                "error": (
+                    "Book title could not be "
+                    "detected from the uploaded images."
+                ),
+            }
+
+        return {
+            "valid": True,
+            "data": normalized,
+            "error": "",
+        }
+
+    # ========================================================
+    # DUPLICATE ISBN CHECK
+    # ========================================================
+
+    def is_duplicate_isbn(
+        self,
+        isbn: str,
+        exclude_book_id: str = ""
+    ) -> bool:
+
+        isbn = self.clean_isbn(
+            isbn
+        )
+
+        if not isbn:
+            return False
+
+        existing = self.get_book_by_isbn(
+            isbn
+        )
+
+        if not existing:
+            return False
+
+        existing_id = str(
+            existing.get(
+                "id",
+                ""
+            )
+        ).strip().lower()
+
+        excluded_id = str(
+            exclude_book_id or ""
+        ).strip().lower()
+
+        if (
+            excluded_id
+            and existing_id == excluded_id
+        ):
+            return False
+
+        return True
+
+    # ========================================================
+    # ADD SCANNED BOOK
+    # ========================================================
+
+    def add_scanned_book(
+        self,
+        scanned_data: Dict[str, Any],
+        front_image: str,
+        back_image: str
+    ) -> Dict[str, Any]:
+
+        validation = self.validate_scanned_data(
+            scanned_data
+        )
+
+        if not validation["valid"]:
+
+            return {
+                "success": False,
+                "error": validation["error"],
+            }
+
+        data = validation["data"]
+
+        isbn = self.clean_isbn(
+            data.get(
+                "isbn",
+                ""
+            )
+        )
+
+        if isbn and isbn != "NOT DETECTED":
+
+            if self.is_duplicate_isbn(
+                isbn
+            ):
+
+                existing = self.get_book_by_isbn(
+                    isbn
+                )
+
+                return {
+                    "success": False,
+                    "error": (
+                        "A book with this ISBN "
+                        "already exists in the library."
+                    ),
+                    "duplicate": True,
+                    "existing_book": existing,
+                }
+
+        book_id = self.generate_book_id()
+
+        book = {
+            "id": book_id,
+            "title": data.get(
+                "title",
+                "Not detected"
+            ),
+            "author": data.get(
+                "author",
+                "Not detected"
+            ),
+            "subtitle": data.get(
+                "subtitle",
+                "Not detected"
+            ),
+            "isbn": (
+                isbn
+                if isbn
+                else "Not detected"
+            ),
+            "category": data.get(
+                "category",
+                "Not detected"
+            ),
+            "publisher": data.get(
+                "publisher",
+                "Not detected"
+            ),
+            "year": data.get(
+                "year",
+                "Not detected"
+            ),
+            "edition": data.get(
+                "edition",
+                "Not detected"
+            ),
+            "price": data.get(
+                "price",
+                "Not detected"
+            ),
+            "copies": 1,
+            "available": 1,
+            "borrowed": 0,
+            "shelf": "",
+            "front_image": front_image or "",
+            "back_image": back_image or "",
+            "date_added": datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            "scan_status": "AI Scanned",
+        }
+
+        try:
+
+            saved = self.excel.add_book(
+                book
+            )
+
+            if not saved:
+
+                return {
+                    "success": False,
+                    "error": (
+                        "The book could not be "
+                        "saved to the library."
+                    ),
+                }
+
+            return {
+                "success": True,
+                "book": book,
+            }
 
         except Exception as error:
 
-            return False, f"Unable to delete book: {error}"
+            return {
+                "success": False,
+                "error": str(error),
+            }
 
-        # Delete cover image
-        cover_filename = book.get("cover", "")
+    # ========================================================
+    # UPDATE BOOK
+    # ========================================================
 
-        if cover_filename:
-            delete_image(
-                cover_filename,
-                self.upload_folder
+    def update_book(
+        self,
+        book_id: str,
+        data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+
+        existing = self.get_book(
+            book_id
+        )
+
+        if not existing:
+
+            return {
+                "success": False,
+                "error": "Book not found.",
+            }
+
+        normalized = self.normalize_scanned_data(
+            data
+        )
+
+        isbn = self.clean_isbn(
+            normalized.get(
+                "isbn",
+                ""
+            )
+        )
+
+        if isbn and isbn != "NOT DETECTED":
+
+            if self.is_duplicate_isbn(
+                isbn,
+                exclude_book_id=book_id
+            ):
+
+                return {
+                    "success": False,
+                    "error": (
+                        "Another book with this "
+                        "ISBN already exists."
+                    ),
+                }
+
+        updated = {
+            "id": book_id,
+            "title": normalized.get(
+                "title",
+                existing.get(
+                    "title",
+                    "Not detected"
+                )
+            ),
+            "author": normalized.get(
+                "author",
+                existing.get(
+                    "author",
+                    "Not detected"
+                )
+            ),
+            "subtitle": normalized.get(
+                "subtitle",
+                existing.get(
+                    "subtitle",
+                    "Not detected"
+                )
+            ),
+            "isbn": (
+                isbn
+                if isbn
+                else existing.get(
+                    "isbn",
+                    "Not detected"
+                )
+            ),
+            "category": normalized.get(
+                "category",
+                existing.get(
+                    "category",
+                    "Not detected"
+                )
+            ),
+            "publisher": normalized.get(
+                "publisher",
+                existing.get(
+                    "publisher",
+                    "Not detected"
+                )
+            ),
+            "year": normalized.get(
+                "year",
+                existing.get(
+                    "year",
+                    "Not detected"
+                )
+            ),
+            "edition": normalized.get(
+                "edition",
+                existing.get(
+                    "edition",
+                    "Not detected"
+                )
+            ),
+            "price": normalized.get(
+                "price",
+                existing.get(
+                    "price",
+                    "Not detected"
+                )
+            ),
+            "copies": existing.get(
+                "copies",
+                1
+            ),
+            "available": existing.get(
+                "available",
+                1
+            ),
+            "borrowed": existing.get(
+                "borrowed",
+                0
+            ),
+            "shelf": existing.get(
+                "shelf",
+                ""
+            ),
+            "front_image": existing.get(
+                "front_image",
+                ""
+            ),
+            "back_image": existing.get(
+                "back_image",
+                ""
+            ),
+            "date_added": existing.get(
+                "date_added",
+                ""
+            ),
+            "scan_status": "AI Scanned",
+        }
+
+        try:
+
+            updated_successfully = (
+                self.excel.update_book(
+                    book_id,
+                    updated
+                )
             )
 
-        return True, "Book deleted successfully."
+            if not updated_successfully:
 
-    # ---------------------------------------------------------
-    # SEARCH BOOKS
-    # ---------------------------------------------------------
+                return {
+                    "success": False,
+                    "error": (
+                        "Book could not be updated."
+                    ),
+                }
 
-    def search_books(self, search_term=""):
-        """
-        Search books by:
-        - Title
-        - Author
-        - ISBN
-        - Category
-        - Book ID
-        """
+            return {
+                "success": True,
+                "book": updated,
+            }
 
-        books = self.get_books()
+        except Exception as error:
 
-        if not search_term:
-            return books
+            return {
+                "success": False,
+                "error": str(error),
+            }
 
-        search_term = search_term.lower().strip()
+    # ========================================================
+    # DELETE BOOK
+    # ========================================================
 
-        results = []
+    def delete_book(
+        self,
+        book_id: str
+    ) -> Dict[str, Any]:
 
-        for book in books:
+        existing = self.get_book(
+            book_id
+        )
 
-            searchable_values = [
-                book.get("book_id", ""),
-                book.get("title", ""),
-                book.get("author", ""),
-                book.get("isbn", ""),
-                book.get("category", ""),
-                book.get("publisher", ""),
-                book.get("shelf", "")
-            ]
+        if not existing:
 
-            searchable_text = " ".join(
-                str(value).lower()
-                for value in searchable_values
+            return {
+                "success": False,
+                "error": "Book not found.",
+            }
+
+        try:
+
+            deleted = self.excel.delete_book(
+                book_id
             )
 
-            if search_term in searchable_text:
-                results.append(book)
+            if not deleted:
 
-        return results
+                return {
+                    "success": False,
+                    "error": (
+                        "Book could not be deleted."
+                    ),
+                }
 
-    # ---------------------------------------------------------
-    # FILTER BY CATEGORY
-    # ---------------------------------------------------------
+            return {
+                "success": True,
+                "book": existing,
+            }
 
-    def get_books_by_category(self, category):
-        """
-        Return books belonging to a specific category.
-        """
+        except Exception as error:
 
-        books = self.get_books()
+            return {
+                "success": False,
+                "error": str(error),
+            }
 
-        if not category:
-            return books
+    # ========================================================
+    # SEARCH
+    # ========================================================
 
-        category = category.lower().strip()
+    def search(
+        self,
+        query: str
+    ) -> List[Dict[str, Any]]:
 
-        return [
-            book
-            for book in books
-            if str(book.get("category", "")).lower().strip()
-            == category
-        ]
-
-    # ---------------------------------------------------------
-    # GET STATISTICS
-    # ---------------------------------------------------------
-
-    def get_library_statistics(self):
-        """
-        Return dashboard statistics.
-        """
-
-        return get_statistics(
-            self.excel_file
+        return self.excel.search_books(
+            query
         )
 
-    # ---------------------------------------------------------
-    # GET CATEGORIES
-    # ---------------------------------------------------------
+    # ========================================================
+    # CATEGORY
+    # ========================================================
 
-    def get_categories(self):
-        """
-        Return unique book categories.
-        """
+    def category(
+        self,
+        category: str
+    ) -> List[Dict[str, Any]]:
 
-        books = self.get_books()
-
-        categories = set()
-
-        for book in books:
-
-            category = str(
-                book.get("category", "")
-            ).strip()
-
-            if category:
-                categories.add(category)
-
-        return sorted(
-            categories,
-            key=str.lower
+        return self.excel.get_by_category(
+            category
         )
 
-    # ---------------------------------------------------------
-    # GET AUTHORS
-    # ---------------------------------------------------------
+    # ========================================================
+    # AVAILABLE
+    # ========================================================
 
-    def get_authors(self):
-        """
-        Return unique authors in the library catalog.
-        """
+    def available(
+        self
+    ) -> List[Dict[str, Any]]:
 
-        books = self.get_books()
+        return self.excel.get_available_books()
 
-        authors = set()
+    # ========================================================
+    # BORROWED
+    # ========================================================
 
-        for book in books:
+    def borrowed(
+        self
+    ) -> List[Dict[str, Any]]:
 
-            author = str(
-                book.get("author", "")
-            ).strip()
+        return self.excel.get_borrowed_books()
 
-            if author:
-                authors.add(author)
+    # ========================================================
+    # STATISTICS
+    # ========================================================
 
-        return sorted(
-            authors,
-            key=str.lower
-        )
+    def statistics(
+        self
+    ) -> Dict[str, Any]:
 
-    # ---------------------------------------------------------
-    # GET AVAILABLE BOOKS
-    # ---------------------------------------------------------
+        return self.excel.get_statistics()
 
-    def get_available_books(self):
-        """
-        Return books that currently have at least one
-        available copy.
-        """
 
-        books = self.get_books()
+# ============================================================
+# GLOBAL INSTANCE
+# ============================================================
 
-        return [
-            book
-            for book in books
-            if int(book.get("available", 0)) > 0
-        ]
+book_manager = BookManager()
 
-    # ---------------------------------------------------------
-    # GET BORROWED BOOKS
-    # ---------------------------------------------------------
 
-    def get_borrowed_books(self):
-        """
-        Return books that currently have borrowed copies.
-        """
+# ============================================================
+# COMPATIBILITY FUNCTIONS
+# ============================================================
 
-        books = self.get_books()
+def get_all_books():
+    return book_manager.get_all_books()
 
-        borrowed_books = []
 
-        for book in books:
+def get_book(
+    book_id
+):
+    return book_manager.get_book(
+        book_id
+    )
 
-            total = int(book.get("copies", 0))
-            available = int(book.get("available", 0))
 
-            if total > available:
-                borrowed_books.append(book)
+def get_book_by_id(
+    book_id
+):
+    return book_manager.get_book(
+        book_id
+    )
 
-        return borrowed_books
+
+def get_book_by_isbn(
+    isbn
+):
+    return book_manager.get_book_by_isbn(
+        isbn
+    )
+
+
+def generate_book_id():
+    return book_manager.generate_book_id()
+
+
+def add_scanned_book(
+    scanned_data,
+    front_image,
+    back_image
+):
+    return book_manager.add_scanned_book(
+        scanned_data,
+        front_image,
+        back_image
+    )
+
+
+def update_book(
+    book_id,
+    data
+):
+    return book_manager.update_book(
+        book_id,
+        data
+    )
+
+
+def delete_book(
+    book_id
+):
+    return book_manager.delete_book(
+        book_id
+    )
+
+
+def search_books(
+    query
+):
+    return book_manager.search(
+        query
+    )
+
+
+def get_statistics():
+    return book_manager.statistics()
