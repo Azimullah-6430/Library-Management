@@ -1,255 +1,226 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Book | Crescent Central Library{% endblock %}
+{% block title %}Edit Book{% endblock %}
 
 {% block content %}
 
 <div class="page-header">
     <div>
-        <span class="page-eyebrow">BOOK MANAGEMENT</span>
         <h1>Edit Book</h1>
-        <p>Review and update the registered book information.</p>
+        <p>Update library record information.</p>
     </div>
 
-    <a href="{{ url_for('book_details', book_id=book['Book ID']) }}" class="btn-secondary">
-        <i class="bi bi-arrow-left"></i>
-        Back to Details
+    <a href="{{ url_for('book_details', book_id=book['Book ID']) }}"
+       class="btn btn-secondary">
+        ← Back to Book
     </a>
 </div>
 
-<form method="POST" class="edit-book-form">
+<div class="form-card">
 
-    <section class="dashboard-card">
+    <form method="POST"
+          action="{{ url_for('edit_book', book_id=book['Book ID']) }}">
 
-        <div class="card-header">
-            <div>
-                <span class="card-eyebrow">BOOK INFORMATION</span>
-                <h2>{{ book['Book Title']|default('Book') }}</h2>
+        <div class="form-section">
+
+            <div class="section-heading">
+                <div>
+                    <span class="section-kicker">BOOK RECORD</span>
+                    <h2>Book Information</h2>
+                    <p>Library information associated with this book.</p>
+                </div>
             </div>
 
-            <span class="ai-badge">
-                <i class="bi bi-stars"></i>
-                {{ book['Scan Status']|default('AI Scanned') }}
-            </span>
-        </div>
+            <div class="form-grid">
 
-        <div class="edit-grid">
-
-            <div class="form-group">
-                <label>Book ID</label>
-                <input
-                    type="text"
-                    value="{{ book['Book ID'] }}"
-                    readonly
-                    class="readonly-input"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="title">Book Title</label>
-                <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    value="{{ book['Book Title']|default('') }}"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="author">Author</label>
-                <input
-                    type="text"
-                    id="author"
-                    name="author"
-                    value="{{ book['Author']|default('') }}"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="subtitle">Subtitle</label>
-                <input
-                    type="text"
-                    id="subtitle"
-                    name="subtitle"
-                    value="{{ book['Subtitle']|default('') }}"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="isbn">ISBN</label>
-                <input
-                    type="text"
-                    id="isbn"
-                    name="isbn"
-                    value="{{ book['ISBN']|default('') }}"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="category">Category</label>
-                <input
-                    type="text"
-                    id="category"
-                    name="category"
-                    value="{{ book['Category']|default('') }}"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="publisher">Publisher</label>
-                <input
-                    type="text"
-                    id="publisher"
-                    name="publisher"
-                    value="{{ book['Publisher']|default('') }}"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="year">Publication Year</label>
-                <input
-                    type="text"
-                    id="year"
-                    name="year"
-                    value="{{ book['Publication Year']|default('') }}"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="edition">Edition</label>
-                <input
-                    type="text"
-                    id="edition"
-                    name="edition"
-                    value="{{ book['Edition']|default('') }}"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="price">Price</label>
-                <input
-                    type="text"
-                    id="price"
-                    name="price"
-                    value="{{ book['Price']|default('') }}"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="total_copies">Total Copies</label>
-                <input
-                    type="number"
-                    id="total_copies"
-                    name="total_copies"
-                    min="1"
-                    value="{{ book['Total Copies']|default(1) }}"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="shelf_number">Shelf Number</label>
-                <input
-                    type="text"
-                    id="shelf_number"
-                    name="shelf_number"
-                    value="{{ book['Shelf Number']|default('') }}"
-                    placeholder="Enter shelf number"
-                >
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="dashboard-card">
-
-        <div class="card-header">
-            <div>
-                <span class="card-eyebrow">COVER IMAGES</span>
-                <h2>Book Images</h2>
-            </div>
-        </div>
-
-        <div class="edit-images-grid">
-
-            <div class="edit-image-card">
-
-                <span>Front Cover</span>
-
-                {% if book['Front Image'] %}
-
-                <img
-                    src="{{ url_for('uploaded_file', filename=book['Front Image']) }}"
-                    alt="Front cover"
-                >
-
-                {% else %}
-
-                <div class="image-placeholder">
-                    <i class="bi bi-book"></i>
-                    <span>No image available</span>
+                <div class="form-group">
+                    <label for="book_id">Book ID</label>
+                    <input type="text"
+                           id="book_id"
+                           value="{{ book.get('Book ID', 'Not available') }}"
+                           readonly>
                 </div>
 
-                {% endif %}
-
-            </div>
-
-            <div class="edit-image-card">
-
-                <span>Back Cover</span>
-
-                {% if book['Back Image'] %}
-
-                <img
-                    src="{{ url_for('uploaded_file', filename=book['Back Image']) }}"
-                    alt="Back cover"
-                >
-
-                {% else %}
-
-                <div class="image-placeholder">
-                    <i class="bi bi-card-image"></i>
-                    <span>No image available</span>
+                <div class="form-group">
+                    <label for="title">Book Title</label>
+                    <input type="text"
+                           id="title"
+                           name="title"
+                           value="{{ book.get('Book Title', '') }}"
+                           required>
                 </div>
 
-                {% endif %}
+                <div class="form-group">
+                    <label for="author">Author</label>
+                    <input type="text"
+                           id="author"
+                           name="author"
+                           value="{{ book.get('Author', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="subtitle">Subtitle</label>
+                    <input type="text"
+                           id="subtitle"
+                           name="subtitle"
+                           value="{{ book.get('Subtitle', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="isbn">ISBN</label>
+                    <input type="text"
+                           id="isbn"
+                           name="isbn"
+                           value="{{ book.get('ISBN', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <input type="text"
+                           id="category"
+                           name="category"
+                           value="{{ book.get('Category', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="publisher">Publisher</label>
+                    <input type="text"
+                           id="publisher"
+                           name="publisher"
+                           value="{{ book.get('Publisher', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="publication_year">Publication Year</label>
+                    <input type="text"
+                           id="publication_year"
+                           name="publication_year"
+                           value="{{ book.get('Publication Year', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="edition">Edition</label>
+                    <input type="text"
+                           id="edition"
+                           name="edition"
+                           value="{{ book.get('Edition', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Price</label>
+                    <input type="text"
+                           id="price"
+                           name="price"
+                           value="{{ book.get('Price', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="shelf_number">Shelf Number</label>
+                    <input type="text"
+                           id="shelf_number"
+                           name="shelf_number"
+                           value="{{ book.get('Shelf Number', '') }}"
+                           placeholder="Enter shelf number">
+                </div>
 
             </div>
 
         </div>
 
-    </section>
 
-    <section class="dashboard-card edit-save-card">
+        <div class="form-section">
 
-        <div>
-            <span class="card-eyebrow">SAVE CHANGES</span>
-            <h2>Update Library Record</h2>
-            <p>
-                Changes will be saved directly to the library catalogue.
-            </p>
+            <div class="section-heading">
+                <div>
+                    <span class="section-kicker">CIRCULATION</span>
+                    <h2>Copy Information</h2>
+                    <p>Manage the current number of library copies.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label for="total_copies">Total Copies</label>
+                    <input type="number"
+                           id="total_copies"
+                           name="total_copies"
+                           min="0"
+                           value="{{ book.get('Total Copies', 1) }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="available_copies">Available Copies</label>
+                    <input type="number"
+                           id="available_copies"
+                           name="available_copies"
+                           min="0"
+                           value="{{ book.get('Available Copies', 1) }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="borrowed_copies">Borrowed Copies</label>
+                    <input type="number"
+                           id="borrowed_copies"
+                           name="borrowed_copies"
+                           min="0"
+                           value="{{ book.get('Borrowed Copies', 0) }}"
+                           required>
+                </div>
+
+            </div>
+
         </div>
 
-        <div class="edit-actions">
 
-            <a
-                href="{{ url_for('book_details', book_id=book['Book ID']) }}"
-                class="btn-secondary"
-            >
+        <div class="form-section">
+
+            <div class="section-heading">
+                <div>
+                    <span class="section-kicker">SCAN INFORMATION</span>
+                    <h2>Registration Status</h2>
+                </div>
+            </div>
+
+            <div class="record-info-grid">
+
+                <div class="record-info-item">
+                    <span>Scan Status</span>
+                    <strong>
+                        {{ book.get('Scan Status', 'Not available') }}
+                    </strong>
+                </div>
+
+                <div class="record-info-item">
+                    <span>Date Added</span>
+                    <strong>
+                        {{ book.get('Date Added', 'Not available') }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <a href="{{ url_for('book_details', book_id=book['Book ID']) }}"
+               class="btn btn-secondary">
                 Cancel
             </a>
 
-            <button type="submit" class="btn-primary">
-                <i class="bi bi-check2-circle"></i>
+            <button type="submit"
+                    class="btn btn-primary">
                 Save Changes
             </button>
 
         </div>
 
-    </section>
+    </form>
 
-</form>
+</div>
 
 {% endblock %}
