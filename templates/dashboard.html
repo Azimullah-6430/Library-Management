@@ -1,313 +1,426 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | Crescent Central Library{% endblock %}
+{% block title %}Dashboard | Crescent Library{% endblock %}
+
+{% block breadcrumb %}
+Dashboard
+{% endblock %}
 
 {% block content %}
 
 <div class="page-header">
+
     <div>
-        <span class="page-eyebrow">OVERVIEW</span>
+        <div class="page-kicker">
+            <i class="bi bi-grid-1x2"></i>
+            CENTRAL LIBRARY
+        </div>
+
         <h1>Library Dashboard</h1>
-        <p>Monitor the collection and circulation activity of Crescent Central Library.</p>
+
+        <p>
+            Overview of your library collection and circulation activity.
+        </p>
     </div>
 
-    <a href="{{ url_for('add_book') }}" class="btn-primary">
-        <i class="bi bi-plus-lg"></i>
-        Add New Book
-    </a>
+    <div class="page-header-actions">
+
+        <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+            <i class="bi bi-upc-scan"></i>
+            Scan New Book
+        </a>
+
+    </div>
+
 </div>
 
-<!-- Statistics -->
-<div class="stats-grid">
 
-    <div class="stat-card">
-        <div class="stat-icon">
-            <i class="bi bi-bookshelf"></i>
+<!-- STATISTICS -->
+
+<div class="dashboard-grid">
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-top">
+
+            <div class="dashboard-card-icon">
+                <i class="bi bi-bookshelf"></i>
+            </div>
+
         </div>
 
-        <div class="stat-content">
-            <span>Total Books</span>
-            <strong>{{ stats.total_books|default(0) }}</strong>
-            <small>Books in catalogue</small>
+        <div class="dashboard-card-content">
+
+            <span class="dashboard-card-label">
+                Total Books
+            </span>
+
+            <strong class="dashboard-card-value">
+                {{ statistics.get('total_books', 0) }}
+            </strong>
+
+            <span class="dashboard-card-description">
+                Books registered in catalogue
+            </span>
+
         </div>
+
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon">
-            <i class="bi bi-check2-circle"></i>
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-top">
+
+            <div class="dashboard-card-icon">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+
         </div>
 
-        <div class="stat-content">
-            <span>Available</span>
-            <strong>{{ stats.available_books|default(0) }}</strong>
-            <small>Currently available</small>
+        <div class="dashboard-card-content">
+
+            <span class="dashboard-card-label">
+                Available Copies
+            </span>
+
+            <strong class="dashboard-card-value">
+                {{ statistics.get('available_copies', 0) }}
+            </strong>
+
+            <span class="dashboard-card-description">
+                Currently available
+            </span>
+
         </div>
+
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon">
-            <i class="bi bi-arrow-left-right"></i>
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-top">
+
+            <div class="dashboard-card-icon">
+                <i class="bi bi-arrow-left-right"></i>
+            </div>
+
         </div>
 
-        <div class="stat-content">
-            <span>Borrowed</span>
-            <strong>{{ stats.borrowed_books|default(0) }}</strong>
-            <small>Currently issued</small>
+        <div class="dashboard-card-content">
+
+            <span class="dashboard-card-label">
+                Borrowed Copies
+            </span>
+
+            <strong class="dashboard-card-value">
+                {{ statistics.get('borrowed_copies', 0) }}
+            </strong>
+
+            <span class="dashboard-card-description">
+                Currently issued
+            </span>
+
         </div>
+
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon">
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-top">
+
+            <div class="dashboard-card-icon">
+                <i class="bi bi-collection"></i>
+            </div>
+
+        </div>
+
+        <div class="dashboard-card-content">
+
+            <span class="dashboard-card-label">
+                Total Copies
+            </span>
+
+            <strong class="dashboard-card-value">
+                {{ statistics.get('total_copies', 0) }}
+            </strong>
+
+            <span class="dashboard-card-description">
+                Physical copies
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- QUICK ACTIONS -->
+
+<div class="section-heading">
+
+    <div>
+        <span class="section-label">
+            QUICK ACTIONS
+        </span>
+
+        <h2>
+            Library Operations
+        </h2>
+    </div>
+
+</div>
+
+
+<div class="quick-actions-grid">
+
+    <a
+        href="{{ url_for('add_book') }}"
+        class="quick-action-card"
+    >
+
+        <div class="quick-action-icon">
+            <i class="bi bi-camera"></i>
+        </div>
+
+        <div>
+
+            <h3>
+                AI Book Scanner
+            </h3>
+
+            <p>
+                Upload front and back images to automatically extract book details.
+            </p>
+
+        </div>
+
+        <i class="bi bi-arrow-right quick-action-arrow"></i>
+
+    </a>
+
+
+    <a
+        href="{{ url_for('books') }}"
+        class="quick-action-card"
+    >
+
+        <div class="quick-action-icon">
             <i class="bi bi-collection"></i>
         </div>
 
-        <div class="stat-content">
-            <span>Total Copies</span>
-            <strong>{{ stats.total_copies|default(0) }}</strong>
-            <small>Physical copies</small>
-        </div>
-    </div>
-
-</div>
-
-<!-- Main Dashboard -->
-<div class="dashboard-grid">
-
-    <!-- Quick Actions -->
-    <section class="dashboard-card">
-        <div class="card-header">
-            <div>
-                <span class="card-eyebrow">QUICK ACTIONS</span>
-                <h2>Library Operations</h2>
-            </div>
-
-            <i class="bi bi-grid"></i>
-        </div>
-
-        <div class="quick-actions">
-
-            <a href="{{ url_for('add_book') }}" class="quick-action">
-                <div class="quick-action-icon">
-                    <i class="bi bi-camera"></i>
-                </div>
-
-                <div>
-                    <strong>AI Book Scanner</strong>
-                    <span>Register a book using front and back images</span>
-                </div>
-
-                <i class="bi bi-chevron-right"></i>
-            </a>
-
-            <a href="{{ url_for('books') }}" class="quick-action">
-                <div class="quick-action-icon">
-                    <i class="bi bi-journal-text"></i>
-                </div>
-
-                <div>
-                    <strong>Book Catalogue</strong>
-                    <span>View and manage all registered books</span>
-                </div>
-
-                <i class="bi bi-chevron-right"></i>
-            </a>
-
-            <a href="{{ url_for('books', status='available') }}" class="quick-action">
-                <div class="quick-action-icon">
-                    <i class="bi bi-book"></i>
-                </div>
-
-                <div>
-                    <strong>Available Books</strong>
-                    <span>View books currently available</span>
-                </div>
-
-                <i class="bi bi-chevron-right"></i>
-            </a>
-
-            <a href="{{ url_for('books', status='borrowed') }}" class="quick-action">
-                <div class="quick-action-icon">
-                    <i class="bi bi-arrow-up-right"></i>
-                </div>
-
-                <div>
-                    <strong>Borrowed Books</strong>
-                    <span>View books currently issued</span>
-                </div>
-
-                <i class="bi bi-chevron-right"></i>
-            </a>
-
-        </div>
-    </section>
-
-    <!-- Collection Summary -->
-    <section class="dashboard-card">
-        <div class="card-header">
-            <div>
-                <span class="card-eyebrow">COLLECTION</span>
-                <h2>Library Summary</h2>
-            </div>
-
-            <i class="bi bi-bar-chart"></i>
-        </div>
-
-        <div class="collection-summary">
-
-            <div class="summary-row">
-                <div class="summary-label">
-                    <span class="summary-dot available"></span>
-                    Available Copies
-                </div>
-
-                <strong>{{ stats.available_copies|default(stats.available_books|default(0)) }}</strong>
-            </div>
-
-            <div class="summary-row">
-                <div class="summary-label">
-                    <span class="summary-dot borrowed"></span>
-                    Borrowed Copies
-                </div>
-
-                <strong>{{ stats.borrowed_copies|default(stats.borrowed_books|default(0)) }}</strong>
-            </div>
-
-            <div class="summary-row">
-                <div class="summary-label">
-                    <span class="summary-dot total"></span>
-                    Total Copies
-                </div>
-
-                <strong>{{ stats.total_copies|default(0) }}</strong>
-            </div>
-
-        </div>
-
-        <div class="collection-progress">
-            {% set total = stats.total_copies|default(0)|int %}
-            {% set available = stats.available_copies|default(stats.available_books|default(0))|int %}
-
-            {% if total > 0 %}
-                {% set percentage = ((available / total) * 100)|round|int %}
-            {% else %}
-                {% set percentage = 0 %}
-            {% endif %}
-
-            <div class="progress-header">
-                <span>Availability Rate</span>
-                <strong>{{ percentage }}%</strong>
-            </div>
-
-            <div class="progress-track">
-                <div class="progress-bar" style="width: {{ percentage }}%;"></div>
-            </div>
-        </div>
-    </section>
-
-</div>
-
-<!-- Recently Added Books -->
-<section class="dashboard-card recent-books">
-
-    <div class="card-header">
         <div>
-            <span class="card-eyebrow">CATALOGUE ACTIVITY</span>
-            <h2>Recently Added Books</h2>
+
+            <h3>
+                Book Catalogue
+            </h3>
+
+            <p>
+                Browse, search and manage all registered books.
+            </p>
+
         </div>
 
-        <a href="{{ url_for('books') }}" class="view-all">
-            View all
-            <i class="bi bi-arrow-right"></i>
-        </a>
+        <i class="bi bi-arrow-right quick-action-arrow"></i>
+
+    </a>
+
+
+    <a
+        href="{{ url_for('available_books') }}"
+        class="quick-action-card"
+    >
+
+        <div class="quick-action-icon">
+            <i class="bi bi-check-circle"></i>
+        </div>
+
+        <div>
+
+            <h3>
+                Available Books
+            </h3>
+
+            <p>
+                View books that are currently available in the library.
+            </p>
+
+        </div>
+
+        <i class="bi bi-arrow-right quick-action-arrow"></i>
+
+    </a>
+
+
+    <a
+        href="{{ url_for('borrowed_books') }}"
+        class="quick-action-card"
+    >
+
+        <div class="quick-action-icon">
+            <i class="bi bi-arrow-left-right"></i>
+        </div>
+
+        <div>
+
+            <h3>
+                Borrowed Books
+            </h3>
+
+            <p>
+                Review books that are currently issued.
+            </p>
+
+        </div>
+
+        <i class="bi bi-arrow-right quick-action-arrow"></i>
+
+    </a>
+
+</div>
+
+
+<!-- RECENT BOOKS -->
+
+<div class="section-heading recent-heading">
+
+    <div>
+        <span class="section-label">
+            COLLECTION
+        </span>
+
+        <h2>
+            Recently Added Books
+        </h2>
     </div>
+
+    <a
+        href="{{ url_for('books') }}"
+        class="text-link"
+    >
+        View Catalogue
+        <i class="bi bi-arrow-right"></i>
+    </a>
+
+</div>
+
+
+<div class="table-card">
 
     {% if recent_books %}
 
     <div class="table-wrapper">
-        <table class="library-table">
+
+        <table class="data-table">
 
             <thead>
+
                 <tr>
                     <th>Book</th>
                     <th>Author</th>
                     <th>ISBN</th>
                     <th>Category</th>
                     <th>Status</th>
-                    <th>Added</th>
+                    <th></th>
                 </tr>
+
             </thead>
 
             <tbody>
 
                 {% for book in recent_books %}
 
-                <tr>
+                <tr
+                    class="clickable-row"
+                    data-href="{{ url_for('book_details', book_id=book['Book ID']) }}"
+                >
 
                     <td>
-                        <div class="book-cell">
 
-                            {% if book['Front Image'] %}
-                            <img
-                                src="{{ url_for('uploaded_file', filename=book['Front Image']) }}"
-                                alt="{{ book['Book Title'] }}"
-                                class="book-thumbnail"
-                            >
-                            {% else %}
-                            <div class="book-thumbnail placeholder">
+                        <div class="book-table-info">
+
+                            <div class="book-mini-cover">
+
+                                {% if book.get('Front Image') %}
+
+                                <img
+                                    src="{{ url_for('uploaded_cover', filename=book['Front Image']) }}"
+                                    alt=""
+                                    onerror="this.style.display='none';"
+                                >
+
+                                {% else %}
+
                                 <i class="bi bi-book"></i>
+
+                                {% endif %}
+
                             </div>
-                            {% endif %}
 
                             <div>
-                                <a
-                                    href="{{ url_for('book_details', book_id=book['Book ID']) }}"
-                                    class="book-title"
-                                >
-                                    {{ book['Book Title']|default('Untitled Book') }}
-                                </a>
 
-                                <span class="book-id">
-                                    {{ book['Book ID'] }}
+                                <strong>
+                                    {{ book.get('Book Title', 'Not detected') }}
+                                </strong>
+
+                                <span>
+                                    {{ book.get('Book ID', '') }}
                                 </span>
+
                             </div>
 
                         </div>
+
                     </td>
 
-                    <td>
-                        {{ book['Author']|default('Not detected') }}
-                    </td>
 
                     <td>
-                        <span class="isbn-text">
-                            {{ book['ISBN']|default('Not detected') }}
+                        {{ book.get('Author', 'Not detected') }}
+                    </td>
+
+
+                    <td>
+                        {{ book.get('ISBN', 'Not detected') }}
+                    </td>
+
+
+                    <td>
+                        {{ book.get('Category', 'Not detected') }}
+                    </td>
+
+
+                    <td>
+
+                        {% if book.get('Available Copies', 0)|int > 0 %}
+
+                        <span class="status-badge status-success">
+                            Available
                         </span>
-                    </td>
 
-                    <td>
-                        <span class="category-badge">
-                            {{ book['Category']|default('Uncategorized') }}
-                        </span>
-                    </td>
-
-                    <td>
-                        {% set available = book['Available Copies']|default(0)|int %}
-
-                        {% if available > 0 %}
-                            <span class="status-badge available">
-                                <span></span>
-                                Available
-                            </span>
                         {% else %}
-                            <span class="status-badge borrowed">
-                                <span></span>
-                                Borrowed
-                            </span>
+
+                        <span class="status-badge status-warning">
+                            Borrowed
+                        </span>
+
                         {% endif %}
+
                     </td>
 
-                    <td>
-                        {{ book['Date Added']|default('—') }}
+
+                    <td class="table-action-cell">
+
+                        <a
+                            href="{{ url_for('book_details', book_id=book['Book ID']) }}"
+                            class="icon-button"
+                            title="View book"
+                            aria-label="View book"
+                        >
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+
                     </td>
 
                 </tr>
@@ -317,31 +430,37 @@
             </tbody>
 
         </table>
+
     </div>
 
     {% else %}
 
     <div class="empty-state">
 
-        <div class="empty-icon">
-            <i class="bi bi-journal-plus"></i>
+        <div class="empty-state-icon">
+            <i class="bi bi-bookshelf"></i>
         </div>
 
-        <h3>No books registered yet</h3>
+        <h3>
+            No books registered yet
+        </h3>
 
         <p>
-            Start building the library catalogue by scanning your first book.
+            Start by scanning the front and back images of a book.
         </p>
 
-        <a href="{{ url_for('add_book') }}" class="btn-primary">
-            <i class="bi bi-camera"></i>
-            Scan First Book
+        <a
+            href="{{ url_for('add_book') }}"
+            class="btn btn-primary"
+        >
+            <i class="bi bi-upc-scan"></i>
+            Scan Your First Book
         </a>
 
     </div>
 
     {% endif %}
 
-</section>
+</div>
 
 {% endblock %}
