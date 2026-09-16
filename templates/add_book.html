@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Book{% endblock %}
+
+{% block page_title %}Add New Book{% endblock %}
+
+{% block content %}
+
+<div class="section-card">
+
+    <div class="section-header">
+        <div>
+            <h2>Book Information</h2>
+            <p class="section-description">
+                Enter the details of the new book and upload its cover image.
+            </p>
+        </div>
+    </div>
+
+    <form method="POST"
+          action="{{ url_for('add_book') }}"
+          enctype="multipart/form-data">
+
+        <div class="form-grid">
+
+            <!-- Book Title -->
+            <div class="form-group full-width">
+                <label for="title">
+                    Book Title <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    class="form-control"
+                    placeholder="Enter book title"
+                    required
+                >
+            </div>
+
+            <!-- Author -->
+            <div class="form-group">
+                <label for="author">
+                    Author <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="author"
+                    name="author"
+                    class="form-control"
+                    placeholder="Enter author name"
+                    required
+                >
+            </div>
+
+            <!-- ISBN -->
+            <div class="form-group">
+                <label for="isbn">ISBN</label>
+
+                <input
+                    type="text"
+                    id="isbn"
+                    name="isbn"
+                    class="form-control"
+                    placeholder="Enter ISBN number"
+                >
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label for="category">Category</label>
+
+                <select
+                    id="category"
+                    name="category"
+                    class="form-control"
+                >
+                    <option value="">Select category</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Science">Science</option>
+                    <option value="Management">Management</option>
+                    <option value="Literature">Literature</option>
+                    <option value="History">History</option>
+                    <option value="Biography">Biography</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <!-- Publisher -->
+            <div class="form-group">
+                <label for="publisher">Publisher</label>
+
+                <input
+                    type="text"
+                    id="publisher"
+                    name="publisher"
+                    class="form-control"
+                    placeholder="Enter publisher name"
+                >
+            </div>
+
+            <!-- Publication Year -->
+            <div class="form-group">
+                <label for="year">Publication Year</label>
+
+                <input
+                    type="number"
+                    id="year"
+                    name="year"
+                    class="form-control"
+                    placeholder="e.g. 2024"
+                    min="1000"
+                    max="2100"
+                >
+            </div>
+
+            <!-- Total Copies -->
+            <div class="form-group">
+                <label for="copies">
+                    Total Copies <span class="required">*</span>
+                </label>
+
+                <input
+                    type="number"
+                    id="copies"
+                    name="copies"
+                    class="form-control"
+                    placeholder="Enter number of copies"
+                    min="1"
+                    required
+                >
+            </div>
+
+            <!-- Shelf Number -->
+            <div class="form-group">
+                <label for="shelf">Shelf Number</label>
+
+                <input
+                    type="text"
+                    id="shelf"
+                    name="shelf"
+                    class="form-control"
+                    placeholder="e.g. A-12"
+                >
+            </div>
+
+        </div>
+
+        <!-- Cover Upload -->
+        <div class="cover-upload-section">
+
+            <div class="section-header">
+                <div>
+                    <h2>Book Cover</h2>
+                    <p class="section-description">
+                        Upload a cover image for this book.
+                    </p>
+                </div>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+
+                <div class="upload-icon">
+                    📚
+                </div>
+
+                <h3>Upload Book Cover</h3>
+
+                <p>
+                    PNG, JPG, JPEG or WEBP
+                </p>
+
+                <label for="cover" class="btn btn-secondary">
+                    Choose Image
+                </label>
+
+                <input
+                    type="file"
+                    id="cover"
+                    name="cover"
+                    accept="image/png,image/jpeg,image/webp"
+                    hidden
+                >
+
+                <div id="fileName" class="file-name"></div>
+
+                <div id="previewContainer" class="preview-container">
+                    <img id="coverPreview" src="" alt="Book cover preview">
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+
+            <a href="{{ url_for('books') }}"
+               class="btn btn-secondary">
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Add Book
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    const coverInput = document.getElementById("cover");
+    const coverPreview = document.getElementById("coverPreview");
+    const previewContainer = document.getElementById("previewContainer");
+    const fileName = document.getElementById("fileName");
+
+    coverInput.addEventListener("change", function () {
+
+        const file = this.files[0];
+
+        if (!file) {
+            previewContainer.style.display = "none";
+            fileName.textContent = "";
+            return;
+        }
+
+        fileName.textContent = file.name;
+
+        const allowedTypes = [
+            "image/png",
+            "image/jpeg",
+            "image/webp"
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            alert("Please select a PNG, JPG, JPEG or WEBP image.");
+            this.value = "";
+            previewContainer.style.display = "none";
+            fileName.textContent = "";
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+            coverPreview.src = event.target.result;
+            previewContainer.style.display = "block";
+        };
+
+        reader.readAsDataURL(file);
+    });
+</script>
+
+{% endblock %}
