@@ -1,486 +1,484 @@
 {% extends "base.html" %}
 
-{% block title %}AI Book Scanner | Crescent Central Library{% endblock %}
+{% block title %}Add New Book{% endblock %}
 
 {% block content %}
 
 <div class="page-header">
     <div>
-        <span class="page-eyebrow">AI BOOK REGISTRATION</span>
-        <h1>Scan New Book</h1>
-        <p>Upload the front and back images of a book to automatically extract its details.</p>
+        <h1>Add New Book</h1>
+        <p>Upload the front and back covers to automatically register the book.</p>
     </div>
-
-    <a href="{{ url_for('books') }}" class="btn-secondary">
-        <i class="bi bi-arrow-left"></i>
-        Back to Catalogue
-    </a>
 </div>
 
-<form id="bookScanForm" method="POST" action="{{ url_for('add_book') }}" enctype="multipart/form-data">
+<div class="scanner-page">
 
-    <input type="hidden" name="extracted_data" id="extractedData">
+    <div class="scanner-card">
 
-    <div class="scanner-layout">
-
-        <!-- Upload Section -->
-        <section class="dashboard-card scanner-card">
-
-            <div class="card-header">
-                <div>
-                    <span class="card-eyebrow">STEP 01</span>
-                    <h2>Upload Book Images</h2>
-                </div>
-
-                <div class="scanner-step-icon">
-                    <i class="bi bi-camera"></i>
-                </div>
+        <div class="scanner-header">
+            <div>
+                <h2>AI-Powered Book Registration</h2>
+                <p>
+                    No manual book-detail entry is required.
+                    Upload both sides of the book and let the system detect the details.
+                </p>
             </div>
 
-            <p class="section-description">
-                Upload clear images of both sides of the book. The AI scanner will
-                identify available bibliographic information automatically.
-            </p>
+            <div class="scanner-status">
+                <span class="status-dot"></span>
+                Automatic Detection
+            </div>
+        </div>
+
+        <form id="bookForm"
+              method="POST"
+              action="{{ url_for('add_book') }}"
+              enctype="multipart/form-data">
 
             <div class="upload-grid">
 
-                <!-- Front Image -->
-                <div class="upload-box" id="frontUploadBox">
-
-                    <input
-                        type="file"
-                        id="frontImage"
-                        name="front_image"
-                        accept="image/jpeg,image/png,image/webp"
-                        hidden
-                        required
-                    >
-
-                    <label for="frontImage" class="upload-content">
-
-                        <div class="upload-icon">
-                            <i class="bi bi-image"></i>
-                        </div>
-
-                        <strong>Front Cover</strong>
-
-                        <span>
-                            Drag & drop or click to browse
-                        </span>
-
-                        <small>
-                            JPG, PNG or WEBP
-                        </small>
-
+                <!-- FRONT IMAGE -->
+                <div class="upload-section">
+                    <label class="upload-label">
+                        Front Cover
+                        <span>Required</span>
                     </label>
 
-                    <div class="image-preview" id="frontPreview">
-                        <img src="" alt="Front cover preview">
-                        <button type="button" class="remove-image" data-target="frontImage">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
+                    <div class="upload-box"
+                         id="frontUploadBox">
 
-                </div>
+                        <input
+                            type="file"
+                            id="front_image"
+                            name="front_image"
+                            accept=".jpg,.jpeg,.png,.webp"
+                            data-preview="frontPreview"
+                            required
+                            hidden
+                        >
 
-                <!-- Back Image -->
-                <div class="upload-box" id="backUploadBox">
+                        <div class="upload-content" id="frontUploadContent">
+                            <div class="upload-icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 16V4M12 4L7 9M12 4L17 9"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"/>
+                                    <path d="M5 14V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V14"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
 
-                    <input
-                        type="file"
-                        id="backImage"
-                        name="back_image"
-                        accept="image/jpeg,image/png,image/webp"
-                        hidden
-                        required
-                    >
+                            <h3>Upload Front Cover</h3>
+                            <p>Drag & drop or browse your image</p>
+                            <small>JPG, JPEG, PNG or WEBP</small>
 
-                    <label for="backImage" class="upload-content">
-
-                        <div class="upload-icon">
-                            <i class="bi bi-card-image"></i>
+                            <button type="button"
+                                    class="btn btn-secondary upload-browse"
+                                    onclick="document.getElementById('front_image').click()">
+                                Browse Image
+                            </button>
                         </div>
 
-                        <strong>Back Cover</strong>
+                        <div class="image-preview" id="frontPreview" hidden>
+                            <img src="" alt="Front cover preview">
 
-                        <span>
-                            Drag & drop or click to browse
-                        </span>
+                            <button type="button"
+                                    class="remove-image"
+                                    data-input="front_image"
+                                    data-preview="frontPreview"
+                                    aria-label="Remove front image">
+                                ×
+                            </button>
+                        </div>
 
-                        <small>
-                            JPG, PNG or WEBP
-                        </small>
+                    </div>
+                </div>
 
+
+                <!-- BACK IMAGE -->
+                <div class="upload-section">
+                    <label class="upload-label">
+                        Back Cover
+                        <span>Required</span>
                     </label>
 
-                    <div class="image-preview" id="backPreview">
-                        <img src="" alt="Back cover preview">
-                        <button type="button" class="remove-image" data-target="backImage">
-                            <i class="bi bi-x"></i>
-                        </button>
+                    <div class="upload-box"
+                         id="backUploadBox">
+
+                        <input
+                            type="file"
+                            id="back_image"
+                            name="back_image"
+                            accept=".jpg,.jpeg,.png,.webp"
+                            data-preview="backPreview"
+                            required
+                            hidden
+                        >
+
+                        <div class="upload-content" id="backUploadContent">
+                            <div class="upload-icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 16V4M12 4L7 9M12 4L17 9"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"/>
+                                    <path d="M5 14V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V14"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
+
+                            <h3>Upload Back Cover</h3>
+                            <p>Drag & drop or browse your image</p>
+                            <small>JPG, JPEG, PNG or WEBP</small>
+
+                            <button type="button"
+                                    class="btn btn-secondary upload-browse"
+                                    onclick="document.getElementById('back_image').click()">
+                                Browse Image
+                            </button>
+                        </div>
+
+                        <div class="image-preview" id="backPreview" hidden>
+                            <img src="" alt="Back cover preview">
+
+                            <button type="button"
+                                    class="remove-image"
+                                    data-input="back_image"
+                                    data-preview="backPreview"
+                                    aria-label="Remove back image">
+                                ×
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- SCAN BUTTON -->
+            <div class="scanner-action">
+                <button type="button"
+                        id="scanBookButton"
+                        class="btn btn-primary btn-large">
+                    <span class="button-icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 7V5C4 4.45 4.45 4 5 4H7"
+                                  stroke="currentColor"
+                                  stroke-width="1.8"
+                                  stroke-linecap="round"/>
+                            <path d="M17 4H19C19.55 4 20 4.45 20 5V7"
+                                  stroke="currentColor"
+                                  stroke-width="1.8"
+                                  stroke-linecap="round"/>
+                            <path d="M20 17V19C20 19.55 19.55 20 19 20H17"
+                                  stroke="currentColor"
+                                  stroke-width="1.8"
+                                  stroke-linecap="round"/>
+                            <path d="M7 20H5C4.45 20 4 19.55 4 19V17"
+                                  stroke="currentColor"
+                                  stroke-width="1.8"
+                                  stroke-linecap="round"/>
+                            <path d="M8 12H16"
+                                  stroke="currentColor"
+                                  stroke-width="1.8"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </span>
+
+                    <span id="scanButtonText">Scan & Detect Book Details</span>
+                </button>
+
+                <p class="scanner-note">
+                    The system will analyze both images using OCR, ISBN detection and AI metadata extraction.
+                </p>
+            </div>
+
+
+            <!-- LOADING -->
+            <div id="scanLoading"
+                 class="scan-loading"
+                 hidden>
+
+                <div class="loading-spinner"></div>
+
+                <div>
+                    <strong>Analyzing book...</strong>
+                    <p>Reading text, ISBN and publication details.</p>
+                </div>
+            </div>
+
+
+            <!-- DETECTED INFORMATION -->
+            <div id="detectedSection"
+                 class="detected-section"
+                 hidden>
+
+                <div class="section-heading">
+                    <div>
+                        <span class="section-kicker">AI EXTRACTION</span>
+                        <h2>Book Information Detected</h2>
+                        <p>Review the information detected from the uploaded covers.</p>
                     </div>
 
+                    <div class="detected-badge">
+                        <span>✓</span>
+                        Detected
+                    </div>
                 </div>
 
-            </div>
 
-            <div class="scanner-notice">
-                <i class="bi bi-info-circle"></i>
-
-                <div>
-                    <strong>For better extraction</strong>
-                    <p>
-                        Ensure the ISBN, publisher information and price on the
-                        back cover are clearly visible.
-                    </p>
-                </div>
-            </div>
-
-            <div class="scanner-actions">
-
-                <button type="button" id="scanButton" class="btn-primary scanner-button">
-                    <i class="bi bi-stars"></i>
-                    <span>Scan Book with AI</span>
-                </button>
-
-                <button type="button" id="resetButton" class="btn-secondary">
-                    <i class="bi bi-arrow-counterclockwise"></i>
-                    Reset
-                </button>
-
-            </div>
-
-        </section>
-
-        <!-- Detection Section -->
-        <section class="dashboard-card detection-card">
-
-            <div class="card-header">
-                <div>
-                    <span class="card-eyebrow">STEP 02</span>
-                    <h2>Detected Information</h2>
-                </div>
-
-                <div class="scan-status" id="scanStatus">
-                    <span class="status-indicator"></span>
-                    Waiting for scan
-                </div>
-            </div>
-
-            <div id="scanLoader" class="scan-loader">
-
-                <div class="loader-ring"></div>
-
-                <h3>Analyzing book images</h3>
-
-                <p>
-                    Extracting title, author, ISBN, publisher and other available
-                    information...
-                </p>
-
-            </div>
-
-            <div id="emptyDetection" class="detection-empty">
-
-                <div class="empty-icon">
-                    <i class="bi bi-stars"></i>
-                </div>
-
-                <h3>Book information will appear here</h3>
-
-                <p>
-                    Upload both images and click
-                    <strong>Scan Book with AI</strong>.
-                </p>
-
-            </div>
-
-            <div id="detectedInformation" class="detected-information">
-
-                <div class="detection-grid">
+                <div class="detected-grid">
 
                     <div class="detected-field">
                         <label>Book Title</label>
-                        <div class="detected-value" id="detectedTitle">Not detected</div>
+                        <input type="text"
+                               id="detected_title"
+                               readonly>
                     </div>
 
                     <div class="detected-field">
                         <label>Author</label>
-                        <div class="detected-value" id="detectedAuthor">Not detected</div>
+                        <input type="text"
+                               id="detected_author"
+                               readonly>
                     </div>
 
                     <div class="detected-field">
                         <label>Subtitle</label>
-                        <div class="detected-value" id="detectedSubtitle">Not detected</div>
+                        <input type="text"
+                               id="detected_subtitle"
+                               readonly>
                     </div>
 
                     <div class="detected-field">
                         <label>ISBN</label>
-                        <div class="detected-value" id="detectedISBN">Not detected</div>
+                        <input type="text"
+                               id="detected_isbn"
+                               readonly>
                     </div>
 
                     <div class="detected-field">
                         <label>Publisher</label>
-                        <div class="detected-value" id="detectedPublisher">Not detected</div>
+                        <input type="text"
+                               id="detected_publisher"
+                               readonly>
                     </div>
 
                     <div class="detected-field">
                         <label>Publication Year</label>
-                        <div class="detected-value" id="detectedYear">Not detected</div>
+                        <input type="text"
+                               id="detected_year"
+                               readonly>
                     </div>
 
                     <div class="detected-field">
                         <label>Edition</label>
-                        <div class="detected-value" id="detectedEdition">Not detected</div>
+                        <input type="text"
+                               id="detected_edition"
+                               readonly>
                     </div>
 
                     <div class="detected-field">
                         <label>Category</label>
-                        <div class="detected-value" id="detectedCategory">Not detected</div>
+                        <input type="text"
+                               id="detected_category"
+                               readonly>
                     </div>
 
                     <div class="detected-field">
                         <label>Price</label>
-                        <div class="detected-value" id="detectedPrice">Not detected</div>
+                        <input type="text"
+                               id="detected_price"
+                               readonly>
                     </div>
 
                 </div>
 
-                <div class="scan-summary">
 
-                    <div>
-                        <i class="bi bi-check-circle"></i>
+                <!-- AUTOMATIC COPY INFORMATION -->
+                <div class="automatic-info">
+
+                    <div class="automatic-info-item">
+                        <span class="info-label">Total Copies</span>
+                        <strong>1</strong>
+                    </div>
+
+                    <div class="automatic-info-item">
+                        <span class="info-label">Available Copies</span>
+                        <strong>1</strong>
+                    </div>
+
+                    <div class="automatic-info-item">
+                        <span class="info-label">Borrowed Copies</span>
+                        <strong>0</strong>
+                    </div>
+
+                    <div class="automatic-info-item">
+                        <span class="info-label">Shelf Number</span>
+                        <strong>Not assigned</strong>
+                    </div>
+
+                </div>
+
+
+                <!-- HIDDEN EXTRACTED DATA -->
+                <input type="hidden"
+                       id="extracted_data"
+                       name="extracted_data">
+
+
+                <div class="save-section">
+
+                    <div class="save-information">
+                        <div class="save-icon">✓</div>
 
                         <div>
-                            <strong>Automatic registration</strong>
-                            <span>
-                                The detected information will be stored in the
-                                library Excel catalogue.
-                            </span>
+                            <strong>Ready to save</strong>
+                            <p>
+                                The detected information will be stored automatically
+                                in the library Excel database.
+                            </p>
                         </div>
                     </div>
 
-                    <span class="ai-badge">
-                        <i class="bi bi-stars"></i>
-                        AI Scanned
-                    </span>
+                    <button type="submit"
+                            id="saveBookButton"
+                            class="btn btn-primary btn-large">
+                        Save Book to Library
+                    </button>
 
                 </div>
 
             </div>
 
-        </section>
+        </form>
 
     </div>
 
-    <!-- Save Section -->
-    <section class="dashboard-card save-card">
 
-        <div class="save-information">
+    <!-- INFORMATION CARD -->
+    <div class="scanner-info-card">
 
-            <div class="save-icon">
-                <i class="bi bi-database-check"></i>
-            </div>
-
-            <div>
-                <span class="card-eyebrow">STEP 03</span>
-                <h2>Save to Library</h2>
-
-                <p>
-                    A unique Book ID will be generated automatically. New books
-                    are registered with one available copy.
-                </p>
-            </div>
-
+        <div class="info-card-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9"
+                        stroke="currentColor"
+                        stroke-width="1.8"/>
+                <path d="M12 10V16"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"/>
+                <circle cx="12" cy="7" r="1"
+                        fill="currentColor"/>
+            </svg>
         </div>
 
-        <button
-            type="submit"
-            id="saveButton"
-            class="btn-primary save-button"
-            disabled
-        >
-            <i class="bi bi-check2-circle"></i>
-            Save Book to Library
-        </button>
+        <div>
+            <h3>Automatic Registration</h3>
 
-    </section>
+            <p>
+                Book details are extracted from the uploaded front and back covers.
+                The system automatically detects the title, author, ISBN, publisher,
+                edition, publication year, category and price whenever available.
+            </p>
 
-</form>
+            <p>
+                Information that cannot be detected is stored as
+                <strong>Not detected</strong>.
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    const form = document.getElementById("bookScanForm");
+    const form = document.getElementById("bookForm");
+    const frontInput = document.getElementById("front_image");
+    const backInput = document.getElementById("back_image");
 
-    const frontInput = document.getElementById("frontImage");
-    const backInput = document.getElementById("backImage");
+    const scanButton = document.getElementById("scanBookButton");
+    const scanButtonText = document.getElementById("scanButtonText");
+    const scanLoading = document.getElementById("scanLoading");
+    const detectedSection = document.getElementById("detectedSection");
+    const extractedDataInput = document.getElementById("extracted_data");
 
-    const frontBox = document.getElementById("frontUploadBox");
-    const backBox = document.getElementById("backUploadBox");
-
-    const frontPreview = document.getElementById("frontPreview");
-    const backPreview = document.getElementById("backPreview");
-
-    const scanButton = document.getElementById("scanButton");
-    const resetButton = document.getElementById("resetButton");
-    const saveButton = document.getElementById("saveButton");
-
-    const scanLoader = document.getElementById("scanLoader");
-    const emptyDetection = document.getElementById("emptyDetection");
-    const detectedInformation = document.getElementById("detectedInformation");
-
-    const scanStatus = document.getElementById("scanStatus");
-    const extractedData = document.getElementById("extractedData");
-
-    let scannedSuccessfully = false;
-
-    function showPreview(input, preview, box) {
-
-        if (!input.files || !input.files[0]) {
-            return;
-        }
-
-        const file = input.files[0];
-
-        if (!file.type.startsWith("image/")) {
-            input.value = "";
-            return;
-        }
-
-        const reader = new FileReader();
-
-        reader.onload = function (event) {
-
-            const image = preview.querySelector("img");
-
-            image.src = event.target.result;
-
-            box.classList.add("has-image");
-            preview.classList.add("visible");
-        };
-
-        reader.readAsDataURL(file);
+    function hasFiles() {
+        return (
+            frontInput.files &&
+            frontInput.files.length > 0 &&
+            backInput.files &&
+            backInput.files.length > 0
+        );
     }
 
-    frontInput.addEventListener("change", function () {
-        showPreview(frontInput, frontPreview, frontBox);
-        scannedSuccessfully = false;
-        saveButton.disabled = true;
-    });
-
-    backInput.addEventListener("change", function () {
-        showPreview(backInput, backPreview, backBox);
-        scannedSuccessfully = false;
-        saveButton.disabled = true;
-    });
-
-    document.querySelectorAll(".remove-image").forEach(function (button) {
-
-        button.addEventListener("click", function (event) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            const targetId = button.dataset.target;
-            const input = document.getElementById(targetId);
-
-            if (targetId === "frontImage") {
-                frontBox.classList.remove("has-image");
-                frontPreview.classList.remove("visible");
-                frontPreview.querySelector("img").src = "";
-            }
-
-            if (targetId === "backImage") {
-                backBox.classList.remove("has-image");
-                backPreview.classList.remove("visible");
-                backPreview.querySelector("img").src = "";
-            }
-
-            input.value = "";
-
-            scannedSuccessfully = false;
-            saveButton.disabled = true;
-        });
-
-    });
-
-    function updateDetectedField(id, value) {
-
-        const element = document.getElementById(id);
-
-        if (!element) {
-            return;
-        }
-
+    function displayValue(value) {
         if (
             value === null ||
             value === undefined ||
-            String(value).trim() === "" ||
-            String(value).toLowerCase() === "null"
+            String(value).trim() === ""
         ) {
-            element.textContent = "Not detected";
-            element.classList.add("not-detected");
-        } else {
-            element.textContent = value;
-            element.classList.remove("not-detected");
+            return "Not detected";
         }
+
+        return String(value);
     }
 
-    function displayDetectedData(data) {
+    function populateDetectedData(data) {
 
-        updateDetectedField("detectedTitle", data.title);
-        updateDetectedField("detectedAuthor", data.author);
-        updateDetectedField("detectedSubtitle", data.subtitle);
-        updateDetectedField("detectedISBN", data.isbn);
-        updateDetectedField("detectedPublisher", data.publisher);
-        updateDetectedField("detectedYear", data.year);
-        updateDetectedField("detectedEdition", data.edition);
-        updateDetectedField("detectedCategory", data.category);
-        updateDetectedField("detectedPrice", data.price);
+        document.getElementById("detected_title").value =
+            displayValue(data.title);
 
-        extractedData.value = JSON.stringify(data);
+        document.getElementById("detected_author").value =
+            displayValue(data.author);
 
-        detectedInformation.classList.add("visible");
-        emptyDetection.classList.add("hidden");
+        document.getElementById("detected_subtitle").value =
+            displayValue(data.subtitle);
 
-        scanLoader.classList.remove("visible");
+        document.getElementById("detected_isbn").value =
+            displayValue(data.isbn);
 
-        scanStatus.classList.add("success");
-        scanStatus.innerHTML =
-            '<span class="status-indicator"></span> Scan completed';
+        document.getElementById("detected_publisher").value =
+            displayValue(data.publisher);
 
-        scannedSuccessfully = true;
-        saveButton.disabled = false;
+        document.getElementById("detected_year").value =
+            displayValue(data.year);
+
+        document.getElementById("detected_edition").value =
+            displayValue(data.edition);
+
+        document.getElementById("detected_category").value =
+            displayValue(data.category);
+
+        document.getElementById("detected_price").value =
+            displayValue(data.price);
+
+        extractedDataInput.value = JSON.stringify(data);
+
+        detectedSection.hidden = false;
+
+        detectedSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
     }
 
-    function showScanError(message) {
-
-        scanLoader.classList.remove("visible");
-        detectedInformation.classList.remove("visible");
-        emptyDetection.classList.remove("hidden");
-
-        scanStatus.classList.remove("success");
-        scanStatus.classList.add("error");
-
-        scanStatus.innerHTML =
-            '<span class="status-indicator"></span> Scan failed';
-
-        alert(message || "Unable to scan the book. Please try again.");
-
-        scannedSuccessfully = false;
-        saveButton.disabled = true;
-    }
 
     scanButton.addEventListener("click", async function () {
 
-        if (!frontInput.files || !frontInput.files[0]) {
-            alert("Please upload the front cover image.");
-            return;
-        }
-
-        if (!backInput.files || !backInput.files[0]) {
-            alert("Please upload the back cover image.");
+        if (!hasFiles()) {
+            alert("Please upload both the front and back images of the book.");
             return;
         }
 
@@ -490,107 +488,91 @@ document.addEventListener("DOMContentLoaded", function () {
         formData.append("back_image", backInput.files[0]);
 
         scanButton.disabled = true;
-
-        scanButton.innerHTML =
-            '<i class="bi bi-arrow-repeat spin"></i>' +
-            '<span>Scanning...</span>';
-
-        scanLoader.classList.add("visible");
-        emptyDetection.classList.add("hidden");
-        detectedInformation.classList.remove("visible");
-
-        scanStatus.classList.remove("success", "error");
-        scanStatus.innerHTML =
-            '<span class="status-indicator"></span> Processing';
+        scanButtonText.textContent = "Scanning Book...";
+        scanLoading.hidden = false;
+        detectedSection.hidden = true;
 
         try {
 
-            const response = await fetch("{{ url_for('scan_book') }}", {
-                method: "POST",
-                body: formData
-            });
+            const response = await fetch(
+                "{{ url_for('scan_book') }}",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
 
-            let result;
+            const contentType =
+                response.headers.get("content-type") || "";
 
-            try {
-                result = await response.json();
-            } catch (jsonError) {
-                throw new Error("The server returned an invalid response.");
+            if (!contentType.includes("application/json")) {
+                throw new Error(
+                    "The server returned an invalid response. Please check the server logs."
+                );
             }
+
+            const result = await response.json();
 
             if (!response.ok || !result.success) {
                 throw new Error(
                     result.error ||
-                    result.message ||
-                    "Book scanning failed."
+                    "Unable to extract book information."
                 );
             }
 
             const data = result.data || result.book || result;
 
-            displayDetectedData(data);
+            populateDetectedData(data);
 
         } catch (error) {
 
-            console.error("Book scan error:", error);
+            console.error("Book scanning error:", error);
 
-            showScanError(
+            alert(
                 error.message ||
-                "Unable to scan the book. Please check the images and try again."
+                "Book scanning failed. Please try again."
             );
 
         } finally {
 
             scanButton.disabled = false;
+            scanButtonText.textContent =
+                "Scan & Detect Book Details";
 
-            scanButton.innerHTML =
-                '<i class="bi bi-stars"></i>' +
-                '<span>Scan Book with AI</span>';
+            scanLoading.hidden = true;
         }
-
     });
 
-    resetButton.addEventListener("click", function () {
-
-        form.reset();
-
-        frontBox.classList.remove("has-image");
-        backBox.classList.remove("has-image");
-
-        frontPreview.classList.remove("visible");
-        backPreview.classList.remove("visible");
-
-        frontPreview.querySelector("img").src = "";
-        backPreview.querySelector("img").src = "";
-
-        detectedInformation.classList.remove("visible");
-        emptyDetection.classList.remove("hidden");
-        scanLoader.classList.remove("visible");
-
-        scanStatus.classList.remove("success", "error");
-        scanStatus.innerHTML =
-            '<span class="status-indicator"></span> Waiting for scan';
-
-        extractedData.value = "";
-
-        scannedSuccessfully = false;
-        saveButton.disabled = true;
-    });
 
     form.addEventListener("submit", function (event) {
 
-        if (!scannedSuccessfully || !extractedData.value) {
+        if (!extractedDataInput.value) {
             event.preventDefault();
 
-            alert("Please scan the book successfully before saving.");
+            alert(
+                "Please scan the book and detect its details before saving."
+            );
+
             return;
         }
 
-        saveButton.disabled = true;
+        if (!hasFiles()) {
+            event.preventDefault();
 
-        saveButton.innerHTML =
-            '<i class="bi bi-arrow-repeat spin"></i>' +
-            '<span>Saving...</span>';
+            alert(
+                "Please upload both the front and back images."
+            );
+
+            return;
+        }
+
+        const saveButton =
+            document.getElementById("saveBookButton");
+
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.textContent = "Saving Book...";
+        }
     });
 
 });
