@@ -1,4 +1,5 @@
 import os
+import traceback
 from datetime import datetime
 
 from flask import (
@@ -13,23 +14,51 @@ from flask import (
 )
 
 from utils.book_manager import BookManager
+from utils.excel_manager import create_excel_file
 
 
 # ============================================================
-# APPLICATION CONFIGURATION
+# PATH CONFIGURATION
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DATA_FOLDER = os.path.join(BASE_DIR, "data")
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads", "book_covers")
+DATA_FOLDER = os.path.join(
+    BASE_DIR,
+    "data"
+)
 
-EXCEL_FILE = os.path.join(DATA_FOLDER, "library_books.xlsx")
+UPLOAD_FOLDER = os.path.join(
+    BASE_DIR,
+    "uploads",
+    "book_covers"
+)
+
+EXCEL_FILE = os.path.join(
+    DATA_FOLDER,
+    "library_books.xlsx"
+)
 
 
-# Create required folders automatically
+# ============================================================
+# CREATE REQUIRED DIRECTORIES
+# ============================================================
+
 os.makedirs(DATA_FOLDER, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+# ============================================================
+# CREATE EXCEL DATABASE IF IT DOES NOT EXIST
+# ============================================================
+
+try:
+    create_excel_file(EXCEL_FILE)
+    print("Excel database initialized successfully.")
+except Exception as error:
+    print("WARNING: Could not initialize Excel database.")
+    print("Error:", error)
+    traceback.print_exc()
 
 
 # ============================================================
@@ -38,10 +67,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = Flask(__name__)
 
-app.secret_key = "crescent-library-secret-key"
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "crescent-library-development-secret"
+)
 
-# Maximum uploaded file size = 5 MB
+# Maximum upload size: 5 MB
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+
+# Upload folder
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
 # ============================================================
@@ -55,39 +90,54 @@ book_manager = BookManager(
 
 
 # ============================================================
-# HELPER FUNCTIONS
+# HELPER FUNCTION
 # ============================================================
 
 def generate_book_id():
     """
-    Generate the next unique Book ID.
+    Generate a unique Book ID.
 
-    Example:
-    LIB0001
-    LIB0002
-    LIB0003
+    Examples:
+        LIB0001
+        LIB0002
+        LIB0003
+
+    Deleted book IDs will not be reused.
     """
 
-    books = book_manager.get_books()
+    try:
+        books = book_manager.get_books()
+    except Exception:
+        books = []
 
     highest_number = 0
 
     for book in books:
-        book_id = str(book.get("book_id", ""))
 
-        if book_id.startswith("LIB"):
-            try:
-                number = int(book_id.replace("LIB", ""))
-                highest_number = max(highest_number, number)
-            except ValueError:
-                continue
+        book_id = str(
+            book.get("book_id", "")
+        ).strip().upper()
+
+        if not book_id.startswith("LIB"):
+            continue
+
+        number_part = book_id[3:]
+
+        try:
+            number = int(number_part)
+
+            if number > highest_number:
+                highest_number = number
+
+        except ValueError:
+            continue
 
     return f"LIB{highest_number + 1:04d}"
 
 
-def get_form_book_data(form):
+def get_book_form_data(form):
     """
-    Read book information from the submitted form.
+    Read and clean book information from HTML form.
     """
 
     return {
@@ -103,21 +153,53 @@ def get_form_book_data(form):
 
 
 # ============================================================
-# DASHBOARD
+# HOME / DASHBOARD
 # ============================================================
 
 @app.route("/")
 def dashboard():
 
-    statistics = book_manager.get_library_statistics()
-    books = book_manager.get_books()
+    try:
 
-    return render_template(
-        "dashboard.html",
-        statistics=statistics,
-        books=books,
-        current_date=datetime.now().strftime("%d %B %Y")
-    )
+        statistics = book_manager.get_library_statistics()
+
+        books = book_manager.get_books()
+
+        return render_template(
+            "dashboard.html",
+            statistics=statistics,
+            books=books,
+            current_date=datetime.now().strftime(
+                "%d %B %Y"
+            )
+        )
+
+    except Exception as error:
+
+        print("\n" + "=" * 70)
+        print("DASHBOARD ERROR")
+        print("=" * 70)
+
+        print("Error:", error)
+
+        traceback.print_exc()
+
+        print("=" * 70 + "\n")
+
+        return """
+        <h1>Crescent College Library</h1>
+        <h2>Dashboard Error</h2>
+
+        <p>
+            The application is running, but the dashboard
+            encountered an error.
+        </p>
+
+        <p>
+            Check the terminal for the complete traceback.
+        </p>
+
+        """, 500
 
 
 # ============================================================
@@ -125,218 +207,467 @@ def dashboard():
 # ============================================================
 
 @app.route("/books")
-def books():
+def books_page():
 
-    search_query = request.args.get("search", "").strip()
+    try:
 
-    if search_query:
-        book_list = book_manager.search_books(search_query)
-    else:
-        book_list = book_manager.get_books()
+        search_query = request.args.get(
+            "search",
+            ""
+        ).strip()
 
-    return render_template(
-        "books.html",
-        books=book_list,
-        search_query=search_query
-    )
+        if search_query:
+
+            books = book_manager.search_books(
+                search_query
+            )
+
+        else:
+
+            books = book_manager.get_books()
+
+        return render_template(
+            "books.html",
+            books=books,
+            search_query=search_query
+        )
+
+    except Exception as error:
+
+        print("\nBOOKS PAGE ERROR")
+        traceback.print_exc()
+
+        flash(
+            f"Unable to load books: {error}",
+            "danger"
+        )
+
+        return redirect(
+            url_for("dashboard")
+        )
 
 
 # ============================================================
 # ADD BOOK
 # ============================================================
 
-@app.route("/add-book", methods=["GET", "POST"])
+@app.route(
+    "/add-book",
+    methods=["GET", "POST"]
+)
 def add_book():
 
-    if request.method == "POST":
+    if request.method == "GET":
 
-        try:
+        return render_template(
+            "add_book.html"
+        )
 
-            book_data = get_form_book_data(request.form)
+    try:
 
-            # Generate unique Book ID
-            book_id = generate_book_id()
+        # ----------------------------------------------------
+        # GET FORM DATA
+        # ----------------------------------------------------
 
-            book_data["book_id"] = book_id
+        book_data = get_book_form_data(
+            request.form
+        )
 
-            # Cover image
-            cover_file = request.files.get("cover")
+        # ----------------------------------------------------
+        # VALIDATE REQUIRED FIELDS
+        # ----------------------------------------------------
 
-            # Create book
-            success, message = book_manager.create_book(
-                book_data,
-                cover_file
-            )
-
-            if success:
-                flash(message, "success")
-                return redirect(url_for("books"))
-
-            flash(message, "danger")
-
-        except Exception as error:
-
-            print("ADD BOOK ERROR:", error)
+        if not book_data["title"]:
 
             flash(
-                f"Unable to add book: {str(error)}",
+                "Book title is required.",
                 "danger"
             )
 
-    return render_template("add_book.html")
+            return render_template(
+                "add_book.html"
+            )
+
+        if not book_data["author"]:
+
+            flash(
+                "Author name is required.",
+                "danger"
+            )
+
+            return render_template(
+                "add_book.html"
+            )
+
+        if not book_data["copies"]:
+
+            flash(
+                "Number of copies is required.",
+                "danger"
+            )
+
+            return render_template(
+                "add_book.html"
+            )
+
+        # ----------------------------------------------------
+        # GENERATE BOOK ID
+        # ----------------------------------------------------
+
+        book_data["book_id"] = generate_book_id()
+
+        # ----------------------------------------------------
+        # GET COVER IMAGE
+        # ----------------------------------------------------
+
+        cover_file = request.files.get(
+            "cover"
+        )
+
+        # ----------------------------------------------------
+        # CREATE BOOK
+        # ----------------------------------------------------
+
+        result = book_manager.create_book(
+            book_data,
+            cover_file
+        )
+
+        # BookManager returns:
+        # (success, message)
+
+        success, message = result
+
+        if success:
+
+            flash(
+                message,
+                "success"
+            )
+
+            return redirect(
+                url_for("books_page")
+            )
+
+        flash(
+            message,
+            "danger"
+        )
+
+        return render_template(
+            "add_book.html"
+        )
+
+    except Exception as error:
+
+        print("\n" + "=" * 70)
+        print("ADD BOOK ERROR")
+        print("=" * 70)
+
+        traceback.print_exc()
+
+        print("=" * 70 + "\n")
+
+        flash(
+            f"Unable to add book: {error}",
+            "danger"
+        )
+
+        return render_template(
+            "add_book.html"
+        )
 
 
 # ============================================================
 # BOOK DETAILS
 # ============================================================
 
-@app.route("/book/<book_id>")
+@app.route(
+    "/book/<book_id>"
+)
 def book_details(book_id):
 
-    book = book_manager.get_book(book_id)
+    try:
 
-    if not book:
+        book = book_manager.get_book(
+            book_id
+        )
 
-        flash("Book not found.", "danger")
+        if not book:
 
-        return redirect(url_for("books"))
+            flash(
+                "Book not found.",
+                "danger"
+            )
 
-    return render_template(
-        "book_details.html",
-        book=book
-    )
+            return redirect(
+                url_for("books_page")
+            )
+
+        return render_template(
+            "book_details.html",
+            book=book
+        )
+
+    except Exception as error:
+
+        print("\nBOOK DETAILS ERROR")
+        traceback.print_exc()
+
+        flash(
+            f"Unable to load book: {error}",
+            "danger"
+        )
+
+        return redirect(
+            url_for("books_page")
+        )
 
 
 # ============================================================
 # EDIT BOOK
 # ============================================================
 
-@app.route("/edit-book/<book_id>", methods=["GET", "POST"])
+@app.route(
+    "/edit-book/<book_id>",
+    methods=["GET", "POST"]
+)
 def edit_book(book_id):
 
-    book = book_manager.get_book(book_id)
+    try:
 
-    if not book:
+        # ----------------------------------------------------
+        # FIND BOOK
+        # ----------------------------------------------------
 
-        flash("Book not found.", "danger")
+        book = book_manager.get_book(
+            book_id
+        )
 
-        return redirect(url_for("books"))
-
-    if request.method == "POST":
-
-        try:
-
-            book_data = get_form_book_data(request.form)
-
-            # Keep the existing Book ID
-            book_data["book_id"] = book_id
-
-            # Existing cover
-            book_data["cover"] = book.get("cover", "")
-
-            # New cover
-            cover_file = request.files.get("cover")
-
-            success, message = book_manager.edit_book(
-                book_id,
-                book_data,
-                cover_file
-            )
-
-            if success:
-
-                flash(message, "success")
-
-                return redirect(
-                    url_for(
-                        "book_details",
-                        book_id=book_id
-                    )
-                )
-
-            flash(message, "danger")
-
-        except Exception as error:
-
-            print("EDIT BOOK ERROR:", error)
+        if not book:
 
             flash(
-                f"Unable to update book: {str(error)}",
+                "Book not found.",
                 "danger"
             )
 
-    # Refresh book data
-    book = book_manager.get_book(book_id)
+            return redirect(
+                url_for("books_page")
+            )
 
-    return render_template(
-        "edit_book.html",
-        book=book
-    )
+        # ----------------------------------------------------
+        # DISPLAY EDIT PAGE
+        # ----------------------------------------------------
+
+        if request.method == "GET":
+
+            return render_template(
+                "edit_book.html",
+                book=book
+            )
+
+        # ----------------------------------------------------
+        # GET UPDATED DATA
+        # ----------------------------------------------------
+
+        book_data = get_book_form_data(
+            request.form
+        )
+
+        book_data["book_id"] = book_id
+
+        # Preserve existing cover
+        book_data["cover"] = book.get(
+            "cover",
+            ""
+        )
+
+        # ----------------------------------------------------
+        # NEW COVER
+        # ----------------------------------------------------
+
+        cover_file = request.files.get(
+            "cover"
+        )
+
+        # ----------------------------------------------------
+        # UPDATE BOOK
+        # ----------------------------------------------------
+
+        success, message = book_manager.edit_book(
+            book_id,
+            book_data,
+            cover_file
+        )
+
+        if success:
+
+            flash(
+                message,
+                "success"
+            )
+
+            return redirect(
+                url_for(
+                    "book_details",
+                    book_id=book_id
+                )
+            )
+
+        flash(
+            message,
+            "danger"
+        )
+
+        updated_book = book_manager.get_book(
+            book_id
+        )
+
+        return render_template(
+            "edit_book.html",
+            book=updated_book
+        )
+
+    except Exception as error:
+
+        print("\n" + "=" * 70)
+        print("EDIT BOOK ERROR")
+        print("=" * 70)
+
+        traceback.print_exc()
+
+        print("=" * 70 + "\n")
+
+        flash(
+            f"Unable to update book: {error}",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "book_details",
+                book_id=book_id
+            )
+        )
 
 
 # ============================================================
 # DELETE BOOK
 # ============================================================
 
-@app.route("/delete-book/<book_id>", methods=["POST", "GET"])
+@app.route(
+    "/delete-book/<book_id>",
+    methods=["POST", "GET"]
+)
 def delete_book(book_id):
 
     try:
 
-        success, message = book_manager.remove_book(book_id)
+        success, message = book_manager.remove_book(
+            book_id
+        )
 
         if success:
-            flash(message, "success")
+
+            flash(
+                message,
+                "success"
+            )
+
         else:
-            flash(message, "danger")
+
+            flash(
+                message,
+                "danger"
+            )
 
     except Exception as error:
 
-        print("DELETE BOOK ERROR:", error)
+        print("\nDELETE BOOK ERROR")
+        traceback.print_exc()
 
         flash(
-            f"Unable to delete book: {str(error)}",
+            f"Unable to delete book: {error}",
             "danger"
         )
 
-    return redirect(url_for("books"))
+    return redirect(
+        url_for("books_page")
+    )
 
 
 # ============================================================
-# SEARCH BOOKS
+# SEARCH API
 # ============================================================
 
 @app.route("/search")
-def search():
+def search_books():
 
-    query = request.args.get("q", "").strip()
+    try:
 
-    if query:
+        query = request.args.get(
+            "q",
+            ""
+        ).strip()
 
-        results = book_manager.search_books(query)
+        if query:
 
-    else:
+            results = book_manager.search_books(
+                query
+            )
 
-        results = book_manager.get_books()
+        else:
 
-    return jsonify(results)
+            results = book_manager.get_books()
+
+        return jsonify(results)
+
+    except Exception as error:
+
+        print("\nSEARCH ERROR")
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": str(error)
+        }), 500
 
 
 # ============================================================
 # CATEGORY FILTER
 # ============================================================
 
-@app.route("/category/<path:category>")
+@app.route(
+    "/category/<path:category>"
+)
 def category_books(category):
 
-    books = book_manager.get_books_by_category(category)
+    try:
 
-    return render_template(
-        "books.html",
-        books=books,
-        search_query="",
-        selected_category=category
-    )
+        books = book_manager.get_books_by_category(
+            category
+        )
+
+        return render_template(
+            "books.html",
+            books=books,
+            search_query="",
+            selected_category=category
+        )
+
+    except Exception as error:
+
+        print("\nCATEGORY ERROR")
+        traceback.print_exc()
+
+        flash(
+            f"Unable to load category: {error}",
+            "danger"
+        )
+
+        return redirect(
+            url_for("books_page")
+        )
 
 
 # ============================================================
@@ -346,13 +677,29 @@ def category_books(category):
 @app.route("/available-books")
 def available_books():
 
-    books = book_manager.get_available_books()
+    try:
 
-    return render_template(
-        "books.html",
-        books=books,
-        search_query=""
-    )
+        books = book_manager.get_available_books()
+
+        return render_template(
+            "books.html",
+            books=books,
+            search_query=""
+        )
+
+    except Exception as error:
+
+        print("\nAVAILABLE BOOKS ERROR")
+        traceback.print_exc()
+
+        flash(
+            f"Unable to load available books: {error}",
+            "danger"
+        )
+
+        return redirect(
+            url_for("books_page")
+        )
 
 
 # ============================================================
@@ -362,25 +709,56 @@ def available_books():
 @app.route("/borrowed-books")
 def borrowed_books():
 
-    books = book_manager.get_borrowed_books()
+    try:
 
-    return render_template(
-        "books.html",
-        books=books,
-        search_query=""
-    )
+        books = book_manager.get_borrowed_books()
+
+        return render_template(
+            "books.html",
+            books=books,
+            search_query=""
+        )
+
+    except Exception as error:
+
+        print("\nBORROWED BOOKS ERROR")
+        traceback.print_exc()
+
+        flash(
+            f"Unable to load borrowed books: {error}",
+            "danger"
+        )
+
+        return redirect(
+            url_for("books_page")
+        )
 
 
 # ============================================================
-# LIBRARY STATISTICS API
+# STATISTICS API
 # ============================================================
 
 @app.route("/api/statistics")
 def statistics_api():
 
-    statistics = book_manager.get_library_statistics()
+    try:
 
-    return jsonify(statistics)
+        statistics = book_manager.get_library_statistics()
+
+        return jsonify({
+            "success": True,
+            "statistics": statistics
+        })
+
+    except Exception as error:
+
+        print("\nSTATISTICS API ERROR")
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": str(error)
+        }), 500
 
 
 # ============================================================
@@ -390,38 +768,71 @@ def statistics_api():
 @app.route("/api/books")
 def books_api():
 
-    books = book_manager.get_books()
+    try:
 
-    return jsonify(books)
+        books = book_manager.get_books()
+
+        return jsonify({
+            "success": True,
+            "books": books
+        })
+
+    except Exception as error:
+
+        print("\nBOOKS API ERROR")
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": str(error)
+        }), 500
 
 
 # ============================================================
 # SINGLE BOOK API
 # ============================================================
 
-@app.route("/api/books/<book_id>")
-def book_api(book_id):
+@app.route(
+    "/api/books/<book_id>"
+)
+def single_book_api(book_id):
 
-    book = book_manager.get_book(book_id)
+    try:
 
-    if not book:
+        book = book_manager.get_book(
+            book_id
+        )
+
+        if not book:
+
+            return jsonify({
+                "success": False,
+                "message": "Book not found."
+            }), 404
+
+        return jsonify({
+            "success": True,
+            "book": book
+        })
+
+    except Exception as error:
+
+        print("\nSINGLE BOOK API ERROR")
+        traceback.print_exc()
 
         return jsonify({
             "success": False,
-            "message": "Book not found"
-        }), 404
-
-    return jsonify({
-        "success": True,
-        "book": book
-    })
+            "error": str(error)
+        }), 500
 
 
 # ============================================================
-# SERVE BOOK COVER IMAGES
+# BOOK COVER IMAGE ROUTE
 # ============================================================
 
-@app.route("/uploads/book_covers/<filename>")
+@app.route(
+    "/uploads/book_covers/<path:filename>"
+)
 def uploaded_book_cover(filename):
 
     return send_from_directory(
@@ -435,74 +846,238 @@ def uploaded_book_cover(filename):
 # ============================================================
 
 @app.route("/health")
-def health():
+def health_check():
 
     return jsonify({
         "status": "healthy",
         "application": "Crescent College Library Management System",
+        "database": "Excel",
         "timestamp": datetime.now().isoformat()
     })
 
 
 # ============================================================
-# 404 ERROR HANDLER
+# 404 ERROR
 # ============================================================
 
 @app.errorhandler(404)
 def page_not_found(error):
 
-    return render_template(
-        "base.html"
-    ), 404
+    return """
+    <!DOCTYPE html>
+
+    <html>
+
+    <head>
+        <title>Page Not Found</title>
+
+        <style>
+
+            body {
+                font-family: Arial, sans-serif;
+                background: #f5f7fa;
+                text-align: center;
+                padding: 80px;
+            }
+
+            .box {
+                background: white;
+                max-width: 600px;
+                margin: auto;
+                padding: 40px;
+                border-radius: 15px;
+                box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+            }
+
+            h1 {
+                font-size: 60px;
+                margin: 0;
+            }
+
+            a {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 24px;
+                background: #111827;
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div class="box">
+
+            <h1>404</h1>
+
+            <h2>Page Not Found</h2>
+
+            <p>
+                The requested page does not exist.
+            </p>
+
+            <a href="/">
+                Go to Dashboard
+            </a>
+
+        </div>
+
+    </body>
+
+    </html>
+    """, 404
 
 
 # ============================================================
-# 413 ERROR HANDLER
+# FILE TOO LARGE
 # ============================================================
 
 @app.errorhandler(413)
 def file_too_large(error):
 
     flash(
-        "The uploaded image is too large. Maximum size is 5 MB.",
+        "The uploaded file is too large. Maximum size is 5 MB.",
         "danger"
     )
 
     return redirect(
-        request.referrer or url_for("add_book")
+        request.referrer or
+        url_for("add_book")
     )
 
 
 # ============================================================
-# 500 ERROR HANDLER
+# INTERNAL SERVER ERROR
 # ============================================================
 
 @app.errorhandler(500)
 def internal_server_error(error):
 
-    print("SERVER ERROR:", error)
+    print("\n" + "=" * 70)
+    print("FLASK INTERNAL SERVER ERROR")
+    print("=" * 70)
+
+    print("Error:", error)
+
+    print("\nFULL TRACEBACK:")
+
+    traceback.print_exc()
+
+    print("=" * 70 + "\n")
 
     return """
-    <h1>Internal Server Error</h1>
-    <p>Something went wrong while processing your request.</p>
-    <p>Please check the terminal for more details.</p>
+    <!DOCTYPE html>
+
+    <html>
+
+    <head>
+
+        <title>
+            Crescent Library - Server Error
+        </title>
+
+        <style>
+
+            body {
+                font-family: Arial, sans-serif;
+                background: #f5f7fa;
+                color: #222;
+                padding: 50px;
+            }
+
+            .error-box {
+                max-width: 750px;
+                margin: auto;
+                background: white;
+                padding: 40px;
+                border-radius: 15px;
+                box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+            }
+
+            h1 {
+                color: #c62828;
+            }
+
+            .message {
+                background: #fff3f3;
+                padding: 15px;
+                border-radius: 8px;
+                margin-top: 20px;
+            }
+
+            a {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 24px;
+                background: #111827;
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div class="error-box">
+
+            <h1>
+                Internal Server Error
+            </h1>
+
+            <p>
+                The Crescent College Library application
+                encountered an unexpected error.
+            </p>
+
+            <div class="message">
+
+                <strong>
+                    Please check the terminal for the
+                    complete Python traceback.
+                </strong>
+
+            </div>
+
+            <a href="/">
+                Return to Dashboard
+            </a>
+
+        </div>
+
+    </body>
+
+    </html>
     """, 500
 
 
 # ============================================================
-# RUN APPLICATION
+# APPLICATION START
 # ============================================================
 
 if __name__ == "__main__":
 
-    print("=" * 60)
+    print()
+    print("=" * 70)
     print("CRESCENT COLLEGE LIBRARY MANAGEMENT SYSTEM")
-    print("=" * 60)
-
-    print(f"Database File : {EXCEL_FILE}")
-    print(f"Upload Folder : {UPLOAD_FOLDER}")
-    print("Server        : http://127.0.0.1:5000")
-    print("=" * 60)
+    print("=" * 70)
+    print()
+    print("Application : Flask")
+    print("Database    : Excel")
+    print(f"Excel File  : {EXCEL_FILE}")
+    print(f"Uploads     : {UPLOAD_FOLDER}")
+    print()
+    print("Local URL   : http://127.0.0.1:5000")
+    print("Health URL  : http://127.0.0.1:5000/health")
+    print()
+    print("=" * 70)
+    print()
 
     app.run(
         host="127.0.0.1",
