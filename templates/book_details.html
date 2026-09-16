@@ -1,706 +1,419 @@
 {% extends "base.html" %}
 
-{% block title %}
-Crescent College Library | Book Details
-{% endblock %}
-
-{% block page_title %}
-Book Details
-{% endblock %}
+{% block title %}Book Details | Crescent Central Library{% endblock %}
 
 {% block content %}
 
-<!-- =========================================================
-     PAGE HEADER
-========================================================== -->
-
-<section class="page-intro">
-
+<div class="page-header">
     <div>
-
-        <span class="welcome-label">
-            CRESCENT COLLEGE CENTRAL LIBRARY
-        </span>
-
-        <h2>
-            Book Details
-        </h2>
-
-        <p>
-            Complete catalogue information for this library book.
-        </p>
-
+        <span class="page-eyebrow">BOOK RECORD</span>
+        <h1>Book Details</h1>
+        <p>Complete information for the selected library book.</p>
     </div>
 
-
-    <div class="page-intro-actions">
-
-        <a
-            href="{{ url_for('books') }}"
-            class="btn btn-secondary"
-        >
-            ← Back to Catalogue
+    <div class="page-header-actions">
+        <a href="{{ url_for('books') }}" class="btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Catalogue
         </a>
 
-        <a
-            href="{{ url_for('edit_book', book_id=book.book_id) }}"
-            class="btn btn-primary"
-        >
-            ✎ Edit Book
+        <a href="{{ url_for('edit_book', book_id=book['Book ID']) }}" class="btn-primary">
+            <i class="bi bi-pencil"></i>
+            Edit Book
         </a>
-
     </div>
+</div>
 
-</section>
+<div class="book-details-layout">
 
+    <!-- Book Cover -->
+    <section class="dashboard-card book-cover-card">
 
-<!-- =========================================================
-     MAIN BOOK PROFILE
-========================================================== -->
+        <div class="book-cover-large">
 
-<section class="book-details-layout">
+            {% if book['Front Image'] %}
 
-
-    <!-- =====================================================
-         BOOK COVER
-    ====================================================== -->
-
-    <div class="section-card book-details-cover-card">
-
-        <div class="book-details-cover">
-
-            {% if book.cover %}
-
-                <img
-                    src="{{ url_for('uploaded_cover', filename=book.cover) }}"
-                    alt="{{ book.title }}"
-                    class="book-cover-large"
-                >
+            <img
+                src="{{ url_for('uploaded_file', filename=book['Front Image']) }}"
+                alt="{{ book['Book Title'] }}"
+            >
 
             {% else %}
 
-                <div class="book-cover-large cover-placeholder-large">
-
-                    <span>
-                        📚
-                    </span>
-
-                    <small>
-                        No Cover Available
-                    </small>
-
-                </div>
+            <div class="large-image-placeholder">
+                <i class="bi bi-book"></i>
+                <span>No cover image</span>
+            </div>
 
             {% endif %}
 
         </div>
 
+        <div class="book-cover-meta">
 
-        <div class="book-cover-id">
-
-            <span>
-                BOOK ID
+            <span class="ai-badge">
+                <i class="bi bi-stars"></i>
+                {{ book['Scan Status']|default('AI Scanned') }}
             </span>
 
-            <strong>
-                {{ book.book_id }}
-            </strong>
+            <span class="book-record-id">
+                {{ book['Book ID'] }}
+            </span>
 
         </div>
 
-    </div>
+    </section>
 
 
-    <!-- =====================================================
-         BOOK INFORMATION
-    ====================================================== -->
+    <!-- Main Information -->
+    <section class="dashboard-card book-information-card">
 
-    <div class="section-card book-details-main">
-
-        <div class="book-details-heading">
-
+        <div class="card-header">
             <div>
-
-                <span class="book-category-badge">
-
-                    {{ book.category|default('General') }}
-
-                </span>
-
-                <h1>
-                    {{ book.title }}
-                </h1>
-
-                <p class="book-author-large">
-
-                    by
-                    <strong>
-                        {{ book.author }}
-                    </strong>
-
-                </p>
-
+                <span class="card-eyebrow">BIBLIOGRAPHIC INFORMATION</span>
+                <h2>{{ book['Book Title']|default('Untitled Book') }}</h2>
             </div>
 
+            {% set available = book['Available Copies']|default(0)|int %}
 
-            <!-- AVAILABILITY BADGE -->
+            {% if available > 0 %}
 
-            {% set available_count = book.available|default(0)|int %}
-            {% set total_count = book.copies|default(0)|int %}
-
-            {% if available_count > 0 %}
-
-                <div class="availability-badge available">
-
-                    <span class="status-dot"></span>
-
-                    Available
-
-                </div>
+            <span class="status-badge available">
+                <span></span>
+                Available
+            </span>
 
             {% else %}
 
-                <div class="availability-badge unavailable">
-
-                    <span class="status-dot"></span>
-
-                    Currently Unavailable
-
-                </div>
+            <span class="status-badge borrowed">
+                <span></span>
+                Borrowed
+            </span>
 
             {% endif %}
 
         </div>
 
+        {% if book['Subtitle'] and book['Subtitle'] != 'Not detected' %}
+        <p class="book-detail-subtitle">
+            {{ book['Subtitle'] }}
+        </p>
+        {% endif %}
 
-        <!-- =================================================
-             COPY STATISTICS
-        ================================================== -->
+        <div class="details-grid">
 
-        <div class="book-copy-statistics">
-
-            <div class="copy-stat">
-
-                <span class="copy-stat-icon">
-                    📚
-                </span>
-
-                <div>
-
-                    <span>
-                        Total Copies
-                    </span>
-
-                    <strong>
-                        {{ total_count }}
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div class="copy-stat">
-
-                <span class="copy-stat-icon">
-                    ✓
-                </span>
-
-                <div>
-
-                    <span>
-                        Available
-                    </span>
-
-                    <strong>
-                        {{ available_count }}
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div class="copy-stat">
-
-                <span class="copy-stat-icon">
-                    ↗
-                </span>
-
-                <div>
-
-                    <span>
-                        Borrowed
-                    </span>
-
-                    <strong>
-                        {{ book.borrowed|default(total_count - available_count) }}
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             AVAILABILITY BAR
-        ================================================== -->
-
-        <div class="details-availability-section">
-
-            <div class="availability-label-row">
-
-                <span>
-                    Current Availability
-                </span>
-
+            <div class="detail-item">
+                <span>Author</span>
                 <strong>
-
-                    {% if total_count > 0 %}
-
-                        {{ ((available_count / total_count) * 100)|round|int }}%
-
-                    {% else %}
-
-                        0%
-
-                    {% endif %}
-
+                    {{ book['Author']|default('Not detected') }}
                 </strong>
-
             </div>
 
-
-            <div class="availability-bar details-bar">
-
-                <div
-                    class="availability-progress"
-                    style="width:
-                    {% if total_count > 0 %}
-                        {{ ((available_count / total_count) * 100)|round|int }}
-                    {% else %}
-                        0
-                    {% endif %}%"
-                ></div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             BOOK INFORMATION GRID
-        ================================================== -->
-
-        <div class="details-information-grid">
-
-
-            <div class="detail-information-item">
-
-                <span class="detail-label">
-                    ISBN
-                </span>
-
+            <div class="detail-item">
+                <span>ISBN</span>
                 <strong>
-
-                    {% if book.isbn %}
-                        {{ book.isbn }}
-                    {% else %}
-                        Not provided
-                    {% endif %}
-
+                    {{ book['ISBN']|default('Not detected') }}
                 </strong>
-
             </div>
 
-
-            <div class="detail-information-item">
-
-                <span class="detail-label">
-                    Category
-                </span>
-
+            <div class="detail-item">
+                <span>Category</span>
                 <strong>
-
-                    {% if book.category %}
-                        {{ book.category }}
-                    {% else %}
-                        Not categorized
-                    {% endif %}
-
+                    {{ book['Category']|default('Not detected') }}
                 </strong>
-
             </div>
 
-
-            <div class="detail-information-item">
-
-                <span class="detail-label">
-                    Publisher
-                </span>
-
+            <div class="detail-item">
+                <span>Publisher</span>
                 <strong>
-
-                    {% if book.publisher %}
-                        {{ book.publisher }}
-                    {% else %}
-                        Not provided
-                    {% endif %}
-
+                    {{ book['Publisher']|default('Not detected') }}
                 </strong>
-
             </div>
 
-
-            <div class="detail-information-item">
-
-                <span class="detail-label">
-                    Publication Year
-                </span>
-
+            <div class="detail-item">
+                <span>Publication Year</span>
                 <strong>
-
-                    {% if book.year %}
-                        {{ book.year }}
-                    {% else %}
-                        Not provided
-                    {% endif %}
-
+                    {{ book['Publication Year']|default('Not detected') }}
                 </strong>
-
             </div>
 
-
-            <div class="detail-information-item">
-
-                <span class="detail-label">
-                    Shelf Number
-                </span>
-
+            <div class="detail-item">
+                <span>Edition</span>
                 <strong>
+                    {{ book['Edition']|default('Not detected') }}
+                </strong>
+            </div>
 
-                    {% if book.shelf %}
-                        {{ book.shelf }}
+            <div class="detail-item">
+                <span>Price</span>
+                <strong>
+                    {{ book['Price']|default('Not detected') }}
+                </strong>
+            </div>
+
+            <div class="detail-item">
+                <span>Shelf Number</span>
+                <strong>
+                    {% if book['Shelf Number'] %}
+                        {{ book['Shelf Number'] }}
                     {% else %}
                         Not assigned
                     {% endif %}
-
                 </strong>
-
             </div>
-
-
-            <div class="detail-information-item">
-
-                <span class="detail-label">
-                    Date Added
-                </span>
-
-                <strong>
-
-                    {% if book.date_added %}
-                        {{ book.date_added }}
-                    {% else %}
-                        Not available
-                    {% endif %}
-
-                </strong>
-
-            </div>
-
 
         </div>
 
-    </div>
+    </section>
 
-</section>
+</div>
 
 
-<!-- =========================================================
-     QUICK INFORMATION
-========================================================== -->
+<!-- Circulation Information -->
+<section class="dashboard-card">
 
-<section class="section-card book-management-card">
-
-    <div class="section-header">
-
+    <div class="card-header">
         <div>
-
-            <h2>
-                Catalogue Management
-            </h2>
-
-            <p>
-                Manage this book record from the options below.
-            </p>
-
+            <span class="card-eyebrow">CIRCULATION</span>
+            <h2>Copy Information</h2>
         </div>
 
+        <i class="bi bi-arrow-left-right card-header-icon"></i>
     </div>
 
+    <div class="copy-stat-grid">
 
-    <div class="management-actions">
-
-
-        <!-- EDIT -->
-
-        <a
-            href="{{ url_for('edit_book', book_id=book.book_id) }}"
-            class="management-action"
-        >
-
-            <div class="management-action-icon">
-                ✎
+        <div class="copy-stat">
+            <div class="copy-stat-icon">
+                <i class="bi bi-collection"></i>
             </div>
 
             <div>
-
-                <strong>
-                    Edit Book
-                </strong>
-
-                <span>
-                    Update catalogue information
-                </span>
-
+                <span>Total Copies</span>
+                <strong>{{ book['Total Copies']|default(0) }}</strong>
             </div>
+        </div>
 
-            <span class="management-arrow">
-                →
-            </span>
-
-        </a>
-
-
-        <!-- VIEW AVAILABLE -->
-
-        {% if available_count > 0 %}
-
-        <a
-            href="{{ url_for('available_books') }}"
-            class="management-action"
-        >
-
-            <div class="management-action-icon">
-                ✓
+        <div class="copy-stat">
+            <div class="copy-stat-icon">
+                <i class="bi bi-check2-circle"></i>
             </div>
 
             <div>
-
-                <strong>
-                    Available Books
-                </strong>
-
-                <span>
-                    View currently available books
-                </span>
-
+                <span>Available Copies</span>
+                <strong>{{ book['Available Copies']|default(0) }}</strong>
             </div>
+        </div>
 
-            <span class="management-arrow">
-                →
-            </span>
-
-        </a>
-
-        {% endif %}
-
-
-        <!-- BORROWED -->
-
-        {% if book.borrowed|default(0)|int > 0 %}
-
-        <a
-            href="{{ url_for('borrowed_books') }}"
-            class="management-action"
-        >
-
-            <div class="management-action-icon">
-                ↗
+        <div class="copy-stat">
+            <div class="copy-stat-icon">
+                <i class="bi bi-arrow-up-right-circle"></i>
             </div>
 
             <div>
-
-                <strong>
-                    Borrowed Books
-                </strong>
-
-                <span>
-                    View borrowed catalogue records
-                </span>
-
+                <span>Borrowed Copies</span>
+                <strong>{{ book['Borrowed Copies']|default(0) }}</strong>
             </div>
-
-            <span class="management-arrow">
-                →
-            </span>
-
-        </a>
-
-        {% endif %}
-
+        </div>
 
     </div>
 
 </section>
 
 
-<!-- =========================================================
-     DELETE SECTION
-========================================================== -->
+<!-- Back Cover -->
+<section class="dashboard-card">
 
-<section class="section-card danger-card">
+    <div class="card-header">
+        <div>
+            <span class="card-eyebrow">BOOK IMAGES</span>
+            <h2>Back Cover</h2>
+        </div>
+    </div>
 
-    <div class="danger-content">
+    <div class="back-cover-container">
 
-        <div class="danger-icon">
-            ⚠
+        {% if book['Back Image'] %}
+
+        <img
+            src="{{ url_for('uploaded_file', filename=book['Back Image']) }}"
+            alt="Back cover of {{ book['Book Title'] }}"
+            class="back-cover-image"
+        >
+
+        {% else %}
+
+        <div class="large-image-placeholder back-placeholder">
+            <i class="bi bi-card-image"></i>
+            <span>Back cover image not available</span>
         </div>
 
+        {% endif %}
 
-        <div class="danger-text">
+    </div>
 
-            <h3>
-                Remove Book
-            </h3>
+</section>
 
-            <p>
-                Removing this book permanently deletes its catalogue
-                record from the library system.
-            </p>
 
+<!-- Record Information -->
+<section class="dashboard-card record-information-card">
+
+    <div class="card-header">
+        <div>
+            <span class="card-eyebrow">SYSTEM RECORD</span>
+            <h2>Registration Information</h2>
         </div>
 
+        <i class="bi bi-database card-header-icon"></i>
+    </div>
 
-        <div class="danger-action">
+    <div class="details-grid">
+
+        <div class="detail-item">
+            <span>Book ID</span>
+            <strong>{{ book['Book ID'] }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Date Added</span>
+            <strong>{{ book['Date Added']|default('Not available') }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Scan Status</span>
+            <strong>{{ book['Scan Status']|default('Not available') }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Registration Method</span>
+            <strong>AI Book Scanner</strong>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- Actions -->
+<section class="dashboard-card danger-zone">
+
+    <div>
+        <span class="card-eyebrow">DANGER ZONE</span>
+        <h2>Delete Book Record</h2>
+        <p>
+            Permanently remove this book and its stored cover images from the
+            library system.
+        </p>
+    </div>
+
+    <button type="button" class="btn-danger" id="deleteBookButton">
+        <i class="bi bi-trash3"></i>
+        Delete Book
+    </button>
+
+</section>
+
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+
+    <div class="confirmation-modal">
+
+        <button
+            type="button"
+            class="modal-close"
+            id="closeDeleteModal"
+            aria-label="Close"
+        >
+            <i class="bi bi-x-lg"></i>
+        </button>
+
+        <div class="confirmation-icon">
+            <i class="bi bi-trash3"></i>
+        </div>
+
+        <h3>Delete Book?</h3>
+
+        <p>
+            You are about to permanently delete
+            <strong>{{ book['Book Title'] }}</strong>
+            from the library catalogue.
+        </p>
+
+        <p class="warning-text">
+            This action cannot be undone.
+        </p>
+
+        <div class="modal-actions">
+
+            <button
+                type="button"
+                class="btn-secondary"
+                id="cancelDelete"
+            >
+                Cancel
+            </button>
 
             <form
                 method="POST"
-                action="{{ url_for('delete_book', book_id=book.book_id) }}"
-                id="deleteBookForm"
+                action="{{ url_for('delete_book', book_id=book['Book ID']) }}"
             >
-
-                <button
-                    type="submit"
-                    class="btn btn-danger"
-                    id="deleteBookButton"
-                >
+                <button type="submit" class="btn-danger">
+                    <i class="bi bi-trash3"></i>
                     Delete Book
                 </button>
-
             </form>
 
         </div>
 
     </div>
 
-</section>
+</div>
 
-
-{% endblock %}
-
-
-{% block scripts %}
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+    const deleteButton = document.getElementById("deleteBookButton");
+    const deleteModal = document.getElementById("deleteModal");
+    const closeDeleteModal = document.getElementById("closeDeleteModal");
+    const cancelDelete = document.getElementById("cancelDelete");
 
-        const deleteForm =
-            document.getElementById(
-                "deleteBookForm"
-            );
-
-
-        const deleteButton =
-            document.getElementById(
-                "deleteBookButton"
-            );
-
-
-        if (deleteForm) {
-
-            deleteForm.addEventListener(
-                "submit",
-                function (event) {
-
-                    const confirmed =
-                        window.confirm(
-                            "Are you sure you want to permanently delete this book from the library catalogue?"
-                        );
-
-
-                    if (!confirmed) {
-
-                        event.preventDefault();
-
-                        return;
-
-                    }
-
-
-                    if (deleteButton) {
-
-                        deleteButton.disabled =
-                            true;
-
-                        deleteButton.textContent =
-                            "Deleting...";
-
-                    }
-
-                }
-            );
-
-        }
-
-
-        /* =================================================
-           SMALL PAGE ANIMATION
-        ================================================== */
-
-        const cards =
-            document.querySelectorAll(
-                ".book-details-layout .section-card, .book-management-card, .danger-card"
-            );
-
-
-        cards.forEach(
-            function (card, index) {
-
-                card.style.opacity =
-                    "0";
-
-                card.style.transform =
-                    "translateY(10px)";
-
-
-                setTimeout(
-                    function () {
-
-                        card.style.transition =
-                            "opacity 0.4s ease, transform 0.4s ease";
-
-                        card.style.opacity =
-                            "1";
-
-                        card.style.transform =
-                            "translateY(0)";
-
-                    },
-                    80 * index
-                );
-
-            }
-        );
-
+    function openModal() {
+        deleteModal.classList.add("visible");
+        document.body.classList.add("modal-open");
     }
-);
 
+    function closeModal() {
+        deleteModal.classList.remove("visible");
+        document.body.classList.remove("modal-open");
+    }
+
+    if (deleteButton) {
+        deleteButton.addEventListener("click", openModal);
+    }
+
+    if (closeDeleteModal) {
+        closeDeleteModal.addEventListener("click", closeModal);
+    }
+
+    if (cancelDelete) {
+        cancelDelete.addEventListener("click", closeModal);
+    }
+
+    deleteModal.addEventListener("click", function (event) {
+        if (event.target === deleteModal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeModal();
+        }
+    });
+
+});
 </script>
 
 {% endblock %}
