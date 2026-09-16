@@ -1,245 +1,903 @@
 {% extends "base.html" %}
 
-{% block title %}Add New Book{% endblock %}
 
-{% block page_title %}Add New Book{% endblock %}
+{% block title %}
+Crescent College Library | Add Book
+{% endblock %}
+
+
+{% block page_title %}
+Add New Book
+{% endblock %}
+
 
 {% block content %}
 
-<div class="section-card">
 
-    <div class="section-header">
-        <div>
-            <h2>Book Information</h2>
-            <p class="section-description">
-                Enter the details of the new book and upload its cover image.
-            </p>
-        </div>
+<!-- =========================================================
+     PAGE INTRO
+========================================================== -->
+
+<section class="page-intro">
+
+    <div>
+
+        <span class="welcome-label">
+            CRESCENT COLLEGE CENTRAL LIBRARY
+        </span>
+
+        <h2>
+            Add New Book
+        </h2>
+
+        <p>
+            Add a new title to the library catalogue with
+            complete bibliographic and shelf information.
+        </p>
+
     </div>
 
-    <form method="POST"
-          action="{{ url_for('add_book') }}"
-          enctype="multipart/form-data">
 
-        <div class="form-grid">
+    <div>
 
-            <!-- Book Title -->
-            <div class="form-group full-width">
-                <label for="title">
-                    Book Title <span class="required">*</span>
-                </label>
+        <a href="{{ url_for('books') }}"
+           class="btn btn-secondary">
 
-                <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    class="form-control"
-                    placeholder="Enter book title"
-                    required
-                >
-            </div>
+            ← Back to Catalogue
 
-            <!-- Author -->
-            <div class="form-group">
-                <label for="author">
-                    Author <span class="required">*</span>
-                </label>
+        </a>
 
-                <input
-                    type="text"
-                    id="author"
-                    name="author"
-                    class="form-control"
-                    placeholder="Enter author name"
-                    required
-                >
-            </div>
+    </div>
 
-            <!-- ISBN -->
-            <div class="form-group">
-                <label for="isbn">ISBN</label>
+</section>
 
-                <input
-                    type="text"
-                    id="isbn"
-                    name="isbn"
-                    class="form-control"
-                    placeholder="Enter ISBN number"
-                >
-            </div>
 
-            <!-- Category -->
-            <div class="form-group">
-                <label for="category">Category</label>
 
-                <select
-                    id="category"
-                    name="category"
-                    class="form-control"
-                >
-                    <option value="">Select category</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Information Technology">Information Technology</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Science">Science</option>
-                    <option value="Management">Management</option>
-                    <option value="Literature">Literature</option>
-                    <option value="History">History</option>
-                    <option value="Biography">Biography</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
+<!-- =========================================================
+     ADD BOOK FORM
+========================================================== -->
 
-            <!-- Publisher -->
-            <div class="form-group">
-                <label for="publisher">Publisher</label>
+<section class="section-card">
 
-                <input
-                    type="text"
-                    id="publisher"
-                    name="publisher"
-                    class="form-control"
-                    placeholder="Enter publisher name"
-                >
-            </div>
 
-            <!-- Publication Year -->
-            <div class="form-group">
-                <label for="year">Publication Year</label>
+    <div class="section-header">
 
-                <input
-                    type="number"
-                    id="year"
-                    name="year"
-                    class="form-control"
-                    placeholder="e.g. 2024"
-                    min="1000"
-                    max="2100"
-                >
-            </div>
+        <div>
 
-            <!-- Total Copies -->
-            <div class="form-group">
-                <label for="copies">
-                    Total Copies <span class="required">*</span>
-                </label>
+            <h2>
+                Book Information
+            </h2>
 
-                <input
-                    type="number"
-                    id="copies"
-                    name="copies"
-                    class="form-control"
-                    placeholder="Enter number of copies"
-                    min="1"
-                    required
-                >
-            </div>
-
-            <!-- Shelf Number -->
-            <div class="form-group">
-                <label for="shelf">Shelf Number</label>
-
-                <input
-                    type="text"
-                    id="shelf"
-                    name="shelf"
-                    class="form-control"
-                    placeholder="e.g. A-12"
-                >
-            </div>
+            <p>
+                Enter the details of the book you want to
+                add to the Crescent College library.
+            </p>
 
         </div>
 
-        <!-- Cover Upload -->
-        <div class="cover-upload-section">
 
-            <div class="section-header">
-                <div>
-                    <h2>Book Cover</h2>
-                    <p class="section-description">
-                        Upload a cover image for this book.
-                    </p>
-                </div>
-            </div>
+        <div class="required-note">
 
-            <div class="upload-area" id="uploadArea">
+            <span>
+                *
+            </span>
 
-                <div class="upload-icon">
+            Required fields
+
+        </div>
+
+    </div>
+
+
+
+    <form
+        method="POST"
+        action="{{ url_for('add_book') }}"
+        enctype="multipart/form-data"
+        id="addBookForm"
+    >
+
+
+        <!-- =================================================
+             BASIC INFORMATION
+        ================================================== -->
+
+        <div class="form-section">
+
+
+            <div class="form-section-title">
+
+                <span class="form-section-icon">
                     📚
-                </div>
+                </span>
 
-                <h3>Upload Book Cover</h3>
+                <div>
 
-                <p>
-                    PNG, JPG, JPEG or WEBP
-                </p>
+                    <h3>
+                        Basic Information
+                    </h3>
 
-                <label for="cover" class="btn btn-secondary">
-                    Choose Image
-                </label>
+                    <p>
+                        Main identification details of the book.
+                    </p>
 
-                <input
-                    type="file"
-                    id="cover"
-                    name="cover"
-                    accept="image/png,image/jpeg,image/webp"
-                    hidden
-                >
-
-                <div id="fileName" class="file-name"></div>
-
-                <div id="previewContainer" class="preview-container">
-                    <img id="coverPreview" src="" alt="Book cover preview">
                 </div>
 
             </div>
 
+
+            <div class="form-grid">
+
+
+                <!-- =========================================
+                     BOOK TITLE
+                ========================================== -->
+
+                <div class="form-group full-width">
+
+                    <label for="title">
+
+                        Book Title
+
+                        <span class="required">
+                            *
+                        </span>
+
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        class="form-control"
+                        placeholder="Enter the complete book title"
+                        value="{{ request.form.get('title', '') }}"
+                        maxlength="200"
+                        required
+                        autocomplete="off"
+                    >
+
+
+                    <small class="form-help">
+                        Enter the official title as printed on
+                        the book.
+                    </small>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     AUTHOR
+                ========================================== -->
+
+                <div class="form-group">
+
+                    <label for="author">
+
+                        Author
+
+                        <span class="required">
+                            *
+                        </span>
+
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="author"
+                        name="author"
+                        class="form-control"
+                        placeholder="e.g. Andrew S. Tanenbaum"
+                        value="{{ request.form.get('author', '') }}"
+                        maxlength="150"
+                        required
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+
+                <!-- =========================================
+                     ISBN
+                ========================================== -->
+
+                <div class="form-group">
+
+                    <label for="isbn">
+
+                        ISBN
+
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="isbn"
+                        name="isbn"
+                        class="form-control"
+                        placeholder="e.g. 9780132350884"
+                        value="{{ request.form.get('isbn', '') }}"
+                        maxlength="30"
+                        autocomplete="off"
+                    >
+
+
+                    <small class="form-help">
+                        Optional.
+                    </small>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     CATEGORY
+                ========================================== -->
+
+                <div class="form-group">
+
+                    <label for="category">
+
+                        Category
+
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="category"
+                        name="category"
+                        class="form-control"
+                        list="categoryOptions"
+                        placeholder="e.g. Computer Science"
+                        value="{{ request.form.get('category', '') }}"
+                        maxlength="100"
+                        autocomplete="off"
+                    >
+
+
+                    {% if categories %}
+
+                        <datalist id="categoryOptions">
+
+                            {% for category in categories %}
+
+                                <option value="{{ category }}">
+                                </option>
+
+                            {% endfor %}
+
+                        </datalist>
+
+                    {% endif %}
+
+
+                    <small class="form-help">
+                        Choose an existing category or enter
+                        a new one.
+                    </small>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     PUBLISHER
+                ========================================== -->
+
+                <div class="form-group">
+
+                    <label for="publisher">
+
+                        Publisher
+
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="publisher"
+                        name="publisher"
+                        class="form-control"
+                        placeholder="e.g. Pearson"
+                        value="{{ request.form.get('publisher', '') }}"
+                        maxlength="150"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+
+                <!-- =========================================
+                     PUBLICATION YEAR
+                ========================================== -->
+
+                <div class="form-group">
+
+                    <label for="year">
+
+                        Publication Year
+
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="year"
+                        name="year"
+                        class="form-control"
+                        placeholder="e.g. 2024"
+                        value="{{ request.form.get('year', '') }}"
+                        min="1"
+                        max="{{ current_year|default(2100) }}"
+                    >
+
+
+                    <small class="form-help">
+                        Optional.
+                    </small>
+
+                </div>
+
+
+            </div>
+
+
         </div>
 
-        <!-- Form Actions -->
+
+
+        <!-- =================================================
+             LIBRARY INFORMATION
+        ================================================== -->
+
+        <div class="form-section">
+
+
+            <div class="form-section-title">
+
+                <span class="form-section-icon">
+                    🏛️
+                </span>
+
+                <div>
+
+                    <h3>
+                        Library Information
+                    </h3>
+
+                    <p>
+                        Specify the number of copies and
+                        physical shelf location.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-grid">
+
+
+                <!-- =========================================
+                     NUMBER OF COPIES
+                ========================================== -->
+
+                <div class="form-group">
+
+                    <label for="copies">
+
+                        Total Copies
+
+                        <span class="required">
+                            *
+                        </span>
+
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="copies"
+                        name="copies"
+                        class="form-control"
+                        placeholder="e.g. 5"
+                        value="{{ request.form.get('copies', '') }}"
+                        min="1"
+                        max="10000"
+                        required
+                    >
+
+
+                    <small class="form-help">
+                        Number of physical copies owned by
+                        the library.
+                    </small>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     SHELF NUMBER
+                ========================================== -->
+
+                <div class="form-group">
+
+                    <label for="shelf">
+
+                        Shelf Number
+
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="shelf"
+                        name="shelf"
+                        class="form-control"
+                        placeholder="e.g. CS-A-12"
+                        value="{{ request.form.get('shelf', '') }}"
+                        maxlength="50"
+                        autocomplete="off"
+                    >
+
+
+                    <small class="form-help">
+                        Enter the physical shelf/rack location.
+                    </small>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 AVAILABILITY INFORMATION
+            ================================================== -->
+
+            <div class="availability-notice">
+
+                <div class="availability-notice-icon">
+                    ✓
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Initial availability
+                    </strong>
+
+                    <p>
+                        When a new book is added, all entered
+                        copies are automatically marked as
+                        available. Issue/return tracking will
+                        be added in the circulation module.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             BOOK COVER
+        ================================================== -->
+
+        <div class="form-section">
+
+
+            <div class="form-section-title">
+
+                <span class="form-section-icon">
+                    🖼️
+                </span>
+
+                <div>
+
+                    <h3>
+                        Book Cover
+                    </h3>
+
+                    <p>
+                        Upload an optional cover image for
+                        easier identification.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="cover-upload-section">
+
+
+                <label
+                    for="cover"
+                    class="upload-area"
+                    id="uploadArea"
+                >
+
+
+                    <div class="upload-icon">
+                        🖼️
+                    </div>
+
+
+                    <div class="upload-text">
+
+                        <strong>
+                            Click to upload a book cover
+                        </strong>
+
+                        <span>
+                            PNG, JPG, JPEG or WEBP
+                        </span>
+
+                        <small>
+                            Maximum size: 5 MB
+                        </small>
+
+                    </div>
+
+
+                    <input
+                        type="file"
+                        id="cover"
+                        name="cover"
+                        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                        hidden
+                    >
+
+                </label>
+
+
+
+                <!-- Image preview -->
+
+                <div
+                    class="preview-container"
+                    id="previewContainer"
+                    style="display:none;"
+                >
+
+                    <div class="preview-image-wrapper">
+
+                        <img
+                            id="imagePreview"
+                            src=""
+                            alt="Book cover preview"
+                        >
+
+                    </div>
+
+
+                    <div class="preview-details">
+
+                        <strong>
+                            Selected Cover
+                        </strong>
+
+
+                        <span id="fileName">
+                            No file selected
+                        </span>
+
+
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            id="removeImageButton"
+                        >
+
+                            Remove
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Upload error -->
+
+                <div
+                    class="upload-error"
+                    id="uploadError"
+                    style="display:none;"
+                >
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             FORM ACTIONS
+        ================================================== -->
+
         <div class="form-actions">
 
-            <a href="{{ url_for('books') }}"
-               class="btn btn-secondary">
+
+            <a
+                href="{{ url_for('books') }}"
+                class="btn btn-secondary"
+            >
+
                 Cancel
+
             </a>
+
+
+            <button
+                type="reset"
+                class="btn btn-outline"
+                id="resetFormButton"
+            >
+
+                Clear Form
+
+            </button>
+
 
             <button
                 type="submit"
                 class="btn btn-primary"
+                id="submitBookButton"
             >
+
+                <span class="button-icon">
+                    ✓
+                </span>
+
                 Add Book
+
             </button>
+
 
         </div>
 
+
     </form>
 
-</div>
+
+</section>
+
+
+
+<!-- =========================================================
+     DATA FLOW INFORMATION
+========================================================== -->
+
+<section class="section-card">
+
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                What happens after you add a book?
+            </h2>
+
+            <p>
+                The system automatically handles the
+                following steps.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="process-flow">
+
+
+        <div class="process-step">
+
+            <div class="process-number">
+                1
+            </div>
+
+            <div>
+
+                <strong>
+                    Generate Book ID
+                </strong>
+
+                <span>
+                    A unique LIBxxxx ID is generated
+                    automatically.
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="process-arrow">
+            →
+        </div>
+
+
+        <div class="process-step">
+
+            <div class="process-number">
+                2
+            </div>
+
+            <div>
+
+                <strong>
+                    Save Cover
+                </strong>
+
+                <span>
+                    The uploaded image is validated and
+                    stored securely.
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="process-arrow">
+            →
+        </div>
+
+
+        <div class="process-step">
+
+            <div class="process-number">
+                3
+            </div>
+
+            <div>
+
+                <strong>
+                    Save Catalogue
+                </strong>
+
+                <span>
+                    Book details are stored in the Excel
+                    library database.
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="process-arrow">
+            →
+        </div>
+
+
+        <div class="process-step">
+
+            <div class="process-number">
+                4
+            </div>
+
+            <div>
+
+                <strong>
+                    Catalogue Updated
+                </strong>
+
+                <span>
+                    The new book immediately appears in
+                    the dashboard and catalogue.
+                </span>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+</section>
+
 
 {% endblock %}
+
 
 
 {% block scripts %}
 
 <script>
-    const coverInput = document.getElementById("cover");
-    const coverPreview = document.getElementById("coverPreview");
-    const previewContainer = document.getElementById("previewContainer");
-    const fileName = document.getElementById("fileName");
 
-    coverInput.addEventListener("change", function () {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-        const file = this.files[0];
 
-        if (!file) {
-            previewContainer.style.display = "none";
-            fileName.textContent = "";
-            return;
-        }
+        /* =================================================
+           ELEMENTS
+        ================================================== */
 
-        fileName.textContent = file.name;
+        const form =
+            document.getElementById(
+                "addBookForm"
+            );
+
+
+        const coverInput =
+            document.getElementById(
+                "cover"
+            );
+
+
+        const previewContainer =
+            document.getElementById(
+                "previewContainer"
+            );
+
+
+        const imagePreview =
+            document.getElementById(
+                "imagePreview"
+            );
+
+
+        const fileName =
+            document.getElementById(
+                "fileName"
+            );
+
+
+        const uploadError =
+            document.getElementById(
+                "uploadError"
+            );
+
+
+        const uploadArea =
+            document.getElementById(
+                "uploadArea"
+            );
+
+
+        const removeButton =
+            document.getElementById(
+                "removeImageButton"
+            );
+
+
+        const resetButton =
+            document.getElementById(
+                "resetFormButton"
+            );
+
+
+        const submitButton =
+            document.getElementById(
+                "submitBookButton"
+            );
+
+
+        /* =================================================
+           IMAGE VALIDATION
+        ================================================== */
 
         const allowedTypes = [
             "image/png",
@@ -247,23 +905,450 @@
             "image/webp"
         ];
 
-        if (!allowedTypes.includes(file.type)) {
-            alert("Please select a PNG, JPG, JPEG or WEBP image.");
-            this.value = "";
-            previewContainer.style.display = "none";
-            fileName.textContent = "";
-            return;
+
+        const maxSize =
+            5 * 1024 * 1024;
+
+
+        function showUploadError(message) {
+
+            if (!uploadError) {
+                return;
+            }
+
+
+            uploadError.textContent =
+                message;
+
+
+            uploadError.style.display =
+                "block";
+
         }
 
-        const reader = new FileReader();
 
-        reader.onload = function (event) {
-            coverPreview.src = event.target.result;
-            previewContainer.style.display = "block";
-        };
+        function clearUploadError() {
 
-        reader.readAsDataURL(file);
-    });
+            if (!uploadError) {
+                return;
+            }
+
+
+            uploadError.textContent =
+                "";
+
+
+            uploadError.style.display =
+                "none";
+
+        }
+
+
+        /* =================================================
+           COVER SELECTION
+        ================================================== */
+
+        if (coverInput) {
+
+            coverInput.addEventListener(
+                "change",
+                function () {
+
+                    clearUploadError();
+
+
+                    const file =
+                        coverInput.files[0];
+
+
+                    if (!file) {
+
+                        return;
+
+                    }
+
+
+                    /* File type */
+
+                    if (
+                        !allowedTypes.includes(
+                            file.type
+                        )
+                    ) {
+
+                        showUploadError(
+                            "Please select a PNG, JPG, JPEG or WEBP image."
+                        );
+
+
+                        coverInput.value =
+                            "";
+
+
+                        return;
+
+                    }
+
+
+                    /* File size */
+
+                    if (
+                        file.size > maxSize
+                    ) {
+
+                        showUploadError(
+                            "Image size must not exceed 5 MB."
+                        );
+
+
+                        coverInput.value =
+                            "";
+
+
+                        return;
+
+                    }
+
+
+                    /* Preview */
+
+                    const reader =
+                        new FileReader();
+
+
+                    reader.onload =
+                        function (event) {
+
+                            if (imagePreview) {
+
+                                imagePreview.src =
+                                    event.target.result;
+
+                            }
+
+
+                            if (fileName) {
+
+                                fileName.textContent =
+                                    `${file.name} • ${(file.size / 1024).toFixed(1)} KB`;
+
+                            }
+
+
+                            if (previewContainer) {
+
+                                previewContainer.style.display =
+                                    "flex";
+
+                            }
+
+
+                            if (uploadArea) {
+
+                                uploadArea.classList.add(
+                                    "has-file"
+                                );
+
+                            }
+
+                        };
+
+
+                    reader.readAsDataURL(
+                        file
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           REMOVE IMAGE
+        ================================================== */
+
+        if (removeButton) {
+
+            removeButton.addEventListener(
+                "click",
+                function () {
+
+                    if (coverInput) {
+
+                        coverInput.value =
+                            "";
+
+                    }
+
+
+                    if (imagePreview) {
+
+                        imagePreview.src =
+                            "";
+
+                    }
+
+
+                    if (fileName) {
+
+                        fileName.textContent =
+                            "No file selected";
+
+                    }
+
+
+                    if (previewContainer) {
+
+                        previewContainer.style.display =
+                            "none";
+
+                    }
+
+
+                    if (uploadArea) {
+
+                        uploadArea.classList.remove(
+                            "has-file"
+                        );
+
+                    }
+
+
+                    clearUploadError();
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           RESET
+        ================================================== */
+
+        if (resetButton) {
+
+            resetButton.addEventListener(
+                "click",
+                function () {
+
+                    setTimeout(
+                        function () {
+
+                            if (previewContainer) {
+
+                                previewContainer.style.display =
+                                    "none";
+
+                            }
+
+
+                            if (imagePreview) {
+
+                                imagePreview.src =
+                                    "";
+
+                            }
+
+
+                            if (fileName) {
+
+                                fileName.textContent =
+                                    "No file selected";
+
+                            }
+
+
+                            if (uploadArea) {
+
+                                uploadArea.classList.remove(
+                                    "has-file"
+                                );
+
+                            }
+
+
+                            clearUploadError();
+
+                        },
+                        50
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           FORM SUBMISSION
+        ================================================== */
+
+        if (form) {
+
+            form.addEventListener(
+                "submit",
+                function (event) {
+
+                    const title =
+                        document.getElementById(
+                            "title"
+                        );
+
+
+                    const author =
+                        document.getElementById(
+                            "author"
+                        );
+
+
+                    const copies =
+                        document.getElementById(
+                            "copies"
+                        );
+
+
+                    let valid = true;
+
+
+                    /* Title */
+
+                    if (
+                        !title
+                        ||
+                        !title.value.trim()
+                    ) {
+
+                        valid = false;
+
+                        if (title) {
+                            title.focus();
+                        }
+
+                    }
+
+
+                    /* Author */
+
+                    else if (
+                        !author
+                        ||
+                        !author.value.trim()
+                    ) {
+
+                        valid = false;
+
+                        if (author) {
+                            author.focus();
+                        }
+
+                    }
+
+
+                    /* Copies */
+
+                    else if (
+                        !copies
+                        ||
+                        parseInt(
+                            copies.value,
+                            10
+                        ) < 1
+                    ) {
+
+                        valid = false;
+
+                        if (copies) {
+                            copies.focus();
+                        }
+
+                    }
+
+
+                    if (!valid) {
+
+                        event.preventDefault();
+
+                        return;
+
+                    }
+
+
+                    /* Prevent double submission */
+
+                    if (submitButton) {
+
+                        submitButton.disabled =
+                            true;
+
+
+                        submitButton.innerHTML =
+                            `
+                            <span>
+                                ⏳
+                            </span>
+                            Adding Book...
+                            `;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           YEAR VALIDATION
+        ================================================== */
+
+        const yearInput =
+            document.getElementById(
+                "year"
+            );
+
+
+        if (yearInput) {
+
+            yearInput.addEventListener(
+                "input",
+                function () {
+
+                    const currentYear =
+                        new Date().getFullYear();
+
+
+                    if (
+                        parseInt(
+                            yearInput.value,
+                            10
+                        )
+                        >
+                        currentYear
+                    ) {
+
+                        yearInput.setCustomValidity(
+                            "Publication year cannot be in the future."
+                        );
+
+                    } else {
+
+                        yearInput.setCustomValidity(
+                            ""
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+
+    }
+);
+
 </script>
 
 {% endblock %}
