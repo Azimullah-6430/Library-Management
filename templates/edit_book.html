@@ -1,0 +1,458 @@
+```html
+{% extends "base.html" %}
+
+{% block title %}Edit Book{% endblock %}
+
+{% block page_title %}Edit Book{% endblock %}
+
+{% block content %}
+
+<div class="section-card">
+
+    <div class="section-header">
+        <div>
+            <h2>Edit Book Information</h2>
+            <p class="section-description">
+                Update the information for this book.
+            </p>
+        </div>
+
+        <span class="badge badge-info">
+            {{ book.book_id }}
+        </span>
+    </div>
+
+
+    <form method="POST"
+          action="{{ url_for('edit_book', book_id=book.book_id) }}"
+          enctype="multipart/form-data">
+
+        <div class="form-grid">
+
+            <!-- Book Title -->
+            <div class="form-group full-width">
+
+                <label for="title">
+                    Book Title <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    class="form-control"
+                    value="{{ book.title }}"
+                    placeholder="Enter book title"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Author -->
+            <div class="form-group">
+
+                <label for="author">
+                    Author <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="author"
+                    name="author"
+                    class="form-control"
+                    value="{{ book.author }}"
+                    placeholder="Enter author name"
+                    required
+                >
+
+            </div>
+
+
+            <!-- ISBN -->
+            <div class="form-group">
+
+                <label for="isbn">
+                    ISBN
+                </label>
+
+                <input
+                    type="text"
+                    id="isbn"
+                    name="isbn"
+                    class="form-control"
+                    value="{{ book.isbn }}"
+                    placeholder="Enter ISBN"
+                >
+
+            </div>
+
+
+            <!-- Category -->
+            <div class="form-group">
+
+                <label for="category">
+                    Category
+                </label>
+
+                <select
+                    id="category"
+                    name="category"
+                    class="form-control"
+                >
+
+                    <option value="">
+                        Select category
+                    </option>
+
+                    <option value="Computer Science"
+                        {% if book.category == "Computer Science" %}selected{% endif %}>
+                        Computer Science
+                    </option>
+
+                    <option value="Information Technology"
+                        {% if book.category == "Information Technology" %}selected{% endif %}>
+                        Information Technology
+                    </option>
+
+                    <option value="Engineering"
+                        {% if book.category == "Engineering" %}selected{% endif %}>
+                        Engineering
+                    </option>
+
+                    <option value="Mathematics"
+                        {% if book.category == "Mathematics" %}selected{% endif %}>
+                        Mathematics
+                    </option>
+
+                    <option value="Science"
+                        {% if book.category == "Science" %}selected{% endif %}>
+                        Science
+                    </option>
+
+                    <option value="Management"
+                        {% if book.category == "Management" %}selected{% endif %}>
+                        Management
+                    </option>
+
+                    <option value="Literature"
+                        {% if book.category == "Literature" %}selected{% endif %}>
+                        Literature
+                    </option>
+
+                    <option value="History"
+                        {% if book.category == "History" %}selected{% endif %}>
+                        History
+                    </option>
+
+                    <option value="Biography"
+                        {% if book.category == "Biography" %}selected{% endif %}>
+                        Biography
+                    </option>
+
+                    <option value="Other"
+                        {% if book.category == "Other" %}selected{% endif %}>
+                        Other
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- Publisher -->
+            <div class="form-group">
+
+                <label for="publisher">
+                    Publisher
+                </label>
+
+                <input
+                    type="text"
+                    id="publisher"
+                    name="publisher"
+                    class="form-control"
+                    value="{{ book.publisher }}"
+                    placeholder="Enter publisher"
+                >
+
+            </div>
+
+
+            <!-- Publication Year -->
+            <div class="form-group">
+
+                <label for="year">
+                    Publication Year
+                </label>
+
+                <input
+                    type="number"
+                    id="year"
+                    name="year"
+                    class="form-control"
+                    value="{{ book.year }}"
+                    min="1000"
+                    max="2100"
+                    placeholder="e.g. 2024"
+                >
+
+            </div>
+
+
+            <!-- Total Copies -->
+            <div class="form-group">
+
+                <label for="copies">
+                    Total Copies <span class="required">*</span>
+                </label>
+
+                <input
+                    type="number"
+                    id="copies"
+                    name="copies"
+                    class="form-control"
+                    value="{{ book.copies }}"
+                    min="1"
+                    required
+                >
+
+                <small style="color: var(--muted); margin-top: 5px;">
+                    Current available copies: {{ book.available }}
+                </small>
+
+            </div>
+
+
+            <!-- Shelf -->
+            <div class="form-group">
+
+                <label for="shelf">
+                    Shelf Number
+                </label>
+
+                <input
+                    type="text"
+                    id="shelf"
+                    name="shelf"
+                    class="form-control"
+                    value="{{ book.shelf }}"
+                    placeholder="e.g. A-12"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- Existing Cover -->
+        <div class="cover-upload-section">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Book Cover</h2>
+
+                    <p class="section-description">
+                        Replace the existing cover if required.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="upload-area">
+
+                {% if book.cover %}
+
+                <div class="preview-container"
+                     style="display: block;">
+
+                    <img
+                        src="{{ url_for('uploaded_cover', filename=book.cover) }}"
+                        alt="{{ book.title }} cover"
+                        id="coverPreview"
+                    >
+
+                </div>
+
+                {% else %}
+
+                <div class="upload-icon">
+                    📚
+                </div>
+
+                <h3>
+                    No Cover Uploaded
+                </h3>
+
+                {% endif %}
+
+
+                <div style="margin-top: 20px;">
+
+                    <label
+                        for="cover"
+                        class="btn btn-secondary"
+                    >
+                        Choose New Cover
+                    </label>
+
+                    <input
+                        type="file"
+                        id="cover"
+                        name="cover"
+                        accept="image/png,image/jpeg,image/webp"
+                        hidden
+                    >
+
+                </div>
+
+
+                <div
+                    id="fileName"
+                    class="file-name"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Actions -->
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('books') }}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Save Changes
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+    const coverInput =
+        document.getElementById("cover");
+
+    const fileName =
+        document.getElementById("fileName");
+
+    const previewContainer =
+        document.querySelector(".preview-container");
+
+    const coverPreview =
+        document.getElementById("coverPreview");
+
+
+    if (coverInput) {
+
+        coverInput.addEventListener(
+            "change",
+            function () {
+
+                const file = this.files[0];
+
+                if (!file) {
+
+                    fileName.textContent = "";
+
+                    return;
+                }
+
+
+                const allowedTypes = [
+                    "image/png",
+                    "image/jpeg",
+                    "image/webp"
+                ];
+
+
+                if (!allowedTypes.includes(file.type)) {
+
+                    alert(
+                        "Please select a PNG, JPG, JPEG or WEBP image."
+                    );
+
+                    this.value = "";
+
+                    fileName.textContent = "";
+
+                    return;
+                }
+
+
+                fileName.textContent =
+                    "Selected: " + file.name;
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (event) {
+
+                        if (coverPreview) {
+
+                            coverPreview.src =
+                                event.target.result;
+
+                            previewContainer.style.display =
+                                "block";
+
+                        } else {
+
+                            const newImage =
+                                document.createElement("img");
+
+                            newImage.id =
+                                "coverPreview";
+
+                            newImage.src =
+                                event.target.result;
+
+                            newImage.alt =
+                                "Book cover preview";
+
+                            previewContainer.innerHTML = "";
+
+                            previewContainer.appendChild(
+                                newImage
+                            );
+
+                            previewContainer.style.display =
+                                "block";
+                        }
+
+                    };
+
+
+                reader.readAsDataURL(file);
+
+            }
+        );
+
+    }
+
+</script>
+
+{% endblock %}
+```
