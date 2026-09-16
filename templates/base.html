@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta
         name="description"
@@ -17,7 +14,6 @@
         {% block title %}Crescent Library{% endblock %}
     </title>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -26,13 +22,11 @@
         rel="stylesheet"
     >
 
-    <!-- Bootstrap Icons -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
 
-    <!-- Main stylesheet -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/style.css') }}"
@@ -43,369 +37,320 @@
 
 <body>
 
-    {% if session.get('logged_in') %}
+{% if session.get('logged_in') %}
 
-    <div class="app-shell">
+<div class="app-shell">
 
-        <!-- ==================================================
-             SIDEBAR
-        =================================================== -->
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
 
-        <aside class="sidebar" id="sidebar">
-
-            <div class="sidebar-brand">
-
-                <div class="brand-mark">
-                    <i class="bi bi-book-half"></i>
-                </div>
-
-                <div class="brand-content">
-                    <span class="brand-name">
-                        CRESCENT
-                    </span>
-
-                    <span class="brand-subtitle">
-                        CENTRAL LIBRARY
-                    </span>
-                </div>
-
+        <div class="sidebar-brand">
+            <div class="brand-mark">
+                <i class="bi bi-book-half"></i>
             </div>
 
+            <div class="brand-content">
+                <span class="brand-name">CRESCENT</span>
+                <span class="brand-subtitle">CENTRAL LIBRARY</span>
+            </div>
+        </div>
 
-            <div class="sidebar-divider"></div>
+        <div class="sidebar-divider"></div>
 
+        <nav class="sidebar-nav">
 
-            <!-- Main Navigation -->
-
-            <nav class="sidebar-nav">
-
-                <div class="nav-section-title">
-                    MAIN
-                </div>
-
-                <a
-                    href="{{ url_for('dashboard') }}"
-                    class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}"
-                >
-                    <span class="nav-icon">
-                        <i class="bi bi-grid-1x2"></i>
-                    </span>
-
-                    <span class="nav-label">
-                        Dashboard
-                    </span>
-                </a>
-
-
-                <a
-                    href="{{ url_for('books') }}"
-                    class="nav-item {% if request.endpoint in ['books', 'book_details', 'search_books'] %}active{% endif %}"
-                >
-                    <span class="nav-icon">
-                        <i class="bi bi-collection"></i>
-                    </span>
-
-                    <span class="nav-label">
-                        Book Catalogue
-                    </span>
-                </a>
-
-
-                <a
-                    href="{{ url_for('add_book') }}"
-                    class="nav-item {% if request.endpoint == 'add_book' %}active{% endif %}"
-                >
-                    <span class="nav-icon">
-                        <i class="bi bi-upc-scan"></i>
-                    </span>
-
-                    <span class="nav-label">
-                        AI Book Scanner
-                    </span>
-
-                    <span class="nav-badge">
-                        AI
-                    </span>
-                </a>
-
-
-                <div class="nav-section-title second">
-                    LIBRARY
-                </div>
-
-
-                <a
-                    href="{{ url_for('available_books') }}"
-                    class="nav-item {% if request.endpoint == 'available_books' %}active{% endif %}"
-                >
-                    <span class="nav-icon">
-                        <i class="bi bi-check2-circle"></i>
-                    </span>
-
-                    <span class="nav-label">
-                        Available Books
-                    </span>
-                </a>
-
-
-                <a
-                    href="{{ url_for('borrowed_books') }}"
-                    class="nav-item {% if request.endpoint == 'borrowed_books' %}active{% endif %}"
-                >
-                    <span class="nav-icon">
-                        <i class="bi bi-arrow-left-right"></i>
-                    </span>
-
-                    <span class="nav-label">
-                        Borrowed Books
-                    </span>
-                </a>
-
-            </nav>
-
-
-            <!-- Sidebar Bottom -->
-
-            <div class="sidebar-bottom">
-
-                <div class="library-status">
-
-                    <div class="status-indicator">
-                        <span></span>
-                    </div>
-
-                    <div>
-                        <strong>
-                            Library System
-                        </strong>
-
-                        <small>
-                            System operational
-                        </small>
-                    </div>
-
-                </div>
-
-
-                <a
-                    href="{{ url_for('logout') }}"
-                    class="logout-link"
-                >
-                    <i class="bi bi-box-arrow-left"></i>
-
-                    <span>
-                        Sign out
-                    </span>
-                </a>
-
+            <div class="nav-section-title">
+                MAIN
             </div>
 
-        </aside>
+            <a
+                href="{{ url_for('index') }}"
+                class="nav-item {% if request.endpoint == 'index' %}active{% endif %}"
+            >
+                <span class="nav-icon">
+                    <i class="bi bi-grid-1x2"></i>
+                </span>
 
+                <span class="nav-label">
+                    Dashboard
+                </span>
+            </a>
 
-        <!-- ==================================================
-             MAIN AREA
-        =================================================== -->
+            <a
+                href="{{ url_for('books') }}"
+                class="nav-item {% if request.endpoint in ['books', 'book_details', 'search'] %}active{% endif %}"
+            >
+                <span class="nav-icon">
+                    <i class="bi bi-collection"></i>
+                </span>
 
-        <div class="main-area">
+                <span class="nav-label">
+                    Book Catalogue
+                </span>
+            </a>
 
-            <!-- Top Header -->
+            <a
+                href="{{ url_for('add_book') }}"
+                class="nav-item {% if request.endpoint == 'add_book' %}active{% endif %}"
+            >
+                <span class="nav-icon">
+                    <i class="bi bi-upc-scan"></i>
+                </span>
 
-            <header class="topbar">
+                <span class="nav-label">
+                    AI Book Scanner
+                </span>
 
-                <div class="topbar-left">
+                <span class="nav-badge">
+                    AI
+                </span>
+            </a>
 
-                    <button
-                        type="button"
-                        class="sidebar-toggle"
-                        id="sidebarToggle"
-                        aria-label="Toggle navigation"
-                    >
-                        <i class="bi bi-list"></i>
-                    </button>
+            <div class="nav-section-title second">
+                LIBRARY
+            </div>
 
+            <a
+                href="{{ url_for('available_books') }}"
+                class="nav-item {% if request.endpoint == 'available_books' %}active{% endif %}"
+            >
+                <span class="nav-icon">
+                    <i class="bi bi-check2-circle"></i>
+                </span>
 
-                    <div class="breadcrumb-area">
+                <span class="nav-label">
+                    Available Books
+                </span>
+            </a>
 
-                        <span class="breadcrumb-home">
-                            <i class="bi bi-building"></i>
-                        </span>
+            <a
+                href="{{ url_for('borrowed_books') }}"
+                class="nav-item {% if request.endpoint == 'borrowed_books' %}active{% endif %}"
+            >
+                <span class="nav-icon">
+                    <i class="bi bi-arrow-left-right"></i>
+                </span>
 
-                        <i class="bi bi-chevron-right breadcrumb-arrow"></i>
+                <span class="nav-label">
+                    Borrowed Books
+                </span>
+            </a>
 
-                        <span class="breadcrumb-current">
-                            {% block breadcrumb %}
-                            Library Management
-                            {% endblock %}
-                        </span>
+        </nav>
 
-                    </div>
+        <div class="sidebar-bottom">
 
+            <div class="library-status">
+
+                <div class="status-indicator">
+                    <span></span>
                 </div>
-
-
-                <div class="topbar-right">
-
-                    <div class="topbar-system">
-
-                        <span class="system-dot"></span>
-
-                        <span>
-                            Central Library
-                        </span>
-
-                    </div>
-
-
-                    <div class="topbar-divider"></div>
-
-
-                    <div class="admin-profile">
-
-                        <div class="admin-avatar">
-                            <i class="bi bi-person"></i>
-                        </div>
-
-                        <div class="admin-info">
-
-                            <strong>
-                                Library Admin
-                            </strong>
-
-                            <span>
-                                Administrator
-                            </span>
-
-                        </div>
-
-                        <i class="bi bi-chevron-down admin-chevron"></i>
-
-                    </div>
-
-                </div>
-
-            </header>
-
-
-            <!-- Page Content -->
-
-            <main class="page-content">
-
-                <!-- Flash Messages -->
-
-                {% with messages = get_flashed_messages(
-                    with_categories=true
-                ) %}
-
-                    {% if messages %}
-
-                        <div class="flash-container">
-
-                            {% for category, message in messages %}
-
-                                <div
-                                    class="flash-message flash-{{ category }}"
-                                    role="alert"
-                                >
-
-                                    <div class="flash-icon">
-
-                                        {% if category == 'success' %}
-                                            <i class="bi bi-check-circle-fill"></i>
-
-                                        {% elif category == 'danger' %}
-                                            <i class="bi bi-exclamation-circle-fill"></i>
-
-                                        {% elif category == 'warning' %}
-                                            <i class="bi bi-exclamation-triangle-fill"></i>
-
-                                        {% else %}
-                                            <i class="bi bi-info-circle-fill"></i>
-                                        {% endif %}
-
-                                    </div>
-
-                                    <span>
-                                        {{ message }}
-                                    </span>
-
-                                    <button
-                                        type="button"
-                                        class="flash-close"
-                                        onclick="this.parentElement.remove()"
-                                        aria-label="Close"
-                                    >
-                                        <i class="bi bi-x"></i>
-                                    </button>
-
-                                </div>
-
-                            {% endfor %}
-
-                        </div>
-
-                    {% endif %}
-
-                {% endwith %}
-
-
-                {% block content %}{% endblock %}
-
-            </main>
-
-
-            <!-- Footer -->
-
-            <footer class="site-footer">
 
                 <div>
-                    Crescent College Central Library
+                    <strong>Library System</strong>
+                    <small>System operational</small>
                 </div>
 
-                <div class="footer-right">
-                    Library Management System
-                    <span>•</span>
-                    <span id="currentYear"></span>
-                </div>
+            </div>
 
-            </footer>
+            <a
+                href="{{ url_for('logout') }}"
+                class="logout-link"
+            >
+                <i class="bi bi-box-arrow-left"></i>
+
+                <span>
+                    Sign out
+                </span>
+            </a>
 
         </div>
 
+    </aside>
+
+
+    <!-- MAIN AREA -->
+    <div class="main-area">
+
+        <header class="topbar">
+
+            <div class="topbar-left">
+
+                <button
+                    type="button"
+                    class="sidebar-toggle"
+                    id="sidebarToggle"
+                    aria-label="Toggle navigation"
+                >
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <div class="breadcrumb-area">
+
+                    <span class="breadcrumb-home">
+                        <i class="bi bi-building"></i>
+                    </span>
+
+                    <i class="bi bi-chevron-right breadcrumb-arrow"></i>
+
+                    <span class="breadcrumb-current">
+                        {% block breadcrumb %}
+                        Library Management
+                        {% endblock %}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="topbar-right">
+
+                <div class="topbar-system">
+
+                    <span class="system-dot"></span>
+
+                    <span>
+                        Central Library
+                    </span>
+
+                </div>
+
+                <div class="topbar-divider"></div>
+
+                <div class="admin-profile">
+
+                    <div class="admin-avatar">
+                        <i class="bi bi-person"></i>
+                    </div>
+
+                    <div class="admin-info">
+
+                        <strong>
+                            Library Admin
+                        </strong>
+
+                        <span>
+                            Administrator
+                        </span>
+
+                    </div>
+
+                    <i class="bi bi-chevron-down admin-chevron"></i>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- PAGE CONTENT -->
+        <main class="page-content">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    <div class="flash-container">
+
+                        {% for category, message in messages %}
+
+                            <div
+                                class="flash-message flash-{{ category }}"
+                                role="alert"
+                            >
+
+                                <div class="flash-icon">
+
+                                    {% if category == 'success' %}
+                                        <i class="bi bi-check-circle-fill"></i>
+
+                                    {% elif category == 'danger' %}
+                                        <i class="bi bi-exclamation-circle-fill"></i>
+
+                                    {% elif category == 'warning' %}
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+
+                                    {% else %}
+                                        <i class="bi bi-info-circle-fill"></i>
+                                    {% endif %}
+
+                                </div>
+
+                                <span>
+                                    {{ message }}
+                                </span>
+
+                                <button
+                                    type="button"
+                                    class="flash-close"
+                                    onclick="this.parentElement.remove()"
+                                    aria-label="Close"
+                                >
+                                    <i class="bi bi-x"></i>
+                                </button>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            {% block content %}{% endblock %}
+
+        </main>
+
+
+        <!-- FOOTER -->
+        <footer class="site-footer">
+
+            <div>
+                Crescent College Central Library
+            </div>
+
+            <div class="footer-right">
+                Library Management System
+                <span>•</span>
+                <span id="currentYear"></span>
+            </div>
+
+        </footer>
+
     </div>
 
-
-    <!-- Mobile Sidebar Overlay -->
-
-    <div
-        class="sidebar-overlay"
-        id="sidebarOverlay"
-    ></div>
+</div>
 
 
-    {% else %}
-
-    <!-- ==================================================
-         AUTHENTICATION LAYOUT
-    =================================================== -->
-
-    <main class="auth-layout">
-
-        {% block auth_content %}{% endblock %}
-
-    </main>
-
-    {% endif %}
+<!-- MOBILE SIDEBAR -->
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+></div>
 
 
-    <!-- Main JavaScript -->
+{% else %}
 
-    <script
-        src="{{ url_for('static', filename='js/script.js') }}"
-    ></script>
+<!-- AUTHENTICATION LAYOUT -->
+<main class="auth-layout">
+
+    {% block auth_content %}{% endblock %}
+
+</main>
+
+{% endif %}
 
 
-    {% block scripts %}{% endblock %}
+<script
+    src="{{ url_for('static', filename='js/script.js') }}"
+></script>
+
+{% block scripts %}{% endblock %}
 
 </body>
 </html>
