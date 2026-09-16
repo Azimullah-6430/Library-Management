@@ -1,988 +1,519 @@
-/* ============================================================
-   CRESCENT COLLEGE LIBRARY MANAGEMENT SYSTEM
-   Global JavaScript
-   ============================================================ */
+document.addEventListener("DOMContentLoaded", function () {
 
-"use strict";
+    /* =====================================================
+       MOBILE SIDEBAR
+       ===================================================== */
 
-
-/* ============================================================
-   DOM READY
-   ============================================================ */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        initializeSidebar();
-
-        initializeDeleteConfirmation();
-
-        initializeSearchShortcut();
-
-        initializeCardAnimations();
-
-        initializeAutoDismissMessages();
-
-        initializeButtonProtection();
-
-    }
-);
-
-
-/* ============================================================
-   SIDEBAR / MOBILE NAVIGATION
-   ============================================================ */
-
-function initializeSidebar() {
-
-    const menuButton =
-        document.getElementById(
-            "mobileMenuButton"
-        );
-
-    const sidebar =
-        document.getElementById(
-            "sidebar"
-        );
-
-    const overlay =
-        document.getElementById(
-            "sidebarOverlay"
-        );
-
-    const closeButton =
-        document.getElementById(
-            "closeSidebarButton"
-        );
-
-
-    if (!sidebar) {
-        return;
-    }
-
+    const menuButton = document.querySelector(".mobile-menu-button");
+    const sidebar = document.querySelector(".sidebar");
+    const sidebarOverlay = document.querySelector(".sidebar-overlay");
 
     function openSidebar() {
-
-        sidebar.classList.add(
-            "sidebar-open"
-        );
-
-
-        if (overlay) {
-
-            overlay.classList.add(
-                "overlay-visible"
-            );
-
-        }
-
-
-        document.body.classList.add(
-            "sidebar-active"
-        );
-
+        if (sidebar) sidebar.classList.add("open");
+        if (sidebarOverlay) sidebarOverlay.classList.add("visible");
     }
-
 
     function closeSidebar() {
-
-        sidebar.classList.remove(
-            "sidebar-open"
-        );
-
-
-        if (overlay) {
-
-            overlay.classList.remove(
-                "overlay-visible"
-            );
-
-        }
-
-
-        document.body.classList.remove(
-            "sidebar-active"
-        );
-
+        if (sidebar) sidebar.classList.remove("open");
+        if (sidebarOverlay) sidebarOverlay.classList.remove("visible");
     }
-
 
     if (menuButton) {
-
-        menuButton.addEventListener(
-            "click",
-            openSidebar
-        );
-
+        menuButton.addEventListener("click", function () {
+            if (sidebar && sidebar.classList.contains("open")) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
     }
 
-
-    if (closeButton) {
-
-        closeButton.addEventListener(
-            "click",
-            closeSidebar
-        );
-
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener("click", closeSidebar);
     }
 
-
-    if (overlay) {
-
-        overlay.addEventListener(
-            "click",
-            closeSidebar
-        );
-
-    }
+    document.querySelectorAll(".nav-item").forEach(function (item) {
+        item.addEventListener("click", function () {
+            if (window.innerWidth <= 900) {
+                closeSidebar();
+            }
+        });
+    });
 
 
-    /* Close sidebar after navigation */
+    /* =====================================================
+       PASSWORD VISIBILITY
+       ===================================================== */
 
-    const sidebarLinks =
-        sidebar.querySelectorAll(
-            "a"
-        );
+    document.querySelectorAll(".password-toggle").forEach(function (button) {
 
+        button.addEventListener("click", function () {
 
-    sidebarLinks.forEach(
-        function (link) {
+            const targetId = button.getAttribute("data-target");
+            const input = document.getElementById(targetId);
 
-            link.addEventListener(
-                "click",
-                function () {
+            if (!input) return;
 
-                    if (
-                        window.innerWidth <= 900
-                    ) {
+            if (input.type === "password") {
+                input.type = "text";
 
-                        closeSidebar();
+                const icon = button.querySelector("i");
 
-                    }
-
+                if (icon) {
+                    icon.classList.remove("bi-eye");
+                    icon.classList.add("bi-eye-slash");
                 }
-            );
 
-        }
-    );
+            } else {
+                input.type = "password";
 
+                const icon = button.querySelector("i");
 
-    /* Escape key */
-
-    document.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                closeSidebar();
-
+                if (icon) {
+                    icon.classList.remove("bi-eye-slash");
+                    icon.classList.add("bi-eye");
+                }
             }
+        });
 
-        }
-    );
-
-
-    /* Handle resize */
-
-    window.addEventListener(
-        "resize",
-        function () {
-
-            if (
-                window.innerWidth > 900
-            ) {
-
-                closeSidebar();
-
-            }
-
-        }
-    );
-
-}
+    });
 
 
-/* ============================================================
-   DELETE CONFIRMATION
-   ============================================================ */
+    /* =====================================================
+       AUTO HIDE FLASH MESSAGES
+       ===================================================== */
 
-function initializeDeleteConfirmation() {
+    const flashMessages = document.querySelectorAll(".flash-message");
 
-    const deleteForms =
-        document.querySelectorAll(
-            'form[action*="/delete-book/"]'
-        );
+    flashMessages.forEach(function (message) {
+
+        setTimeout(function () {
+
+            message.style.opacity = "0";
+            message.style.transform = "translateX(15px)";
+            message.style.transition = "opacity 250ms ease, transform 250ms ease";
+
+            setTimeout(function () {
+                message.remove();
+            }, 300);
+
+        }, 4500);
+
+    });
 
 
-    deleteForms.forEach(
-        function (form) {
+    /* =====================================================
+       IMAGE UPLOAD PREVIEW
+       ===================================================== */
 
-            if (
-                form.dataset.deleteInitialized ===
-                "true"
-            ) {
+    document.querySelectorAll('input[type="file"]').forEach(function (input) {
 
+        input.addEventListener("change", function () {
+
+            const file = input.files && input.files[0];
+
+            if (!file) return;
+
+            if (!file.type.startsWith("image/")) {
+                alert("Please select a valid image file.");
+                input.value = "";
                 return;
-
             }
 
+            const previewId = input.getAttribute("data-preview");
 
-            form.dataset.deleteInitialized =
-                "true";
+            if (!previewId) return;
 
+            const preview = document.getElementById(previewId);
 
-            form.addEventListener(
-                "submit",
-                function (event) {
+            if (!preview) return;
 
-                    const confirmed =
-                        window.confirm(
-                            "Are you sure you want to permanently delete this book from the library catalogue?"
-                        );
+            const image = preview.querySelector("img");
 
+            if (!image) return;
 
-                    if (!confirmed) {
+            const reader = new FileReader();
 
-                        event.preventDefault();
+            reader.onload = function (event) {
 
-                        return;
+                image.src = event.target.result;
 
-                    }
+                preview.classList.add("visible");
 
+                const uploadBox = input.closest(".upload-box");
 
-                    const button =
-                        form.querySelector(
-                            "button[type='submit']"
-                        );
-
-
-                    if (button) {
-
-                        button.disabled =
-                            true;
-
-                        button.textContent =
-                            "Deleting...";
-
-                    }
-
+                if (uploadBox) {
+                    uploadBox.classList.add("has-image");
                 }
-            );
 
-        }
-    );
+            };
 
-}
+            reader.readAsDataURL(file);
+
+        });
+
+    });
 
 
-/* ============================================================
-   GLOBAL SEARCH SHORTCUT
-   ============================================================ */
+    /* =====================================================
+       REMOVE IMAGE
+       ===================================================== */
 
-function initializeSearchShortcut() {
+    document.querySelectorAll(".remove-image").forEach(function (button) {
 
-    document.addEventListener(
-        "keydown",
-        function (event) {
+        button.addEventListener("click", function (event) {
 
-            /*
-             * Ctrl + K
-             * or
-             * Cmd + K
-             */
+            event.preventDefault();
+            event.stopPropagation();
 
-            if (
-                (
-                    event.ctrlKey ||
-                    event.metaKey
-                )
-                &&
-                event.key.toLowerCase() === "k"
-            ) {
+            const previewId = button.getAttribute("data-preview");
+
+            const preview = document.getElementById(previewId);
+
+            if (!preview) return;
+
+            const inputId = preview.getAttribute("data-input");
+            const input = document.getElementById(inputId);
+
+            if (input) {
+                input.value = "";
+            }
+
+            preview.classList.remove("visible");
+
+            const image = preview.querySelector("img");
+
+            if (image) {
+                image.removeAttribute("src");
+            }
+
+            const uploadBox = preview.closest(".upload-box");
+
+            if (uploadBox) {
+                uploadBox.classList.remove("has-image");
+            }
+
+        });
+
+    });
+
+
+    /* =====================================================
+       DRAG AND DROP IMAGE UPLOAD
+       ===================================================== */
+
+    document.querySelectorAll(".upload-box").forEach(function (box) {
+
+        const input = box.querySelector('input[type="file"]');
+
+        if (!input) return;
+
+        ["dragenter", "dragover"].forEach(function (eventName) {
+
+            box.addEventListener(eventName, function (event) {
 
                 event.preventDefault();
+                event.stopPropagation();
 
+                box.style.borderColor = "var(--navy-700)";
+                box.style.background = "#f5f8fb";
 
-                const searchInput =
-                    document.querySelector(
-                        'input[name="search"], #searchInput'
-                    );
+            });
 
+        });
 
-                if (searchInput) {
+        ["dragleave", "drop"].forEach(function (eventName) {
 
-                    searchInput.focus();
+            box.addEventListener(eventName, function (event) {
 
-                    searchInput.select();
+                event.preventDefault();
+                event.stopPropagation();
 
-                }
+                box.style.borderColor = "";
+                box.style.background = "";
 
+            });
+
+        });
+
+        box.addEventListener("drop", function (event) {
+
+            const files = event.dataTransfer.files;
+
+            if (!files || !files.length) return;
+
+            const file = files[0];
+
+            if (!file.type.startsWith("image/")) {
+                alert("Please drop a valid image file.");
+                return;
             }
 
-        }
-    );
+            try {
 
-}
+                const dataTransfer = new DataTransfer();
 
+                dataTransfer.items.add(file);
 
-/* ============================================================
-   CARD ANIMATIONS
-   ============================================================ */
+                input.files = dataTransfer.files;
 
-function initializeCardAnimations() {
+                input.dispatchEvent(new Event("change", {
+                    bubbles: true
+                }));
 
-    const animatedElements =
-        document.querySelectorAll(
-            `
-            .stat-card,
-            .book-card,
-            .action-card,
-            .info-action-card,
-            .section-card
-            `
-        );
+            } catch (error) {
 
-
-    if (
-        !animatedElements.length
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-     * Use IntersectionObserver where available.
-     * This prevents unnecessary animation work for
-     * elements that are not currently visible.
-     */
-
-    if (
-        "IntersectionObserver" in window
-    ) {
-
-        const observer =
-            new IntersectionObserver(
-                function (entries) {
-
-                    entries.forEach(
-                        function (entry) {
-
-                            if (
-                                entry.isIntersecting
-                            ) {
-
-                                entry.target.classList.add(
-                                    "element-visible"
-                                );
-
-                                observer.unobserve(
-                                    entry.target
-                                );
-
-                            }
-
-                        }
-                    );
-
-                },
-                {
-                    threshold: 0.08
-                }
-            );
-
-
-        animatedElements.forEach(
-            function (element) {
-
-                observer.observe(
-                    element
+                console.warn(
+                    "Browser does not allow programmatic file assignment.",
+                    error
                 );
 
             }
-        );
 
-    } else {
+        });
 
-        animatedElements.forEach(
-            function (element) {
+    });
 
-                element.classList.add(
-                    "element-visible"
+
+    /* =====================================================
+       CONFIRM DELETE ACTIONS
+       ===================================================== */
+
+    document.querySelectorAll("[data-confirm-delete]").forEach(function (button) {
+
+        button.addEventListener("click", function (event) {
+
+            const message =
+                button.getAttribute("data-confirm-delete") ||
+                "Are you sure you want to delete this book?";
+
+            if (!window.confirm(message)) {
+                event.preventDefault();
+            }
+
+        });
+
+    });
+
+
+    /* =====================================================
+       SEARCH INPUT CLEAR
+       ===================================================== */
+
+    document.querySelectorAll(".clear-search").forEach(function (button) {
+
+        button.addEventListener("click", function () {
+
+            const targetId = button.getAttribute("data-target");
+
+            const input = document.getElementById(targetId);
+
+            if (!input) return;
+
+            input.value = "";
+
+            const form = input.closest("form");
+
+            if (form) {
+                form.submit();
+            }
+
+        });
+
+    });
+
+
+    /* =====================================================
+       SEARCH KEYBOARD SHORTCUT
+       ===================================================== */
+
+    document.addEventListener("keydown", function (event) {
+
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
+
+            const searchInput =
+                document.querySelector(".search-input-wrapper input");
+
+            if (searchInput) {
+                event.preventDefault();
+                searchInput.focus();
+            }
+
+        }
+
+    });
+
+
+    /* =====================================================
+       PREVENT DOUBLE FORM SUBMISSION
+       ===================================================== */
+
+    document.querySelectorAll("form").forEach(function (form) {
+
+        form.addEventListener("submit", function () {
+
+            if (form.dataset.submitting === "true") {
+                return;
+            }
+
+            form.dataset.submitting = "true";
+
+            const submitButtons =
+                form.querySelectorAll(
+                    'button[type="submit"], input[type="submit"]'
                 );
 
-            }
-        );
+            submitButtons.forEach(function (button) {
 
-    }
+                button.disabled = true;
 
-}
+                const originalText =
+                    button.innerHTML || button.value;
 
+                button.dataset.originalText = originalText;
 
-/* ============================================================
-   FLASH MESSAGE AUTO DISMISS
-   ============================================================ */
+                if (button.tagName.toLowerCase() === "button") {
 
-function initializeAutoDismissMessages() {
+                    if (!button.querySelector(".button-loader")) {
 
-    const messages =
-        document.querySelectorAll(
-            ".alert, .flash-message"
-        );
-
-
-    messages.forEach(
-        function (message) {
-
-            /*
-             * Login flash messages are intentionally
-             * kept visible.
-             */
-
-            if (
-                message.closest(
-                    ".login-page"
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            setTimeout(
-                function () {
-
-                    message.classList.add(
-                        "message-hiding"
-                    );
-
-
-                    setTimeout(
-                        function () {
-
-                            if (
-                                message.parentNode
-                            ) {
-
-                                message.remove();
-
-                            }
-
-                        },
-                        350
-                    );
-
-                },
-                5000
-            );
-
-        }
-    );
-
-}
-
-
-/* ============================================================
-   PREVENT DOUBLE SUBMISSION
-   ============================================================ */
-
-function initializeButtonProtection() {
-
-    const forms =
-        document.querySelectorAll(
-            "form"
-        );
-
-
-    forms.forEach(
-        function (form) {
-
-            /*
-             * Delete forms are handled separately.
-             */
-
-            if (
-                form.action.includes(
-                    "/delete-book/"
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            form.addEventListener(
-                "submit",
-                function () {
-
-                    const submitButtons =
-                        form.querySelectorAll(
-                            'button[type="submit"], input[type="submit"]'
-                        );
-
-
-                    submitButtons.forEach(
-                        function (button) {
-
-                            /*
-                             * Do not disable buttons that
-                             * are already disabled.
-                             */
-
-                            if (
-                                button.disabled
-                            ) {
-
-                                return;
-
-                            }
-
-
-                            button.dataset.originalText =
-                                button.textContent;
-
-
-                            button.disabled =
-                                true;
-
-
-                            if (
-                                button.tagName ===
-                                "BUTTON"
-                            ) {
-
-                                button.innerHTML =
-                                    `
-                                    <span class="button-loading">
-                                        ⏳
-                                    </span>
-                                    Processing...
-                                    `;
-
-                            }
-
-                        }
-                    );
-
-                }
-            );
-
-        }
-    );
-
-}
-
-
-/* ============================================================
-   NUMBER INPUT SAFETY
-   ============================================================ */
-
-document.addEventListener(
-    "input",
-    function (event) {
-
-        const element =
-            event.target;
-
-
-        if (
-            !element.matches(
-                'input[type="number"]'
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        /*
-         * Prevent negative values from being
-         * accidentally entered.
-         */
-
-        if (
-            element.value !== ""
-            &&
-            Number(element.value) < 0
-        ) {
-
-            element.value =
-                0;
-
-        }
-
-    }
-);
-
-
-/* ============================================================
-   IMAGE ERROR HANDLING
-   ============================================================ */
-
-document.addEventListener(
-    "error",
-    function (event) {
-
-        const image =
-            event.target;
-
-
-        if (
-            image.tagName !== "IMG"
-        ) {
-
-            return;
-
-        }
-
-
-        /*
-         * Prevent repeated error events.
-         */
-
-        if (
-            image.dataset.imageErrorHandled ===
-            "true"
-        ) {
-
-            return;
-
-        }
-
-
-        image.dataset.imageErrorHandled =
-            "true";
-
-
-        /*
-         * Hide broken book-cover images
-         * instead of displaying a broken-image icon.
-         */
-
-        if (
-            image.classList.contains(
-                "book-cover"
-            )
-            ||
-            image.classList.contains(
-                "book-cover-large"
-            )
-        ) {
-
-            image.style.display =
-                "none";
-
-        }
-
-    },
-    true
-);
-
-
-/* ============================================================
-   SEARCH FORM UX
-   ============================================================ */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        const searchForms =
-            document.querySelectorAll(
-                ".catalogue-search-form"
-            );
-
-
-        searchForms.forEach(
-            function (form) {
-
-                const input =
-                    form.querySelector(
-                        'input[name="search"]'
-                    );
-
-
-                if (!input) {
-                    return;
-                }
-
-
-                /*
-                 * Clear search with Escape.
-                 */
-
-                input.addEventListener(
-                    "keydown",
-                    function (event) {
-
-                        if (
-                            event.key ===
-                            "Escape"
-                        ) {
-
-                            input.value =
-                                "";
-
-                        }
+                        button.innerHTML =
+                            '<i class="bi bi-arrow-repeat spin"></i> ' +
+                            "Processing...";
 
                     }
-                );
 
-            }
-        );
+                } else {
+                    button.value = "Processing...";
+                }
 
-    }
-);
+            });
 
+        });
 
-/* ============================================================
-   ACTIVE NAVIGATION
-   ============================================================ */
-
-function initializeActiveNavigation() {
-
-    const currentPath =
-        window.location.pathname;
+    });
 
 
-    const navigationLinks =
-        document.querySelectorAll(
-            ".sidebar a[href]"
-        );
+    /* =====================================================
+       SMOOTH SCROLL FOR INTERNAL ANCHORS
+       ===================================================== */
+
+    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+
+        link.addEventListener("click", function (event) {
+
+            const targetId = link.getAttribute("href");
+
+            if (!targetId || targetId === "#") return;
+
+            const target = document.querySelector(targetId);
+
+            if (!target) return;
+
+            event.preventDefault();
+
+            target.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        });
+
+    });
 
 
-    navigationLinks.forEach(
-        function (link) {
+    /* =====================================================
+       RESPONSIVE SIDEBAR RESET
+       ===================================================== */
 
-            const href =
-                link.getAttribute(
-                    "href"
-                );
+    window.addEventListener("resize", function () {
+
+        if (window.innerWidth > 900) {
+            closeSidebar();
+        }
+
+    });
 
 
-            if (
-                !href
-                ||
-                href === "#"
-            ) {
+    /* =====================================================
+       IMAGE ERROR HANDLING
+       ===================================================== */
 
+    document.querySelectorAll("img").forEach(function (image) {
+
+        image.addEventListener("error", function () {
+
+            if (image.dataset.errorHandled === "true") {
                 return;
+            }
+
+            image.dataset.errorHandled = "true";
+
+            image.style.display = "none";
+
+            const parent = image.parentElement;
+
+            if (parent && !parent.querySelector(".image-error-placeholder")) {
+
+                const placeholder =
+                    document.createElement("div");
+
+                placeholder.className =
+                    "image-error-placeholder large-image-placeholder";
+
+                placeholder.innerHTML =
+                    '<i class="bi bi-image"></i>' +
+                    '<span>Image unavailable</span>';
+
+                parent.appendChild(placeholder);
 
             }
 
+        });
 
-            /*
-             * Remove query strings before comparison.
-             */
-
-            const linkPath =
-                href.split("?")[0];
+    });
 
 
-            if (
-                linkPath === currentPath
-            ) {
+    /* =====================================================
+       TABLE ROW KEYBOARD ACCESS
+       ===================================================== */
 
-                link.classList.add(
-                    "active"
-                );
+    document.querySelectorAll(".library-table tbody tr").forEach(function (row) {
 
+        const link = row.querySelector("a");
+
+        if (!link) return;
+
+        row.setAttribute("tabindex", "0");
+
+        row.addEventListener("keydown", function (event) {
+
+            if (event.key === "Enter") {
+                link.click();
             }
 
-        }
-    );
+        });
 
-}
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    initializeActiveNavigation
-);
+    });
 
 
-/* ============================================================
-   TABLE / CARD HOVER ACCESSIBILITY
-   ============================================================ */
+    /* =====================================================
+       TOOLTIP INITIALIZATION
+       ===================================================== */
 
-document.addEventListener(
-    "keydown",
-    function (event) {
+    document.querySelectorAll("[title]").forEach(function (element) {
 
-        /*
-         * Allow keyboard users to activate elements
-         * that have role="button".
-         */
+        element.addEventListener("mouseenter", function () {
 
-        if (
-            event.key !== "Enter"
-            &&
-            event.key !== " "
-        ) {
+            element.setAttribute(
+                "aria-label",
+                element.getAttribute("title")
+            );
 
-            return;
+        });
 
-        }
+    });
 
-
-        const target =
-            event.target;
-
-
-        if (
-            target.getAttribute(
-                "role"
-            ) !== "button"
-        ) {
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-        target.click();
-
-    }
-);
-
-
-/* ============================================================
-   UTILITY: SAFE TEXT
-   ============================================================ */
-
-function escapeHTML(value) {
-
-    if (
-        value === null
-        ||
-        value === undefined
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(value)
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/* ============================================================
-   UTILITY: FORMAT NUMBER
-   ============================================================ */
-
-function formatNumber(value) {
-
-    const number =
-        Number(value);
-
-
-    if (
-        Number.isNaN(number)
-    ) {
-
-        return "0";
-
-    }
-
-
-    return number.toLocaleString(
-        "en-IN"
-    );
-
-}
-
-
-/* ============================================================
-   GLOBAL API HELPERS
-   ============================================================ */
-
-async function fetchJSON(
-    url,
-    options = {}
-) {
-
-    const response =
-        await fetch(
-            url,
-            options
-        );
-
-
-    const contentType =
-        response.headers.get(
-            "content-type"
-        ) || "";
-
-
-    if (
-        !contentType.includes(
-            "application/json"
-        )
-    ) {
-
-        throw new Error(
-            "Server returned a non-JSON response."
-        );
-
-    }
-
-
-    const data =
-        await response.json();
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            data.error ||
-            data.message ||
-            "Request failed."
-        );
-
-    }
-
-
-    return data;
-
-}
-
-
-/* ============================================================
-   CONSOLE STATUS
-   ============================================================ */
-
-console.log(
-    "Crescent College Library Management System loaded."
-);
+});
