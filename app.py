@@ -12,7 +12,7 @@ from flask import (
     flash,
     send_from_directory,
     jsonify,
-    session
+    session,
 )
 
 from werkzeug.utils import secure_filename
@@ -22,7 +22,13 @@ from PIL import Image
 
 
 # ============================================================
-# APPLICATION CONFIGURATION
+# CRESCENT COLLEGE LIBRARY MANAGEMENT SYSTEM
+# Backend Application
+# ============================================================
+
+
+# ============================================================
+# PATH CONFIGURATION
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -44,10 +50,7 @@ EXCEL_FILE = os.path.join(
 )
 
 
-# ============================================================
-# CREATE REQUIRED DIRECTORIES
-# ============================================================
-
+# Create required folders
 os.makedirs(DATA_FOLDER, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -60,12 +63,12 @@ app = Flask(__name__)
 
 app.secret_key = os.environ.get(
     "SECRET_KEY",
-    "crescent-library-development-secret"
+    "crescent-library-development-secret-key"
 )
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Maximum complete request size
+# Maximum request size: 5 MB
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
 
@@ -85,104 +88,129 @@ HEADERS = [
     "Available Copies",
     "Shelf Number",
     "Cover Image",
-    "Date Added"
+    "Date Added",
 ]
 
+
+# ============================================================
+# IMAGE CONFIGURATION
+# ============================================================
 
 ALLOWED_IMAGE_EXTENSIONS = {
     "png",
     "jpg",
     "jpeg",
-    "webp"
+    "webp",
 }
-
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
 
 # ============================================================
-# EXCEL DATABASE INITIALIZATION
+# EXCEL DATABASE
 # ============================================================
+
+def create_empty_excel():
+    """
+    Create a fresh Excel database with the correct structure.
+    """
+
+    workbook = Workbook()
+
+    worksheet = workbook.active
+    worksheet.title = "Books"
+
+    worksheet.append(HEADERS)
+
+    # Basic formatting
+    for cell in worksheet[1]:
+        cell.font = cell.font.copy(bold=True)
+
+    column_widths = {
+        "A": 15,
+        "B": 35,
+        "C": 28,
+        "D": 22,
+        "E": 22,
+        "F": 28,
+        "G": 20,
+        "H": 16,
+        "I": 18,
+        "J": 18,
+        "K": 35,
+        "L": 18,
+    }
+
+    for column, width in column_widths.items():
+        worksheet.column_dimensions[column].width = width
+
+    worksheet.freeze_panes = "A2"
+
+    workbook.save(EXCEL_FILE)
+    workbook.close()
+
 
 def initialize_excel():
     """
-    Create the Excel database if it does not exist.
-
-    If the file exists but is empty/corrupt, recreate it.
+    Make sure the Excel database exists and has
+    the required Books worksheet.
     """
 
     try:
 
         if not os.path.exists(EXCEL_FILE):
-
-            workbook = Workbook()
-
-            worksheet = workbook.active
-            worksheet.title = "Books"
-
-            worksheet.append(HEADERS)
-
-            workbook.save(EXCEL_FILE)
-
-            print("Created Excel database:")
-            print(EXCEL_FILE)
-
+            create_empty_excel()
+            print("Created new Excel database.")
             return
 
-        # Try opening existing workbook
-        workbook = load_workbook(
-            EXCEL_FILE
-        )
+        workbook = load_workbook(EXCEL_FILE)
 
         if "Books" not in workbook.sheetnames:
 
-            worksheet = workbook.create_sheet(
-                "Books"
-            )
-
+            worksheet = workbook.create_sheet("Books")
             worksheet.append(HEADERS)
 
-            workbook.save(
-                EXCEL_FILE
-            )
+            workbook.save(EXCEL_FILE)
 
         else:
 
             worksheet = workbook["Books"]
 
-            # If completely empty
-            if worksheet.max_row == 1 and worksheet["A1"].value is None:
+            # Empty workbook/sheet
+            if (
+                worksheet.max_row == 1
+                and worksheet["A1"].value is None
+            ):
 
                 worksheet.delete_rows(
                     1,
                     worksheet.max_row
                 )
 
-                worksheet.append(
-                    HEADERS
-                )
+                worksheet.append(HEADERS)
 
-                workbook.save(
-                    EXCEL_FILE
-                )
+                workbook.save(EXCEL_FILE)
 
         workbook.close()
 
-    except Exception as error:
+    except Exception:
 
-        print()
         print("=" * 70)
-        print("EXCEL INITIALIZATION ERROR")
+        print("EXCEL DATABASE ERROR")
         print("=" * 70)
 
         traceback.print_exc()
 
-        print("=" * 70)
+        # Close/release the file before backup attempt
+        try:
+            workbook.close()
+        except Exception:
+            pass
 
-        # Backup corrupt file
+        # Backup damaged Excel file
         if os.path.exists(EXCEL_FILE):
 
-            backup_name = (
+            backup_file = (
                 EXCEL_FILE
                 + ".backup_"
                 + datetime.now().strftime(
@@ -194,37 +222,27 @@ def initialize_excel():
 
                 os.rename(
                     EXCEL_FILE,
-                    backup_name
+                    backup_file
                 )
 
                 print(
-                    f"Corrupt Excel file backed up to: {backup_name}"
+                    f"Damaged Excel file backed up to:\n"
+                    f"{backup_file}"
                 )
 
             except Exception:
 
-                pass
+                print(
+                    "Unable to create Excel backup."
+                )
 
-        # Create fresh database
-        workbook = Workbook()
+        # Create clean database
+        create_empty_excel()
 
-        worksheet = workbook.active
-        worksheet.title = "Books"
-
-        worksheet.append(
-            HEADERS
-        )
-
-        workbook.save(
-            EXCEL_FILE
-        )
-
-        workbook.close()
-
-        print("Created fresh Excel database.")
+        print("Created a fresh Excel database.")
+        print("=" * 70)
 
 
-# Initialize database immediately
 initialize_excel()
 
 
@@ -233,6 +251,9 @@ initialize_excel()
 # ============================================================
 
 def get_workbook():
+    """
+    Open and return the Excel workbook.
+    """
 
     initialize_excel()
 
@@ -241,41 +262,91 @@ def get_workbook():
     )
 
 
+def safe_int(value, default=0):
+    """
+    Safely convert a value into an integer.
+    """
+
+    try:
+
+        return int(value)
+
+    except (ValueError, TypeError):
+
+        try:
+
+            return int(float(value))
+
+        except (ValueError, TypeError):
+
+            return default
+
+
 def normalize_book(row):
     """
-    Convert an Excel row into the dictionary format
-    expected by the HTML templates.
+    Convert an Excel row into the dictionary structure
+    used throughout the application.
     """
 
+    values = list(row)
+
+    while len(values) < 12:
+        values.append("")
+
+    total_copies = safe_int(
+        values[7],
+        0
+    )
+
+    available_copies = safe_int(
+        values[8],
+        0
+    )
+
+    # Prevent invalid negative values
+    if total_copies < 0:
+        total_copies = 0
+
+    if available_copies < 0:
+        available_copies = 0
+
+    if available_copies > total_copies:
+        available_copies = total_copies
+
+    borrowed_copies = (
+        total_copies
+        - available_copies
+    )
+
     return {
+        "book_id": values[0] or "",
+        "title": values[1] or "",
+        "author": values[2] or "",
+        "isbn": values[3] or "",
+        "category": values[4] or "",
+        "publisher": values[5] or "",
+        "year": values[6] or "",
+        "copies": total_copies,
+        "available": available_copies,
 
-        "book_id": row[0] or "",
+        # Compatibility aliases
+        "available_copies": available_copies,
+        "total_copies": total_copies,
+        "borrowed": borrowed_copies,
+        "borrowed_copies": borrowed_copies,
 
-        "title": row[1] or "",
-
-        "author": row[2] or "",
-
-        "isbn": row[3] or "",
-
-        "category": row[4] or "",
-
-        "publisher": row[5] or "",
-
-        "year": row[6] or "",
-
-        "copies": row[7] or 0,
-
-        "available": row[8] or 0,
-
-        "shelf": row[9] or "",
-
-        "cover": row[10] or "",
-
-        "date_added": row[11] or ""
+        "shelf": values[9] or "",
+        "cover": values[10] or "",
+        "date_added": values[11] or "",
     }
 
 
 def get_all_books():
+    """
+    Read all books from the Excel database.
+    """
+
+    workbook = None
 
     try:
 
@@ -290,24 +361,15 @@ def get_all_books():
             values_only=True
         ):
 
-            # Skip completely empty rows
             if not any(
                 value is not None
                 for value in row
             ):
                 continue
 
-            # Ensure row has 12 values
-            row = list(row)
-
-            while len(row) < 12:
-                row.append("")
-
             books.append(
                 normalize_book(row)
             )
-
-        workbook.close()
 
         return books
 
@@ -315,208 +377,239 @@ def get_all_books():
 
         traceback.print_exc()
 
-        return []
+        raise
+
+    finally:
+
+        if workbook is not None:
+
+            try:
+                workbook.close()
+            except Exception:
+                pass
 
 
 def find_book(book_id):
+    """
+    Find a book using its Book ID.
+    """
 
-    book_id = str(
+    target_id = str(
         book_id
     ).strip()
 
-    workbook = get_workbook()
-
-    worksheet = workbook["Books"]
-
-    for row_number in range(
-        2,
-        worksheet.max_row + 1
-    ):
-
-        value = worksheet.cell(
-            row_number,
-            1
-        ).value
-
-        if str(value).strip() == book_id:
-
-            row = [
-                worksheet.cell(
-                    row_number,
-                    column
-                ).value
-                for column in range(
-                    1,
-                    13
-                )
-            ]
-
-            workbook.close()
-
-            return normalize_book(
-                row
-            )
-
-    workbook.close()
-
-    return None
-
-
-def add_book_to_excel(book):
-
-    workbook = get_workbook()
-
-    worksheet = workbook["Books"]
-
-    worksheet.append([
-        book["book_id"],
-        book["title"],
-        book["author"],
-        book["isbn"],
-        book["category"],
-        book["publisher"],
-        book["year"],
-        book["copies"],
-        book["available"],
-        book["shelf"],
-        book["cover"],
-        book["date_added"]
-    ])
-
-    workbook.save(
-        EXCEL_FILE
-    )
-
-    workbook.close()
-
-
-def update_book_in_excel(
-    book_id,
-    book
-):
-
-    workbook = get_workbook()
-
-    worksheet = workbook["Books"]
-
-    for row_number in range(
-        2,
-        worksheet.max_row + 1
-    ):
-
-        current_id = worksheet.cell(
-            row_number,
-            1
-        ).value
-
-        if str(current_id).strip() == str(book_id).strip():
-
-            values = [
-                book["book_id"],
-                book["title"],
-                book["author"],
-                book["isbn"],
-                book["category"],
-                book["publisher"],
-                book["year"],
-                book["copies"],
-                book["available"],
-                book["shelf"],
-                book["cover"],
-                book["date_added"]
-            ]
-
-            for column, value in enumerate(
-                values,
-                start=1
-            ):
-
-                worksheet.cell(
-                    row_number,
-                    column
-                ).value = value
-
-            workbook.save(
-                EXCEL_FILE
-            )
-
-            workbook.close()
-
-            return True
-
-    workbook.close()
-
-    return False
-
-
-def delete_book_from_excel(book_id):
-
-    workbook = get_workbook()
-
-    worksheet = workbook["Books"]
-
-    for row_number in range(
-        2,
-        worksheet.max_row + 1
-    ):
-
-        current_id = worksheet.cell(
-            row_number,
-            1
-        ).value
-
-        if str(current_id).strip() == str(book_id).strip():
-
-            worksheet.delete_rows(
-                row_number,
-                1
-            )
-
-            workbook.save(
-                EXCEL_FILE
-            )
-
-            workbook.close()
-
-            return True
-
-    workbook.close()
-
-    return False
-
-
-# ============================================================
-# NUMBER HELPERS
-# ============================================================
-
-def safe_int(
-    value,
-    default=0
-):
+    workbook = None
 
     try:
 
-        return int(
-            value
-        )
+        workbook = get_workbook()
 
-    except (
-        ValueError,
-        TypeError
-    ):
+        worksheet = workbook["Books"]
 
-        try:
-
-            return int(
-                float(value)
-            )
-
-        except (
-            ValueError,
-            TypeError
+        for row_number in range(
+            2,
+            worksheet.max_row + 1
         ):
 
-            return default
+            current_id = worksheet.cell(
+                row=row_number,
+                column=1
+            ).value
+
+            if (
+                str(current_id).strip()
+                == target_id
+            ):
+
+                row = [
+                    worksheet.cell(
+                        row=row_number,
+                        column=column
+                    ).value
+                    for column in range(
+                        1,
+                        13
+                    )
+                ]
+
+                return normalize_book(row)
+
+        return None
+
+    finally:
+
+        if workbook is not None:
+
+            try:
+                workbook.close()
+            except Exception:
+                pass
+
+
+def add_book_to_excel(book):
+    """
+    Add a new book to Excel.
+    """
+
+    workbook = None
+
+    try:
+
+        workbook = get_workbook()
+
+        worksheet = workbook["Books"]
+
+        worksheet.append([
+            book["book_id"],
+            book["title"],
+            book["author"],
+            book["isbn"],
+            book["category"],
+            book["publisher"],
+            book["year"],
+            book["copies"],
+            book["available"],
+            book["shelf"],
+            book["cover"],
+            book["date_added"],
+        ])
+
+        workbook.save(EXCEL_FILE)
+
+    finally:
+
+        if workbook is not None:
+
+            try:
+                workbook.close()
+            except Exception:
+                pass
+
+
+def update_book_in_excel(book_id, book):
+    """
+    Update an existing book.
+    """
+
+    workbook = None
+
+    try:
+
+        workbook = get_workbook()
+
+        worksheet = workbook["Books"]
+
+        target_id = str(
+            book_id
+        ).strip()
+
+        for row_number in range(
+            2,
+            worksheet.max_row + 1
+        ):
+
+            current_id = worksheet.cell(
+                row=row_number,
+                column=1
+            ).value
+
+            if (
+                str(current_id).strip()
+                == target_id
+            ):
+
+                values = [
+                    book["book_id"],
+                    book["title"],
+                    book["author"],
+                    book["isbn"],
+                    book["category"],
+                    book["publisher"],
+                    book["year"],
+                    book["copies"],
+                    book["available"],
+                    book["shelf"],
+                    book["cover"],
+                    book["date_added"],
+                ]
+
+                for column, value in enumerate(
+                    values,
+                    start=1
+                ):
+
+                    worksheet.cell(
+                        row=row_number,
+                        column=column
+                    ).value = value
+
+                workbook.save(EXCEL_FILE)
+
+                return True
+
+        return False
+
+    finally:
+
+        if workbook is not None:
+
+            try:
+                workbook.close()
+            except Exception:
+                pass
+
+
+def delete_book_from_excel(book_id):
+    """
+    Delete a book from Excel.
+    """
+
+    workbook = None
+
+    try:
+
+        workbook = get_workbook()
+
+        worksheet = workbook["Books"]
+
+        target_id = str(
+            book_id
+        ).strip()
+
+        for row_number in range(
+            2,
+            worksheet.max_row + 1
+        ):
+
+            current_id = worksheet.cell(
+                row=row_number,
+                column=1
+            ).value
+
+            if (
+                str(current_id).strip()
+                == target_id
+            ):
+
+                worksheet.delete_rows(
+                    row_number,
+                    1
+                )
+
+                workbook.save(EXCEL_FILE)
+
+                return True
+
+        return False
+
+    finally:
+
+        if workbook is not None:
+
+            try:
+                workbook.close()
+            except Exception:
+                pass
 
 
 # ============================================================
@@ -524,16 +617,19 @@ def safe_int(
 # ============================================================
 
 def is_allowed_image(filename):
+    """
+    Check whether the image extension is allowed.
+    """
 
     if not filename:
         return False
 
+    if "." not in filename:
+        return False
+
     extension = (
         filename
-        .rsplit(
-            ".",
-            1
-        )[-1]
+        .rsplit(".", 1)[1]
         .lower()
     )
 
@@ -541,6 +637,12 @@ def is_allowed_image(filename):
 
 
 def save_cover_image(file):
+    """
+    Validate and save a book-cover image.
+
+    Returns:
+        filename
+    """
 
     if not file:
         return ""
@@ -559,7 +661,10 @@ def save_cover_image(file):
         )
 
 
-    # Check file size
+    # --------------------------------------------------------
+    # File size
+    # --------------------------------------------------------
+
     file.seek(
         0,
         os.SEEK_END
@@ -567,10 +672,13 @@ def save_cover_image(file):
 
     file_size = file.tell()
 
-    file.seek(
-        0
-    )
+    file.seek(0)
 
+    if file_size == 0:
+
+        raise ValueError(
+            "The uploaded image is empty."
+        )
 
     if file_size > MAX_IMAGE_SIZE:
 
@@ -579,47 +687,44 @@ def save_cover_image(file):
         )
 
 
-    # Verify actual image content
+    # --------------------------------------------------------
+    # Validate actual image
+    # --------------------------------------------------------
+
     try:
 
-        image = Image.open(
-            file
-        )
+        with Image.open(file) as image:
+            image.verify()
 
-        image.verify()
-
-        file.seek(
-            0
-        )
+        file.seek(0)
 
     except Exception:
+
+        file.seek(0)
 
         raise ValueError(
             "The uploaded file is not a valid image."
         )
 
 
-    # Secure original name
+    # --------------------------------------------------------
+    # Generate safe unique filename
+    # --------------------------------------------------------
+
     original_name = secure_filename(
         file.filename
     )
 
     extension = (
         original_name
-        .rsplit(
-            ".",
-            1
-        )[-1]
+        .rsplit(".", 1)[1]
         .lower()
     )
 
-
-    # Unique filename
     filename = (
         f"{uuid.uuid4().hex}."
         f"{extension}"
     )
-
 
     destination = os.path.join(
         UPLOAD_FOLDER,
@@ -627,15 +732,39 @@ def save_cover_image(file):
     )
 
 
-    file.save(
-        destination
-    )
+    # --------------------------------------------------------
+    # Save image
+    # --------------------------------------------------------
+
+    try:
+
+        file.save(destination)
+
+        # Verify saved file
+        with Image.open(destination) as image:
+            image.verify()
+
+    except Exception:
+
+        if os.path.exists(destination):
+
+            try:
+                os.remove(destination)
+            except OSError:
+                pass
+
+        raise ValueError(
+            "Unable to save the book-cover image."
+        )
 
 
     return filename
 
 
 def delete_cover_image(filename):
+    """
+    Delete a stored cover image safely.
+    """
 
     if not filename:
         return
@@ -644,22 +773,20 @@ def delete_cover_image(filename):
         filename
     )
 
+    if safe_name != filename:
+        return
+
     file_path = os.path.join(
         UPLOAD_FOLDER,
         safe_name
     )
 
-    if os.path.exists(
-        file_path
-    ):
+    if os.path.isfile(file_path):
 
         try:
+            os.remove(file_path)
 
-            os.remove(
-                file_path
-            )
-
-        except Exception:
+        except OSError:
 
             traceback.print_exc()
 
@@ -669,10 +796,13 @@ def delete_cover_image(filename):
 # ============================================================
 
 def generate_book_id():
+    """
+    Generate the next LIBxxxx Book ID.
+    """
 
     books = get_all_books()
 
-    highest = 0
+    highest_number = 0
 
     for book in books:
 
@@ -683,9 +813,7 @@ def generate_book_id():
             )
         ).strip().upper()
 
-        if not book_id.startswith(
-            "LIB"
-        ):
+        if not book_id.startswith("LIB"):
             continue
 
         try:
@@ -694,8 +822,8 @@ def generate_book_id():
                 book_id[3:]
             )
 
-            highest = max(
-                highest,
+            highest_number = max(
+                highest_number,
                 number
             )
 
@@ -703,40 +831,39 @@ def generate_book_id():
 
             continue
 
-    return f"LIB{highest + 1:04d}"
+    return f"LIB{highest_number + 1:04d}"
 
 
 # ============================================================
 # STATISTICS
 # ============================================================
 
-def calculate_statistics(
-    books
-):
+def calculate_statistics(books):
+    """
+    Calculate library statistics.
+    """
 
-    total_books = len(
-        books
-    )
+    total_books = len(books)
 
-    total_copies = 0
-
-    available_copies = 0
-
-    for book in books:
-
-        total_copies += safe_int(
+    total_copies = sum(
+        safe_int(
             book.get(
                 "copies",
                 0
             )
         )
+        for book in books
+    )
 
-        available_copies += safe_int(
+    available_copies = sum(
+        safe_int(
             book.get(
                 "available",
                 0
             )
         )
+        for book in books
+    )
 
     borrowed_copies = (
         total_copies
@@ -746,92 +873,71 @@ def calculate_statistics(
     if borrowed_copies < 0:
         borrowed_copies = 0
 
+
     return {
-
         "total_books": total_books,
-
         "total_copies": total_copies,
-
         "available_copies": available_copies,
-
-        "borrowed_copies": borrowed_copies
+        "borrowed_copies": borrowed_copies,
     }
 
 
 # ============================================================
-# FORM DATA
+# FORM HELPERS
 # ============================================================
 
 def get_form_data():
-
-    title = request.form.get(
-        "title",
-        ""
-    ).strip()
-
-    author = request.form.get(
-        "author",
-        ""
-    ).strip()
-
-    isbn = request.form.get(
-        "isbn",
-        ""
-    ).strip()
-
-    category = request.form.get(
-        "category",
-        ""
-    ).strip()
-
-    publisher = request.form.get(
-        "publisher",
-        ""
-    ).strip()
-
-    year = request.form.get(
-        "year",
-        ""
-    ).strip()
-
-    copies = request.form.get(
-        "copies",
-        ""
-    ).strip()
-
-    shelf = request.form.get(
-        "shelf",
-        ""
-    ).strip()
-
+    """
+    Collect and clean book form data.
+    """
 
     return {
+        "title": request.form.get(
+            "title",
+            ""
+        ).strip(),
 
-        "title": title,
+        "author": request.form.get(
+            "author",
+            ""
+        ).strip(),
 
-        "author": author,
+        "isbn": request.form.get(
+            "isbn",
+            ""
+        ).strip(),
 
-        "isbn": isbn,
+        "category": request.form.get(
+            "category",
+            ""
+        ).strip(),
 
-        "category": category,
+        "publisher": request.form.get(
+            "publisher",
+            ""
+        ).strip(),
 
-        "publisher": publisher,
+        "year": request.form.get(
+            "year",
+            ""
+        ).strip(),
 
-        "year": year,
+        "copies": request.form.get(
+            "copies",
+            ""
+        ).strip(),
 
-        "copies": copies,
-
-        "shelf": shelf
+        "shelf": request.form.get(
+            "shelf",
+            ""
+        ).strip(),
     }
 
 
-# ============================================================
-# VALIDATE BOOK DATA
-# ============================================================
-
-def validate_book_data(
-    data
-):
+def validate_book_data(data):
+    """
+    Validate book information.
+    """
 
     if not data["title"]:
 
@@ -873,9 +979,7 @@ def validate_book_data(
             -1
         )
 
-        current_year = (
-            datetime.now().year
-        )
+        current_year = datetime.now().year
 
         if year < 0:
 
@@ -893,12 +997,64 @@ def validate_book_data(
     return True, ""
 
 
+def get_categories(books=None):
+    """
+    Return unique categories.
+    """
+
+    if books is None:
+        books = get_all_books()
+
+    categories = set()
+
+    for book in books:
+
+        category = str(
+            book.get(
+                "category",
+                ""
+            )
+        ).strip()
+
+        if category:
+            categories.add(category)
+
+    # Useful default categories
+    default_categories = {
+        "Computer Science",
+        "Information Technology",
+        "Engineering",
+        "Mathematics",
+        "Science",
+        "Management",
+        "Literature",
+        "History",
+        "Biography",
+        "Other",
+    }
+
+    categories.update(
+        default_categories
+    )
+
+    return sorted(
+        categories,
+        key=str.lower
+    )
+
+
 # ============================================================
 # DASHBOARD
 # ============================================================
 
-@app.route("/")
+@app.route("/", endpoint="index")
 def dashboard():
+    """
+    Main library dashboard.
+
+    Endpoint name is intentionally 'index' because
+    base.html uses url_for('index').
+    """
 
     try:
 
@@ -910,16 +1066,35 @@ def dashboard():
 
         return render_template(
             "dashboard.html",
+
             books=books,
+
             statistics=statistics,
+
+            # Template compatibility
+            total_books=statistics[
+                "total_books"
+            ],
+
+            total_copies=statistics[
+                "total_copies"
+            ],
+
+            available_copies=statistics[
+                "available_copies"
+            ],
+
+            borrowed_copies=statistics[
+                "borrowed_copies"
+            ],
+
             current_date=datetime.now().strftime(
                 "%d %B %Y"
-            )
+            ),
         )
 
-    except Exception as error:
+    except Exception:
 
-        print()
         print("=" * 70)
         print("DASHBOARD ERROR")
         print("=" * 70)
@@ -928,19 +1103,100 @@ def dashboard():
 
         print("=" * 70)
 
-        return render_template(
-            "base.html"
-        ), 500
+        return (
+            """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Crescent Library - Error</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: #f5f7fa;
+                        padding: 60px;
+                    }
+
+                    .box {
+                        max-width: 700px;
+                        margin: auto;
+                        background: white;
+                        padding: 40px;
+                        border-radius: 16px;
+                        box-shadow:
+                            0 10px 30px
+                            rgba(0,0,0,0.08);
+                    }
+
+                    h1 {
+                        color: #c62828;
+                    }
+
+                    a {
+                        display: inline-block;
+                        margin-top: 20px;
+                        padding: 12px 22px;
+                        background: #111827;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 8px;
+                    }
+                </style>
+            </head>
+
+            <body>
+
+                <div class="box">
+
+                    <h1>
+                        Dashboard Error
+                    </h1>
+
+                    <p>
+                        The dashboard could not be loaded.
+                    </p>
+
+                    <p>
+                        Check the terminal for the
+                        Python traceback.
+                    </p>
+
+                    <a href="/health">
+                        Check Application Health
+                    </a>
+
+                </div>
+
+            </body>
+            </html>
+            """,
+            500
+        )
+
+
+# ============================================================
+# DASHBOARD COMPATIBILITY ROUTE
+# ============================================================
+
+@app.route("/dashboard")
+def dashboard_alias():
+    """
+    Compatibility URL for /dashboard.
+    """
+
+    return redirect(
+        url_for("index")
+    )
 
 
 # ============================================================
 # BOOK LIST
 # ============================================================
 
-@app.route(
-    "/books"
-)
+@app.route("/books")
 def books():
+    """
+    Display all books.
+    """
 
     try:
 
@@ -959,66 +1215,34 @@ def books():
                 book
                 for book in all_books
 
-                if (
-                    query
-                    in str(
+                if any(
+                    query in str(
                         book.get(
-                            "book_id",
+                            field,
                             ""
                         )
                     ).lower()
-                    or
-                    query
-                    in str(
-                        book.get(
-                            "title",
-                            ""
-                        )
-                    ).lower()
-                    or
-                    query
-                    in str(
-                        book.get(
-                            "author",
-                            ""
-                        )
-                    ).lower()
-                    or
-                    query
-                    in str(
-                        book.get(
-                            "isbn",
-                            ""
-                        )
-                    ).lower()
-                    or
-                    query
-                    in str(
-                        book.get(
-                            "category",
-                            ""
-                        )
-                    ).lower()
-                    or
-                    query
-                    in str(
-                        book.get(
-                            "publisher",
-                            ""
-                        )
-                    ).lower()
+
+                    for field in [
+                        "book_id",
+                        "title",
+                        "author",
+                        "isbn",
+                        "category",
+                        "publisher",
+                        "shelf",
+                    ]
                 )
             ]
+
 
         return render_template(
             "books.html",
             books=all_books,
-            search_query=search_query
+            search_query=search_query,
         )
 
     except Exception:
-
-        print("BOOK LIST ERROR")
 
         traceback.print_exc()
 
@@ -1028,9 +1252,7 @@ def books():
         )
 
         return redirect(
-            url_for(
-                "dashboard"
-            )
+            url_for("index")
         )
 
 
@@ -1040,26 +1262,29 @@ def books():
 
 @app.route(
     "/add-book",
-    methods=[
-        "GET",
-        "POST"
-    ]
+    methods=["GET", "POST"]
 )
 def add_book():
+    """
+    Add a new book.
+    """
+
+    books = get_all_books()
 
     if request.method == "GET":
 
         return render_template(
-            "add_book.html"
+            "add_book.html",
+            categories=get_categories(books),
         )
 
+
+    cover_filename = ""
 
     try:
 
         data = get_form_data()
 
-
-        # Validate
         valid, message = validate_book_data(
             data
         )
@@ -1072,22 +1297,23 @@ def add_book():
             )
 
             return render_template(
-                "add_book.html"
+                "add_book.html",
+                categories=get_categories(books),
             )
 
 
         book_id = generate_book_id()
 
 
-        # Cover
+        # Upload cover
         cover_file = request.files.get(
             "cover"
         )
 
-        cover_filename = ""
-
-
-        if cover_file and cover_file.filename:
+        if (
+            cover_file
+            and cover_file.filename
+        ):
 
             cover_filename = save_cover_image(
                 cover_file
@@ -1125,13 +1351,23 @@ def add_book():
 
             "date_added": datetime.now().strftime(
                 "%Y-%m-%d"
-            )
+            ),
         }
 
 
-        add_book_to_excel(
-            book
-        )
+        try:
+
+            add_book_to_excel(book)
+
+        except Exception:
+
+            # Remove uploaded cover if Excel operation fails
+            if cover_filename:
+                delete_cover_image(
+                    cover_filename
+                )
+
+            raise
 
 
         flash(
@@ -1139,11 +1375,8 @@ def add_book():
             "success"
         )
 
-
         return redirect(
-            url_for(
-                "books"
-            )
+            url_for("books")
         )
 
 
@@ -1155,7 +1388,10 @@ def add_book():
         )
 
         return render_template(
-            "add_book.html"
+            "add_book.html",
+            categories=get_categories(
+                get_all_books()
+            ),
         )
 
 
@@ -1171,7 +1407,10 @@ def add_book():
         )
 
         return render_template(
-            "add_book.html"
+            "add_book.html",
+            categories=get_categories(
+                get_all_books()
+            ),
         )
 
 
@@ -1182,9 +1421,10 @@ def add_book():
 @app.route(
     "/book/<book_id>"
 )
-def book_details(
-    book_id
-):
+def book_details(book_id):
+    """
+    Display individual book details.
+    """
 
     try:
 
@@ -1200,15 +1440,13 @@ def book_details(
             )
 
             return redirect(
-                url_for(
-                    "books"
-                )
+                url_for("books")
             )
 
 
         return render_template(
             "book_details.html",
-            book=book
+            book=book,
         )
 
 
@@ -1224,9 +1462,7 @@ def book_details(
         )
 
         return redirect(
-            url_for(
-                "books"
-            )
+            url_for("books")
         )
 
 
@@ -1236,14 +1472,12 @@ def book_details(
 
 @app.route(
     "/edit-book/<book_id>",
-    methods=[
-        "GET",
-        "POST"
-    ]
+    methods=["GET", "POST"]
 )
-def edit_book(
-    book_id
-):
+def edit_book(book_id):
+    """
+    Edit an existing book.
+    """
 
     book = find_book(
         book_id
@@ -1257,9 +1491,7 @@ def edit_book(
         )
 
         return redirect(
-            url_for(
-                "books"
-            )
+            url_for("books")
         )
 
 
@@ -1267,14 +1499,22 @@ def edit_book(
 
         return render_template(
             "edit_book.html",
-            book=book
+            book=book,
+            categories=get_categories(
+                get_all_books()
+            ),
         )
 
+
+    new_cover_filename = ""
+    old_cover_filename = book.get(
+        "cover",
+        ""
+    )
 
     try:
 
         data = get_form_data()
-
 
         valid, message = validate_book_data(
             data
@@ -1289,7 +1529,10 @@ def edit_book(
 
             return render_template(
                 "edit_book.html",
-                book=book
+                book=book,
+                categories=get_categories(
+                    get_all_books()
+                ),
             )
 
 
@@ -1297,14 +1540,12 @@ def edit_book(
             data["copies"]
         )
 
-
         old_total = safe_int(
             book.get(
                 "copies",
                 0
             )
         )
-
 
         old_available = safe_int(
             book.get(
@@ -1314,37 +1555,42 @@ def edit_book(
         )
 
 
-        borrowed = (
+        # Number of currently borrowed copies
+        borrowed_copies = (
             old_total
             - old_available
         )
 
+        if borrowed_copies < 0:
+            borrowed_copies = 0
 
-        # Do not allow total copies
-        # to become less than borrowed.
-        if new_total < borrowed:
+
+        # Cannot reduce total below borrowed count
+        if new_total < borrowed_copies:
 
             flash(
-                "Total copies cannot be less than the number of borrowed copies.",
+                "Total copies cannot be less than "
+                "the number of currently borrowed copies.",
                 "danger"
             )
 
             return render_template(
                 "edit_book.html",
-                book=book
+                book=book,
+                categories=get_categories(
+                    get_all_books()
+                ),
             )
 
 
         new_available = (
             new_total
-            - borrowed
+            - borrowed_copies
         )
 
 
-        cover_filename = book.get(
-            "cover",
-            ""
-        )
+        # Existing cover remains unless a new one is uploaded
+        cover_filename = old_cover_filename
 
 
         new_cover = request.files.get(
@@ -1352,20 +1598,16 @@ def edit_book(
         )
 
 
-        if new_cover and new_cover.filename:
+        if (
+            new_cover
+            and new_cover.filename
+        ):
 
             new_cover_filename = save_cover_image(
                 new_cover
             )
 
-
-            old_cover = cover_filename
-
             cover_filename = new_cover_filename
-
-            delete_cover_image(
-                old_cover
-            )
 
 
         updated_book = {
@@ -1397,9 +1639,15 @@ def edit_book(
                 datetime.now().strftime(
                     "%Y-%m-%d"
                 )
-            )
+            ),
         }
 
+
+        # ----------------------------------------------------
+        # IMPORTANT:
+        # Update Excel FIRST.
+        # Delete old cover ONLY after successful update.
+        # ----------------------------------------------------
 
         updated = update_book_in_excel(
             book_id,
@@ -1409,6 +1657,12 @@ def edit_book(
 
         if not updated:
 
+            # Excel failed, remove newly uploaded cover
+            if new_cover_filename:
+                delete_cover_image(
+                    new_cover_filename
+                )
+
             flash(
                 "Book could not be updated.",
                 "danger"
@@ -1416,7 +1670,24 @@ def edit_book(
 
             return render_template(
                 "edit_book.html",
-                book=book
+                book=book,
+                categories=get_categories(
+                    get_all_books()
+                ),
+            )
+
+
+        # Excel update successful.
+        # Now remove old cover.
+        if (
+            new_cover_filename
+            and old_cover_filename
+            and old_cover_filename
+            != new_cover_filename
+        ):
+
+            delete_cover_image(
+                old_cover_filename
             )
 
 
@@ -1436,6 +1707,11 @@ def edit_book(
 
     except ValueError as error:
 
+        if new_cover_filename:
+            delete_cover_image(
+                new_cover_filename
+            )
+
         flash(
             str(error),
             "danger"
@@ -1443,11 +1719,19 @@ def edit_book(
 
         return render_template(
             "edit_book.html",
-            book=book
+            book=book,
+            categories=get_categories(
+                get_all_books()
+            ),
         )
 
 
     except Exception as error:
+
+        if new_cover_filename:
+            delete_cover_image(
+                new_cover_filename
+            )
 
         print("EDIT BOOK ERROR")
 
@@ -1460,7 +1744,10 @@ def edit_book(
 
         return render_template(
             "edit_book.html",
-            book=book
+            book=book,
+            categories=get_categories(
+                get_all_books()
+            ),
         )
 
 
@@ -1470,14 +1757,14 @@ def edit_book(
 
 @app.route(
     "/delete-book/<book_id>",
-    methods=[
-        "POST",
-        "GET"
-    ]
+    methods=["POST", "GET"]
 )
-def delete_book(
-    book_id
-):
+def delete_book(book_id):
+    """
+    Delete a book.
+
+    Deletion is blocked when copies are borrowed.
+    """
 
     try:
 
@@ -1493,9 +1780,7 @@ def delete_book(
             )
 
             return redirect(
-                url_for(
-                    "books"
-                )
+                url_for("books")
             )
 
 
@@ -1506,7 +1791,6 @@ def delete_book(
             )
         )
 
-
         available = safe_int(
             book.get(
                 "available",
@@ -1514,26 +1798,22 @@ def delete_book(
             )
         )
 
-
         borrowed = (
             total
             - available
         )
 
 
-        # Never delete a book
-        # while copies are borrowed.
         if borrowed > 0:
 
             flash(
-                "This book cannot be deleted because copies are currently borrowed.",
+                "This book cannot be deleted because "
+                f"{borrowed} copy/copies are currently borrowed.",
                 "danger"
             )
 
             return redirect(
-                url_for(
-                    "books"
-                )
+                url_for("books")
             )
 
 
@@ -1542,26 +1822,30 @@ def delete_book(
         )
 
 
-        if deleted:
-
-            delete_cover_image(
-                book.get(
-                    "cover",
-                    ""
-                )
-            )
-
-            flash(
-                "Book deleted successfully.",
-                "success"
-            )
-
-        else:
+        if not deleted:
 
             flash(
                 "Book could not be deleted.",
                 "danger"
             )
+
+            return redirect(
+                url_for("books")
+            )
+
+
+        # Delete cover only after successful Excel deletion
+        if book.get("cover"):
+
+            delete_cover_image(
+                book["cover"]
+            )
+
+
+        flash(
+            "Book deleted successfully.",
+            "success"
+        )
 
 
     except Exception as error:
@@ -1577,33 +1861,31 @@ def delete_book(
 
 
     return redirect(
-        url_for(
-            "books"
-        )
+        url_for("books")
     )
 
 
 # ============================================================
-# CATEGORY
+# CATEGORY BOOKS
 # ============================================================
 
 @app.route(
     "/category/<path:category>"
 )
-def category_books(
-    category
-):
+def category_books(category):
+    """
+    Display books belonging to a category.
+    """
 
     try:
 
         books_list = get_all_books()
 
-        category_lower = (
+        target_category = (
             category
             .strip()
             .lower()
         )
-
 
         filtered = [
 
@@ -1611,20 +1893,24 @@ def category_books(
 
             for book in books_list
 
-            if str(
-                book.get(
-                    "category",
-                    ""
+            if (
+                str(
+                    book.get(
+                        "category",
+                        ""
+                    )
                 )
-            ).strip().lower()
-            == category_lower
+                .strip()
+                .lower()
+                == target_category
+            )
         ]
 
 
         return render_template(
             "books.html",
             books=filtered,
-            search_query=""
+            search_query="",
         )
 
 
@@ -1638,9 +1924,7 @@ def category_books(
         )
 
         return redirect(
-            url_for(
-                "books"
-            )
+            url_for("books")
         )
 
 
@@ -1652,6 +1936,9 @@ def category_books(
     "/available-books"
 )
 def available_books():
+    """
+    Display books with available copies.
+    """
 
     books_list = get_all_books()
 
@@ -1673,7 +1960,7 @@ def available_books():
     return render_template(
         "books.html",
         books=available,
-        search_query=""
+        search_query="",
     )
 
 
@@ -1685,6 +1972,9 @@ def available_books():
     "/borrowed-books"
 )
 def borrowed_books():
+    """
+    Display books with borrowed copies.
+    """
 
     books_list = get_all_books()
 
@@ -1701,21 +1991,21 @@ def borrowed_books():
                     0
                 )
             )
-            -
+            >
             safe_int(
                 book.get(
                     "available",
                     0
                 )
             )
-        ) > 0
+        )
     ]
 
 
     return render_template(
         "books.html",
         books=borrowed,
-        search_query=""
+        search_query="",
     )
 
 
@@ -1727,15 +2017,16 @@ def borrowed_books():
     "/search"
 )
 def search():
+    """
+    Search books through JSON API.
+    """
 
     query = request.args.get(
         "q",
         ""
     ).strip().lower()
 
-
     books_list = get_all_books()
-
 
     if not query:
 
@@ -1750,74 +2041,24 @@ def search():
 
         for book in books_list
 
-        if (
-            query
-            in str(
+        if any(
+
+            query in str(
                 book.get(
-                    "book_id",
+                    field,
                     ""
                 )
             ).lower()
 
-            or
-
-            query
-            in str(
-                book.get(
-                    "title",
-                    ""
-                )
-            ).lower()
-
-            or
-
-            query
-            in str(
-                book.get(
-                    "author",
-                    ""
-                )
-            ).lower()
-
-            or
-
-            query
-            in str(
-                book.get(
-                    "isbn",
-                    ""
-                )
-            ).lower()
-
-            or
-
-            query
-            in str(
-                book.get(
-                    "category",
-                    ""
-                )
-            ).lower()
-
-            or
-
-            query
-            in str(
-                book.get(
-                    "publisher",
-                    ""
-                )
-            ).lower()
-
-            or
-
-            query
-            in str(
-                book.get(
-                    "shelf",
-                    ""
-                )
-            ).lower()
+            for field in [
+                "book_id",
+                "title",
+                "author",
+                "isbn",
+                "category",
+                "publisher",
+                "shelf",
+            ]
         )
     ]
 
@@ -1835,17 +2076,18 @@ def search():
     "/api/statistics"
 )
 def statistics_api():
+    """
+    Return library statistics as JSON.
+    """
 
     try:
 
         books_list = get_all_books()
 
-        statistics = calculate_statistics(
-            books_list
-        )
-
         return jsonify(
-            statistics
+            calculate_statistics(
+                books_list
+            )
         )
 
     except Exception as error:
@@ -1865,6 +2107,9 @@ def statistics_api():
     "/api/books"
 )
 def books_api():
+    """
+    Return all books as JSON.
+    """
 
     try:
 
@@ -1888,14 +2133,14 @@ def books_api():
 @app.route(
     "/api/books/<book_id>"
 )
-def book_api(
-    book_id
-):
+def book_api(book_id):
+    """
+    Return one book as JSON.
+    """
 
     book = find_book(
         book_id
     )
-
 
     if not book:
 
@@ -1914,11 +2159,16 @@ def book_api(
 # ============================================================
 
 @app.route(
-    "/uploads/book_covers/<path:filename>"
+    "/uploads/book_covers/<path:filename>",
+    endpoint="uploaded_cover"
 )
-def uploaded_book_cover(
-    filename
-):
+def uploaded_book_cover(filename):
+    """
+    Serve uploaded book-cover images.
+
+    Endpoint name is 'uploaded_cover' because
+    the HTML templates use url_for('uploaded_cover').
+    """
 
     return send_from_directory(
         UPLOAD_FOLDER,
@@ -1932,14 +2182,26 @@ def uploaded_book_cover(
 
 @app.route(
     "/login",
-    methods=[
-        "GET",
-        "POST"
-    ]
+    methods=["GET", "POST"]
 )
 def login():
+    """
+    Librarian login.
+
+    Demo credentials:
+        Username: admin
+        Password: admin123
+    """
 
     if request.method == "GET":
+
+        if session.get(
+            "logged_in"
+        ):
+
+            return redirect(
+                url_for("index")
+            )
 
         return render_template(
             "login.html"
@@ -1951,26 +2213,24 @@ def login():
         ""
     ).strip()
 
-
     password = request.form.get(
         "password",
         ""
     )
 
 
-    # Demo credentials
     if (
         username == "admin"
-        and
-        password == "admin123"
+        and password == "admin123"
     ):
 
+        session.clear()
+
         session["logged_in"] = True
+        session["username"] = username
 
         return redirect(
-            url_for(
-                "dashboard"
-            )
+            url_for("index")
         )
 
 
@@ -1978,7 +2238,6 @@ def login():
         "Invalid username or password.",
         "danger"
     )
-
 
     return render_template(
         "login.html"
@@ -1997,9 +2256,7 @@ def logout():
     session.clear()
 
     return redirect(
-        url_for(
-            "login"
-        )
+        url_for("login")
     )
 
 
@@ -2011,15 +2268,16 @@ def logout():
     "/health"
 )
 def health():
+    """
+    Check whether the application and Excel database
+    are working.
+    """
 
     try:
 
         initialize_excel()
 
-        books_count = len(
-            get_all_books()
-        )
-
+        books = get_all_books()
 
         return jsonify({
 
@@ -2031,14 +2289,11 @@ def health():
             "database":
                 "Excel",
 
-            "database_file":
-                EXCEL_FILE,
-
             "books":
-                books_count,
+                len(books),
 
             "timestamp":
-                datetime.now().isoformat()
+                datetime.now().isoformat(),
         })
 
 
@@ -2051,8 +2306,7 @@ def health():
             "status": "error",
 
             "error":
-                str(error)
-
+                str(error),
         }), 500
 
 
@@ -2061,12 +2315,9 @@ def health():
 # ============================================================
 
 @app.errorhandler(404)
-def page_not_found(
-    error
-):
+def page_not_found(error):
 
     return """
-
     <!DOCTYPE html>
 
     <html>
@@ -2074,7 +2325,7 @@ def page_not_found(
     <head>
 
         <title>
-            Page Not Found
+            Crescent Library - 404
         </title>
 
         <style>
@@ -2082,30 +2333,29 @@ def page_not_found(
             body {
                 font-family: Arial, sans-serif;
                 background: #f5f7fa;
-                text-align: center;
-                padding: 80px;
+                padding: 60px;
             }
 
             .box {
-                background: white;
-                max-width: 600px;
+                max-width: 650px;
                 margin: auto;
+                background: white;
                 padding: 40px;
-                border-radius: 15px;
+                border-radius: 16px;
                 box-shadow:
-                    0 5px 25px
+                    0 10px 30px
                     rgba(0,0,0,0.08);
             }
 
             h1 {
-                font-size: 64px;
-                margin: 0;
+                font-size: 52px;
+                margin-bottom: 10px;
             }
 
             a {
                 display: inline-block;
                 margin-top: 20px;
-                padding: 12px 24px;
+                padding: 12px 22px;
                 background: #111827;
                 color: white;
                 text-decoration: none;
@@ -2120,7 +2370,9 @@ def page_not_found(
 
         <div class="box">
 
-            <h1>404</h1>
+            <h1>
+                404
+            </h1>
 
             <h2>
                 Page Not Found
@@ -2139,7 +2391,6 @@ def page_not_found(
     </body>
 
     </html>
-
     """, 404
 
 
@@ -2148,22 +2399,16 @@ def page_not_found(
 # ============================================================
 
 @app.errorhandler(413)
-def file_too_large(
-    error
-):
+def file_too_large(error):
 
     flash(
         "Uploaded file is too large. Maximum size is 5 MB.",
         "danger"
     )
 
-
     return redirect(
         request.referrer
-        or
-        url_for(
-            "add_book"
-        )
+        or url_for("add_book")
     )
 
 
@@ -2172,9 +2417,7 @@ def file_too_large(
 # ============================================================
 
 @app.errorhandler(500)
-def internal_server_error(
-    error
-):
+def internal_server_error(error):
 
     print()
     print("=" * 70)
@@ -2190,9 +2433,7 @@ def internal_server_error(
 
     print("=" * 70)
 
-
     return """
-
     <!DOCTYPE html>
 
     <html>
@@ -2216,9 +2457,9 @@ def internal_server_error(
                 margin: auto;
                 background: white;
                 padding: 40px;
-                border-radius: 15px;
+                border-radius: 16px;
                 box-shadow:
-                    0 5px 25px
+                    0 10px 30px
                     rgba(0,0,0,0.08);
             }
 
@@ -2253,8 +2494,8 @@ def internal_server_error(
             </p>
 
             <p>
-                Please check the terminal for the complete
-                Python traceback.
+                The complete Python traceback is printed
+                in the Codespaces terminal.
             </p>
 
             <a href="/">
@@ -2266,12 +2507,11 @@ def internal_server_error(
     </body>
 
     </html>
-
     """, 500
 
 
 # ============================================================
-# START APPLICATION
+# APPLICATION START
 # ============================================================
 
 if __name__ == "__main__":
@@ -2283,8 +2523,7 @@ if __name__ == "__main__":
 
     print()
     print("Application : Flask")
-    print("Database    : Excel")
-
+    print("Storage     : Excel")
     print()
     print("Excel File:")
     print(EXCEL_FILE)
@@ -2298,25 +2537,24 @@ if __name__ == "__main__":
     print("http://127.0.0.1:5000/")
 
     print()
-    print("Login:")
-    print("http://127.0.0.1:5000/login")
-
-    print()
     print("Health:")
     print("http://127.0.0.1:5000/health")
 
     print()
     print("Demo Login:")
-    print("Username: admin")
-    print("Password: admin123")
+    print("Username : admin")
+    print("Password : admin123")
 
     print()
     print("=" * 70)
-    print()
-
 
     app.run(
-        host="127.0.0.1",
-        port=5000,
-        debug=True
+        host="0.0.0.0",
+        port=int(
+            os.environ.get(
+                "PORT",
+                5000
+            )
+        ),
+        debug=True,
     )
