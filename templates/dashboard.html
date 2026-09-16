@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}
+Library Dashboard
+{% endblock %}
+
+{% block page_title %}
+Library Dashboard
+{% endblock %}
+
+{% block content %}
+
+<!-- =====================================================
+     WELCOME SECTION
+====================================================== -->
+
+<div class="section-card">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Welcome, Librarian 👋
+            </h2>
+
+            <p>
+                Here's an overview of your library.
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('add_book') }}"
+           class="btn btn-primary">
+
+            ➕ Add New Book
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     STATISTICS
+====================================================== -->
+
+<div class="stats-grid">
+
+
+    <!-- Total Books -->
+
+    <div class="stat-card">
+
+        <div class="stat-info">
+
+            <span>
+                Total Books
+            </span>
+
+            <h3>
+                {{ total_books }}
+            </h3>
+
+        </div>
+
+        <div class="stat-icon">
+            📚
+        </div>
+
+    </div>
+
+
+    <!-- Total Copies -->
+
+    <div class="stat-card">
+
+        <div class="stat-info">
+
+            <span>
+                Total Copies
+            </span>
+
+            <h3>
+                {{ total_copies }}
+            </h3>
+
+        </div>
+
+        <div class="stat-icon">
+            📖
+        </div>
+
+    </div>
+
+
+    <!-- Available Copies -->
+
+    <div class="stat-card">
+
+        <div class="stat-info">
+
+            <span>
+                Available Copies
+            </span>
+
+            <h3>
+                {{ available_copies }}
+            </h3>
+
+        </div>
+
+        <div class="stat-icon">
+            ✅
+        </div>
+
+    </div>
+
+
+    <!-- Borrowed Copies -->
+
+    <div class="stat-card">
+
+        <div class="stat-info">
+
+            <span>
+                Borrowed Copies
+            </span>
+
+            <h3>
+                {{ borrowed_copies }}
+            </h3>
+
+        </div>
+
+        <div class="stat-icon">
+            🔄
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     RECENT BOOKS
+====================================================== -->
+
+<div class="section-card">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Recently Added Books
+            </h2>
+
+            <p>
+                Books recently added to your library.
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('books') }}"
+           class="btn btn-secondary">
+
+            View All
+
+        </a>
+
+    </div>
+
+
+    {% if books %}
+
+    <div class="book-grid">
+
+        {% for book in books[-4:]|reverse %}
+
+        <div class="book-card">
+
+
+            <!-- Book Cover -->
+
+            {% if book.cover %}
+
+            <img
+                src="{{ url_for(
+                    'uploaded_cover',
+                    filename=book.cover
+                ) }}"
+                alt="{{ book.title }}"
+                class="book-cover"
+            >
+
+            {% else %}
+
+            <div class="no-cover">
+                📚
+            </div>
+
+            {% endif %}
+
+
+            <!-- Book Information -->
+
+            <div class="book-info">
+
+                <h3>
+                    {{ book.title }}
+                </h3>
+
+                <p class="book-author">
+                    {{ book.author }}
+                </p>
+
+
+                <div class="book-meta">
+
+                    <span class="book-id">
+                        {{ book.book_id }}
+                    </span>
+
+
+                    {% if book.available_copies|int > 0 %}
+
+                    <span class="available">
+                        ● Available
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge badge-danger">
+                        Unavailable
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    {% else %}
+
+    <!-- Empty Library -->
+
+    <div class="empty-state">
+
+        <div class="empty-state-icon">
+            📚
+        </div>
+
+        <h3>
+            No books added yet
+        </h3>
+
+        <p>
+            Start building your library by adding your first book.
+        </p>
+
+        <a href="{{ url_for('add_book') }}"
+           class="btn btn-primary">
+
+            ➕ Add Your First Book
+
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+
+<!-- =====================================================
+     QUICK ACTIONS
+====================================================== -->
+
+<div class="section-card">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Quick Actions
+            </h2>
+
+            <p>
+                Frequently used library operations.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div style="
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    ">
+
+
+        <!-- Add Book -->
+
+        <a href="{{ url_for('add_book') }}"
+           class="btn btn-secondary"
+           style="padding: 18px;">
+
+            📕
+            <span>
+                Add Book
+            </span>
+
+        </a>
+
+
+        <!-- View Books -->
+
+        <a href="{{ url_for('books') }}"
+           class="btn btn-secondary"
+           style="padding: 18px;">
+
+            📚
+            <span>
+                Browse Books
+            </span>
+
+        </a>
+
+
+        <!-- Future Issue -->
+
+        <a href="#"
+           class="btn btn-secondary disabled-link"
+           style="padding: 18px;">
+
+            🔄
+            <span>
+                Issue / Return
+            </span>
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}
