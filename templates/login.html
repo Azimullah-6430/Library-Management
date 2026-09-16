@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,237 +10,807 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Librarian Login | LibraCore</title>
+    <meta
+        name="description"
+        content="Crescent College Central Library Management System"
+    >
 
-    <!-- Google Font -->
+    <title>
+        Crescent College Library | Login
+    </title>
+
+
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
+
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
     >
 
     <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
     >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         LOGIN STYLES
+    ====================================================== -->
 
     <style>
 
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
         body {
             margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+
+        body {
+            font-family: "Inter", Arial, sans-serif;
+            background:
+                radial-gradient(
+                    circle at 10% 20%,
+                    rgba(40, 75, 120, 0.18),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 80%,
+                    rgba(80, 120, 160, 0.12),
+                    transparent 30%
+                ),
+                #08111f;
+
+            color: #ffffff;
+        }
+
+
+        .login-page {
             min-height: 100vh;
 
             display: flex;
             align-items: center;
             justify-content: center;
 
+            padding: 30px;
+
+            position: relative;
+            overflow: hidden;
+        }
+
+
+        /* =================================================
+           BACKGROUND
+        ================================================== */
+
+        .background-grid {
+            position: absolute;
+            inset: 0;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 55px 55px;
+
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent
+                );
+
+            pointer-events: none;
+        }
+
+
+        .background-glow {
+            position: absolute;
+
+            width: 500px;
+            height: 500px;
+
+            border-radius: 50%;
+
             background:
                 radial-gradient(
-                    circle at top left,
-                    #dbeafe,
-                    transparent 35%
-                ),
-                #f8fafc;
+                    circle,
+                    rgba(64, 116, 170, 0.20),
+                    transparent 68%
+                );
+
+            filter: blur(20px);
+
+            pointer-events: none;
         }
 
 
-        .login-wrapper {
+        .background-glow.one {
+            top: -250px;
+            left: -180px;
+        }
+
+
+        .background-glow.two {
+            right: -220px;
+            bottom: -250px;
+        }
+
+
+        /* =================================================
+           LOGIN CONTAINER
+        ================================================== */
+
+        .login-container {
             width: 100%;
-            max-width: 430px;
+            max-width: 1050px;
 
-            padding: 20px;
-        }
+            min-height: 620px;
 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
 
-        .login-card {
-            background: white;
+            position: relative;
+            z-index: 2;
 
-            border: 1px solid var(--border);
+            background: rgba(13, 25, 42, 0.88);
 
-            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.09);
 
-            padding: 38px;
+            border-radius: 26px;
+
+            overflow: hidden;
 
             box-shadow:
-                0 15px 40px rgba(15, 23, 42, 0.10);
+                0 30px 90px rgba(0,0,0,0.45),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+
+            backdrop-filter: blur(20px);
         }
 
 
-        .login-logo {
-            display: flex;
+        /* =================================================
+           LEFT BRAND PANEL
+        ================================================== */
 
+        .brand-panel {
+            padding: 55px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(20, 48, 78, 0.95),
+                    rgba(8, 20, 35, 0.98)
+                );
+
+            border-right: 1px solid rgba(255,255,255,0.07);
+        }
+
+
+        .brand-top {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+
+        .logo-box {
+            width: 64px;
+            height: 64px;
+
+            border-radius: 17px;
+
+            display: flex;
             align-items: center;
             justify-content: center;
 
-            margin-bottom: 25px;
+            background: rgba(255,255,255,0.08);
+
+            border: 1px solid rgba(255,255,255,0.12);
+
+            overflow: hidden;
+
+            font-size: 29px;
+
+            flex-shrink: 0;
         }
 
 
-        .login-logo-icon {
-            width: 52px;
-            height: 52px;
+        .logo-box img {
+            width: 100%;
+            height: 100%;
 
-            border-radius: 13px;
+            object-fit: contain;
+        }
 
-            background: var(--primary);
-            color: white;
 
+        .brand-name {
             display: flex;
-            align-items: center;
-            justify-content: center;
-
-            font-size: 25px;
-
-            margin-right: 12px;
+            flex-direction: column;
         }
 
 
-        .login-logo-text {
-            font-size: 25px;
+        .brand-name strong {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+        }
 
+
+        .brand-name span {
+            margin-top: 4px;
+
+            color: rgba(255,255,255,0.58);
+
+            font-size: 11px;
+            font-weight: 600;
+
+            letter-spacing: 0.7px;
+
+            text-transform: uppercase;
+        }
+
+
+        .brand-content {
+            margin-top: auto;
+            margin-bottom: auto;
+            padding: 70px 0 50px;
+        }
+
+
+        .eyebrow {
+            display: inline-block;
+
+            padding: 7px 11px;
+
+            border-radius: 8px;
+
+            background: rgba(255,255,255,0.07);
+
+            border: 1px solid rgba(255,255,255,0.08);
+
+            color: rgba(255,255,255,0.68);
+
+            font-size: 10px;
             font-weight: 700;
 
-            letter-spacing: -0.7px;
+            letter-spacing: 1.2px;
 
-            color: var(--text);
+            text-transform: uppercase;
+        }
+
+
+        .brand-content h1 {
+            margin: 20px 0 18px;
+
+            font-size: clamp(34px, 4vw, 52px);
+
+            line-height: 1.04;
+
+            letter-spacing: -2px;
+
+            font-weight: 800;
+        }
+
+
+        .brand-content h1 span {
+            color: #8eb6dc;
+        }
+
+
+        .brand-content p {
+            max-width: 450px;
+
+            margin: 0;
+
+            color: rgba(255,255,255,0.62);
+
+            font-size: 14px;
+
+            line-height: 1.8;
+        }
+
+
+        .feature-list {
+            display: grid;
+            gap: 14px;
+        }
+
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            color: rgba(255,255,255,0.60);
+
+            font-size: 12px;
+        }
+
+
+        .feature-icon {
+            width: 28px;
+            height: 28px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 8px;
+
+            background: rgba(255,255,255,0.07);
+
+            border: 1px solid rgba(255,255,255,0.07);
+
+            font-size: 13px;
+        }
+
+
+        /* =================================================
+           LOGIN PANEL
+        ================================================== */
+
+        .login-panel {
+            padding: 55px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: rgba(9, 19, 32, 0.75);
+        }
+
+
+        .login-content {
+            width: 100%;
+            max-width: 390px;
         }
 
 
         .login-heading {
-            text-align: center;
-
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         }
 
 
-        .login-heading h1 {
-            font-size: 22px;
+        .login-heading h2 {
+            margin: 0 0 9px;
 
-            margin-bottom: 7px;
+            font-size: 30px;
+
+            letter-spacing: -1px;
+
+            font-weight: 800;
         }
 
 
         .login-heading p {
-            color: var(--muted);
+            margin: 0;
+
+            color: rgba(255,255,255,0.52);
 
             font-size: 13px;
 
-            margin: 0;
+            line-height: 1.6;
         }
 
 
-        .login-form .form-group {
-            margin-bottom: 18px;
+        /* =================================================
+           FLASH MESSAGES
+        ================================================== */
+
+        .flash-message {
+            padding: 13px 15px;
+
+            margin-bottom: 20px;
+
+            border-radius: 10px;
+
+            background: rgba(190, 65, 65, 0.12);
+
+            border: 1px solid rgba(220, 90, 90, 0.25);
+
+            color: #ffb3b3;
+
+            font-size: 12px;
+
+            line-height: 1.5;
         }
 
 
-        .password-wrapper {
+        /* =================================================
+           FORM
+        ================================================== */
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+
+        .form-group label {
+            display: block;
+
+            margin-bottom: 8px;
+
+            color: rgba(255,255,255,0.78);
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        .input-wrapper {
             position: relative;
         }
 
 
-        .password-wrapper .form-control {
-            padding-right: 70px;
-        }
-
-
-        .show-password {
+        .input-icon {
             position: absolute;
 
-            right: 10px;
+            left: 15px;
             top: 50%;
 
             transform: translateY(-50%);
 
-            border: none;
+            color: rgba(255,255,255,0.35);
+
+            font-size: 15px;
+
+            pointer-events: none;
+        }
+
+
+        .form-control {
+            width: 100%;
+
+            height: 50px;
+
+            padding:
+                0 15px 0 43px;
+
+            border-radius: 11px;
+
+            border: 1px solid rgba(255,255,255,0.10);
+
+            outline: none;
+
+            background: rgba(255,255,255,0.045);
+
+            color: #ffffff;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            transition:
+                border-color 0.2s ease,
+                background 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+
+        .form-control::placeholder {
+            color: rgba(255,255,255,0.28);
+        }
+
+
+        .form-control:focus {
+            border-color: rgba(142,182,220,0.65);
+
+            background: rgba(255,255,255,0.065);
+
+            box-shadow:
+                0 0 0 3px rgba(100,150,200,0.10);
+        }
+
+
+        .password-toggle {
+            position: absolute;
+
+            right: 12px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            border: 0;
 
             background: transparent;
 
-            color: var(--primary);
+            color: rgba(255,255,255,0.38);
+
+            cursor: pointer;
+
+            font-size: 14px;
+
+            padding: 5px;
+        }
+
+
+        .password-toggle:hover {
+            color: rgba(255,255,255,0.75);
+        }
+
+
+        .remember-row {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            margin: 5px 0 25px;
+        }
+
+
+        .remember-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            color: rgba(255,255,255,0.48);
 
             font-size: 11px;
 
-            font-weight: 600;
-
             cursor: pointer;
+        }
+
+
+        .remember-label input {
+            width: 15px;
+            height: 15px;
+
+            accent-color: #7fa9d1;
         }
 
 
         .login-button {
             width: 100%;
 
-            margin-top: 5px;
+            height: 52px;
 
-            height: 44px;
+            border: 0;
+
+            border-radius: 11px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #315d87,
+                    #527fa8
+                );
+
+            color: #ffffff;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 10px 25px rgba(37, 83, 125, 0.22);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                opacity 0.2s ease;
         }
 
 
-        .login-footer {
-            text-align: center;
+        .login-button:hover {
+            transform: translateY(-1px);
 
+            box-shadow:
+                0 14px 30px rgba(37, 83, 125, 0.32);
+        }
+
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+
+        .login-button:disabled {
+            opacity: 0.65;
+
+            cursor: not-allowed;
+
+            transform: none;
+        }
+
+
+        .demo-box {
             margin-top: 25px;
 
-            color: var(--muted);
+            padding: 14px 15px;
+
+            border-radius: 11px;
+
+            background: rgba(255,255,255,0.035);
+
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+
+
+        .demo-title {
+            margin-bottom: 7px;
+
+            color: rgba(255,255,255,0.45);
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.8px;
+
+            text-transform: uppercase;
+        }
+
+
+        .demo-credentials {
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 10px;
+
+            color: rgba(255,255,255,0.67);
+
+            font-family: monospace;
 
             font-size: 11px;
         }
 
 
-        .login-footer strong {
-            color: var(--text);
-        }
-
-
-        .login-error {
-            display: none;
-
-            padding: 11px 13px;
-
-            margin-bottom: 18px;
-
-            border-radius: 8px;
-
-            background: #fef2f2;
-
-            border: 1px solid #fecaca;
-
-            color: #991b1b;
-
-            font-size: 12px;
-        }
-
-
-        .demo-info {
-            margin-top: 20px;
-
-            padding: 12px;
-
-            border-radius: 8px;
-
-            background: #f8fafc;
-
-            border: 1px solid var(--border);
+        .security-note {
+            margin-top: 24px;
 
             text-align: center;
 
-            font-size: 11px;
+            color: rgba(255,255,255,0.28);
 
-            color: var(--muted);
+            font-size: 10px;
+
+            line-height: 1.6;
         }
 
 
-        .demo-info strong {
-            color: var(--text);
+        /* =================================================
+           FOOTER
+        ================================================== */
+
+        .login-footer {
+            position: absolute;
+
+            bottom: 18px;
+
+            left: 0;
+            right: 0;
+
+            text-align: center;
+
+            color: rgba(255,255,255,0.25);
+
+            font-size: 9px;
+
+            letter-spacing: 0.4px;
         }
 
 
-        @media (max-width: 500px) {
+        /* =================================================
+           RESPONSIVE
+        ================================================== */
 
-            .login-wrapper {
+        @media (max-width: 850px) {
+
+            .login-container {
+                max-width: 520px;
+
+                grid-template-columns: 1fr;
+
+                min-height: auto;
+            }
+
+
+            .brand-panel {
+                padding: 35px;
+
+                border-right: 0;
+
+                border-bottom:
+                    1px solid rgba(255,255,255,0.07);
+            }
+
+
+            .brand-content {
+                padding: 40px 0;
+            }
+
+
+            .brand-content h1 {
+                font-size: 38px;
+            }
+
+
+            .feature-list {
+                display: none;
+            }
+
+
+            .login-panel {
+                padding: 40px 35px 45px;
+            }
+
+        }
+
+
+        @media (max-width: 520px) {
+
+            .login-page {
                 padding: 15px;
             }
 
-            .login-card {
-                padding: 28px 22px;
+
+            .login-container {
+                border-radius: 19px;
+            }
+
+
+            .brand-panel {
+                padding: 28px;
+            }
+
+
+            .login-panel {
+                padding: 32px 25px 35px;
+            }
+
+
+            .brand-content {
+                padding: 30px 0;
+            }
+
+
+            .brand-content h1 {
+                font-size: 32px;
+
+                letter-spacing: -1.3px;
+            }
+
+
+            .brand-content p {
+                font-size: 12px;
+            }
+
+
+            .demo-credentials {
+                flex-direction: column;
             }
 
         }
@@ -253,273 +822,479 @@
 
 <body>
 
-    <div class="login-wrapper">
+<div class="login-page">
 
-        <div class="login-card">
+    <!-- Background -->
 
-            <!-- Logo -->
+    <div class="background-grid"></div>
 
-            <div class="login-logo">
+    <div class="background-glow one"></div>
 
-                <div class="login-logo-icon">
+    <div class="background-glow two"></div>
+
+
+    <!-- =====================================================
+         LOGIN CONTAINER
+    ====================================================== -->
+
+    <main class="login-container">
+
+
+        <!-- =================================================
+             BRAND PANEL
+        ================================================== -->
+
+        <section class="brand-panel">
+
+
+            <div class="brand-top">
+
+                <div class="logo-box">
+
+                    {% if url_for('static', filename='images/logo.png') %}
+
+                    <img
+                        src="{{ url_for('static', filename='images/logo.png') }}"
+                        alt="Crescent College Logo"
+                        onerror="this.style.display='none'; this.parentElement.innerHTML='📚';"
+                    >
+
+                    {% else %}
+
                     📚
+
+                    {% endif %}
+
                 </div>
 
-                <div class="login-logo-text">
-                    LibraCore
+
+                <div class="brand-name">
+
+                    <strong>
+                        Crescent Library
+                    </strong>
+
+                    <span>
+                        Central Library
+                    </span>
+
                 </div>
 
             </div>
 
 
-            <!-- Heading -->
+            <div class="brand-content">
 
-            <div class="login-heading">
+                <span class="eyebrow">
+                    Library Management System
+                </span>
+
 
                 <h1>
-                    Librarian Login
+
+                    Knowledge
+                    <span>
+                        Starts Here.
+                    </span>
+
                 </h1>
 
+
                 <p>
-                    Sign in to manage your library collection
+
+                    A centralized digital library management
+                    platform for organizing, tracking and
+                    managing the Crescent College book catalogue.
+
                 </p>
 
             </div>
 
 
-            <!-- Error -->
+            <div class="feature-list">
 
-            <div
-                id="loginError"
-                class="login-error"
-            >
-                Invalid username or password.
-            </div>
+                <div class="feature">
 
+                    <span class="feature-icon">
+                        📚
+                    </span>
 
-            <!-- Login Form -->
-
-            <form
-                id="loginForm"
-                class="login-form"
-            >
-
-                <!-- Username -->
-
-                <div class="form-group">
-
-                    <label for="username">
-                        Username
-                    </label>
-
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        class="form-control"
-                        placeholder="Enter your username"
-                        autocomplete="username"
-                        required
-                    >
+                    <span>
+                        Centralized Book Catalogue
+                    </span>
 
                 </div>
 
 
-                <!-- Password -->
+                <div class="feature">
 
-                <div class="form-group">
+                    <span class="feature-icon">
+                        📊
+                    </span>
 
-                    <label for="password">
-                        Password
-                    </label>
+                    <span>
+                        Library Statistics & Analytics
+                    </span>
 
-                    <div class="password-wrapper">
+                </div>
 
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            class="form-control"
-                            placeholder="Enter your password"
-                            autocomplete="current-password"
-                            required
-                        >
 
-                        <button
-                            type="button"
-                            class="show-password"
-                            id="togglePassword"
-                        >
-                            Show
-                        </button>
+                <div class="feature">
+
+                    <span class="feature-icon">
+                        🔐
+                    </span>
+
+                    <span>
+                        Secure Library Access
+                    </span>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             LOGIN PANEL
+        ================================================== -->
+
+        <section class="login-panel">
+
+            <div class="login-content">
+
+
+                <div class="login-heading">
+
+                    <h2>
+                        Welcome Back
+                    </h2>
+
+                    <p>
+                        Sign in to access the library management
+                        dashboard.
+                    </p>
+
+                </div>
+
+
+                <!-- =================================================
+                     FLASH MESSAGES
+                ================================================== -->
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+
+                    {% if messages %}
+
+                        {% for category, message in messages %}
+
+                            <div class="flash-message">
+
+                                {{ message }}
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endwith %}
+
+
+                <!-- =================================================
+                     LOGIN FORM
+                ================================================== -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for('login') }}"
+                    id="loginForm"
+                    autocomplete="on"
+                >
+
+
+                    <!-- USERNAME -->
+
+                    <div class="form-group">
+
+                        <label for="username">
+                            Username
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+                                👤
+                            </span>
+
+
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                class="form-control"
+                                placeholder="Enter your username"
+                                autocomplete="username"
+                                required
+                                autofocus
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">
+                                🔒
+                            </span>
+
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="form-control"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                                style="padding-right: 45px;"
+                            >
+
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="passwordToggle"
+                                aria-label="Show password"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REMEMBER -->
+
+                    <div class="remember-row">
+
+                        <label class="remember-label">
+
+                            <input
+                                type="checkbox"
+                                name="remember"
+                                value="1"
+                            >
+
+                            Remember me
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- LOGIN -->
+
+                    <button
+                        type="submit"
+                        class="login-button"
+                        id="loginButton"
+                    >
+
+                        Sign In to Library
+
+                    </button>
+
+
+                </form>
+
+
+                <!-- =================================================
+                     DEMO CREDENTIALS
+                ================================================== -->
+
+                <div class="demo-box">
+
+                    <div class="demo-title">
+                        Local Demo Credentials
+                    </div>
+
+
+                    <div class="demo-credentials">
+
+                        <span>
+                            Username: admin
+                        </span>
+
+                        <span>
+                            Password: admin123
+                        </span>
 
                     </div>
 
                 </div>
 
 
-                <!-- Login Button -->
+                <div class="security-note">
 
-                <button
-                    type="submit"
-                    class="btn btn-primary login-button"
-                >
-                    Sign In
-                </button>
+                    Access is intended for authorized library
+                    management users only.
 
-            </form>
+                </div>
 
-
-            <!-- Demo Credentials -->
-
-            <div class="demo-info">
-
-                Demo Login:
-                <strong>admin</strong>
-                /
-                <strong>admin123</strong>
 
             </div>
 
+        </section>
 
-            <!-- Footer -->
 
-            <div class="login-footer">
+    </main>
 
-                <strong>LibraCore</strong>
 
-                <br>
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
 
-                Library Management System
+    <div class="login-footer">
 
-            </div>
-
-        </div>
+        B.S. Abdur Rahman Crescent Institute of Science and Technology
+        • Crescent College Central Library
 
     </div>
 
 
-    <script>
+</div>
 
-        /* =========================================
-           PASSWORD VISIBILITY
-        ========================================= */
+
+<!-- =========================================================
+     LOGIN JAVASCRIPT
+========================================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
 
         const passwordInput =
-            document.getElementById("password");
-
-        const togglePassword =
-            document.getElementById("togglePassword");
-
-
-        togglePassword.addEventListener(
-            "click",
-            function () {
-
-                if (passwordInput.type === "password") {
-
-                    passwordInput.type = "text";
-
-                    togglePassword.textContent = "Hide";
-
-                } else {
-
-                    passwordInput.type = "password";
-
-                    togglePassword.textContent = "Show";
-
-                }
-
-            }
-        );
+            document.getElementById(
+                "password"
+            );
 
 
-        /* =========================================
-           DEMO LOGIN
-        ========================================= */
+        const passwordToggle =
+            document.getElementById(
+                "passwordToggle"
+            );
+
 
         const loginForm =
-            document.getElementById("loginForm");
-
-        const loginError =
-            document.getElementById("loginError");
-
-
-        loginForm.addEventListener(
-            "submit",
-            function (event) {
-
-                event.preventDefault();
+            document.getElementById(
+                "loginForm"
+            );
 
 
-                const username =
-                    document.getElementById("username")
-                        .value
-                        .trim();
-
-                const password =
-                    document.getElementById("password")
-                        .value;
+        const loginButton =
+            document.getElementById(
+                "loginButton"
+            );
 
 
-                if (
-                    username === "admin" &&
-                    password === "admin123"
-                ) {
+        /* =================================================
+           PASSWORD VISIBILITY
+        ================================================== */
 
-                    /*
-                     * Temporary frontend login.
-                     * Proper Flask session authentication
-                     * will be connected later.
-                     */
+        if (passwordToggle && passwordInput) {
 
-                    sessionStorage.setItem(
-                        "librarianLoggedIn",
-                        "true"
-                    );
-
-                    window.location.href = "/";
-
-                } else {
-
-                    loginError.style.display = "block";
-
-                }
-
-            }
-        );
-
-
-        /* =========================================
-           REMOVE ERROR WHEN USER TYPES
-        ========================================= */
-
-        document
-            .getElementById("username")
-            .addEventListener(
-                "input",
+            passwordToggle.addEventListener(
+                "click",
                 function () {
 
-                    loginError.style.display = "none";
+                    if (
+                        passwordInput.type ===
+                        "password"
+                    ) {
+
+                        passwordInput.type =
+                            "text";
+
+                        passwordToggle.textContent =
+                            "🙈";
+
+                        passwordToggle.setAttribute(
+                            "aria-label",
+                            "Hide password"
+                        );
+
+                    } else {
+
+                        passwordInput.type =
+                            "password";
+
+                        passwordToggle.textContent =
+                            "👁";
+
+                        passwordToggle.setAttribute(
+                            "aria-label",
+                            "Show password"
+                        );
+
+                    }
 
                 }
             );
 
+        }
 
-        document
-            .getElementById("password")
-            .addEventListener(
-                "input",
+
+        /* =================================================
+           FORM SUBMISSION
+        ================================================== */
+
+        if (loginForm) {
+
+            loginForm.addEventListener(
+                "submit",
                 function () {
 
-                    loginError.style.display = "none";
+                    if (loginButton) {
+
+                        loginButton.disabled =
+                            true;
+
+                        loginButton.textContent =
+                            "Signing in...";
+
+                    }
 
                 }
             );
 
-    </script>
+        }
+
+
+    }
+);
+
+</script>
+
 
 </body>
 
 </html>
-```
