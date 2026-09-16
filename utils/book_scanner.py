@@ -1,539 +1,313 @@
+# utils/book_scanner.py
+
+import json
 import os
 import re
-import json
-import base64
-from typing import Dict, Any
 
-from PIL import Image
+from .ocr_manager import ocr_manager
 
 
-# ============================================================
-# BOOK SCANNER
-# ============================================================
-
-BOOK_FIELDS = [
-    "title",
-    "author",
-    "subtitle",
-    "isbn",
-    "category",
-    "publisher",
-    "year",
-    "edition",
-    "price",
-]
-
-
-def empty_book_data() -> Dict[str, str]:
-    return {
-        field: ""
-        for field in BOOK_FIELDS
-    }
-
-
-def clean_text(value: Any) -> str:
+def _clean_value(value):
     if value is None:
-        return ""
+        return "Not detected"
 
-    if isinstance(value, (list, tuple)):
-        value = " ".join(
-            str(item) for item in value
-        )
+    value = str(value).strip()
 
-    return str(value).strip()
-
-
-def clean_isbn(value: Any) -> str:
-    value = clean_text(value)
-
-    value = re.sub(
-        r"(?i)^isbn[\s:\-]*",
-        "",
-        value
-    )
-
-    value = re.sub(
-        r"[^0-9Xx]",
-        "",
-        value
-    )
-
-    if len(value) in (10, 13):
-        return value.upper()
-
-    return ""
-
-
-def clean_year(value: Any) -> str:
-    value = clean_text(value)
-
-    match = re.search(
-        r"\b(?:19|20)\d{2}\b",
-        value
-    )
-
-    if match:
-        return match.group(0)
-
-    return ""
-
-
-def clean_price(value: Any) -> str:
-    value = clean_text(value)
-
-    if not value:
-        return ""
-
-    match = re.search(
-        r"(?:₹|Rs\.?|INR)?\s*[\d,]+(?:\.\d{1,2})?",
-        value,
-        re.IGNORECASE
-    )
-
-    if match:
-        return match.group(0).strip()
+    if not value or value.lower() in {
+        "none",
+        "null",
+        "unknown",
+        "not found",
+        "not available",
+        "n/a",
+    }:
+        return "Not detected"
 
     return value
 
 
-def normalize_result(data: Dict[str, Any]) -> Dict[str, str]:
-    result = empty_book_data()
+def _normalize_isbn(value):
+    if not value:
+        return "Not detected"
 
-    if not isinstance(data, dict):
-        return result
+    isbn = re.sub(r"[^0-9Xx]", "", str(value))
 
-    aliases = {
-        "title": [
-            "title",
-            "book_title",
-            "book title",
-            "name",
-        ],
-        "author": [
-            "author",
-            "authors",
-            "writer",
-        ],
-        "subtitle": [
-            "subtitle",
-            "sub_title",
-            "sub title",
-        ],
-        "isbn": [
-            "isbn",
-            "isbn10",
-            "isbn13",
-            "isbn_10",
-            "isbn_13",
-        ],
-        "category": [
-            "category",
-            "subject",
-            "genre",
-        ],
-        "publisher": [
-            "publisher",
-            "publishing_company",
-            "publishing company",
-            "publisher_name",
-        ],
-        "year": [
-            "year",
-            "publication_year",
-            "publication year",
-            "published_year",
-        ],
-        "edition": [
-            "edition",
-        ],
-        "price": [
-            "price",
-            "mrp",
-            "maximum_retail_price",
-            "maximum retail price",
-        ],
-    }
+    if len(isbn) in (10, 13):
+        return isbn.upper()
 
-    normalized_keys = {
-        re.sub(
-            r"[^a-z0-9]",
-            "",
-            str(key).lower()
-        ): value
-        for key, value in data.items()
-    }
-
-    for field, possible_keys in aliases.items():
-
-        for key in possible_keys:
-
-            normalized_key = re.sub(
-                r"[^a-z0-9]",
-                "",
-                key.lower()
-            )
-
-            if normalized_key in normalized_keys:
-
-                value = normalized_keys[
-                    normalized_key
-                ]
-
-                result[field] = clean_text(value)
-
-                break
-
-    result["isbn"] = clean_isbn(
-        result["isbn"]
-    )
-
-    result["year"] = clean_year(
-        result["year"]
-    )
-
-    result["price"] = clean_price(
-        result["price"]
-    )
-
-    return result
+    return _clean_value(value)
 
 
-# ============================================================
-# OCR SUPPORT
-# ============================================================
-
-def run_local_ocr(image_path: str) -> str:
-    """
-    Optional local OCR.
-
-    Uses pytesseract when it is installed.
-    The application continues to work if it is unavailable.
-    """
-
-    try:
-        import pytesseract
-    except ImportError:
-        return ""
-
-    if not image_path or not os.path.exists(image_path):
-        return ""
-
-    try:
-
-        image = Image.open(image_path)
-
-        image = image.convert("RGB")
-
-        text = pytesseract.image_to_string(
-            image
-        )
-
-        return text.strip()
-
-    except Exception:
-        return ""
-
-
-# ============================================================
-# ISBN DETECTION
-# ============================================================
-
-def detect_isbn(text: str) -> str:
+def _extract_json(text):
     if not text:
-        return ""
+        return None
+
+    text = text.strip()
 
     text = re.sub(
-        r"(?i)isbn[\s:\-]*",
-        " ",
-        text
+        r"^```(?:json)?\s*",
+        "",
+        text,
+        flags=re.IGNORECASE
     )
 
-    candidates = re.findall(
-        r"(?:97[89][\-\s]?)?"
-        r"\d(?:[\d\-\s]{8,16})[\dXx]",
-        text
-    )
+    text = re.sub(r"\s*```$", "", text)
 
-    for candidate in candidates:
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
 
-        isbn = re.sub(
-            r"[^0-9Xx]",
-            "",
-            candidate
-        )
+    match = re.search(r"\{.*\}", text, re.DOTALL)
 
-        if len(isbn) == 13:
-            return isbn
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except Exception:
+            return None
 
-        if len(isbn) == 10:
-            return isbn.upper()
-
-    return ""
+    return None
 
 
-# ============================================================
-# BASIC METADATA FALLBACK
-# ============================================================
+def _fallback_from_ocr(ocr_data):
+    combined = ocr_data.get("combined_text", "")
 
-def fallback_metadata(
-    front_text: str,
-    back_text: str
-) -> Dict[str, str]:
+    isbn = ocr_data.get("isbn") or "Not detected"
+    year = ocr_data.get("year") or "Not detected"
 
-    result = empty_book_data()
+    lines = [
+        line.strip()
+        for line in combined.splitlines()
+        if line.strip()
+    ]
 
-    combined_text = (
-        f"{front_text}\n{back_text}"
-    ).strip()
+    title = "Not detected"
+    author = "Not detected"
+    publisher = "Not detected"
+    category = "Not detected"
+    edition = "Not detected"
+    price = "Not detected"
+    subtitle = "Not detected"
 
-    result["isbn"] = detect_isbn(
-        combined_text
-    )
+    for line in lines:
+        lower = line.lower()
 
-    year_match = re.search(
-        r"\b(?:19|20)\d{2}\b",
-        combined_text
-    )
+        if title == "Not detected" and len(line) > 3:
+            if not any(
+                keyword in lower
+                for keyword in [
+                    "isbn",
+                    "publisher",
+                    "edition",
+                    "price",
+                    "www.",
+                    "http",
+                    "copyright",
+                ]
+            ):
+                title = line
 
-    if year_match:
-        result["year"] = year_match.group(0)
+        if author == "Not detected" and any(
+            keyword in lower
+            for keyword in [
+                "author",
+                "written by",
+                "by ",
+            ]
+        ):
+            value = re.sub(
+                r"^(author|written by|by)\s*[:\-]?\s*",
+                "",
+                line,
+                flags=re.IGNORECASE
+            ).strip()
 
-    return result
+            if value:
+                author = value
+
+        if publisher == "Not detected" and "publisher" in lower:
+            value = re.sub(
+                r"^.*?publisher\s*[:\-]?\s*",
+                "",
+                line,
+                flags=re.IGNORECASE
+            ).strip()
+
+            if value:
+                publisher = value
+
+        if edition == "Not detected" and "edition" in lower:
+            match = re.search(
+                r"([\w\-]+\s*edition)",
+                line,
+                re.IGNORECASE
+            )
+
+            if match:
+                edition = match.group(1)
+
+        if price == "Not detected":
+            match = re.search(
+                r"(?:₹|rs\.?|inr|\$|€|£)\s*[\d,]+(?:\.\d{1,2})?",
+                line,
+                re.IGNORECASE
+            )
+
+            if match:
+                price = match.group(0)
+
+    return {
+        "title": title,
+        "author": author,
+        "subtitle": subtitle,
+        "isbn": _normalize_isbn(isbn),
+        "category": category,
+        "publisher": publisher,
+        "year": year,
+        "edition": edition,
+        "price": price,
+    }
 
 
-# ============================================================
-# OPTIONAL GEMINI EXTRACTION
-# ============================================================
-
-def extract_with_gemini(
-    front_path: str,
-    back_path: str,
-    front_text: str,
-    back_text: str
-) -> Dict[str, str]:
-
-    api_key = os.environ.get(
-        "GEMINI_API_KEY"
-    )
+def _gemini_scan(ocr_data):
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
     if not api_key:
-        return {}
+        return None
 
     try:
         from google import genai
-    except ImportError:
-        return {}
 
-    try:
+        client = genai.Client(api_key=api_key)
 
-        client = genai.Client(
-            api_key=api_key
+        model_name = os.getenv(
+            "GEMINI_MODEL",
+            "gemini-2.5-flash"
         )
 
-        front_file = client.files.upload(
-            file=front_path
-        )
+        prompt = f"""
+You are an expert library cataloguing system.
 
-        back_file = client.files.upload(
-            file=back_path
-        )
+Extract book metadata from the OCR text below.
 
-        prompt = """
-You are a professional library cataloguing assistant.
+The OCR may contain errors. Use context to identify the correct
+book information. Do not invent information.
 
-Analyze the FRONT and BACK images of the same physical book.
+Return ONLY valid JSON with exactly these keys:
 
-Extract ONLY information that is actually visible or strongly supported
-by the images/OCR.
-
-Do NOT invent, guess, hallucinate, or complete missing information.
-
-Return ONLY valid JSON using exactly these fields:
-
-{
-  "title": "",
-  "author": "",
-  "subtitle": "",
-  "isbn": "",
-  "category": "",
-  "publisher": "",
-  "year": "",
-  "edition": "",
-  "price": ""
-}
+title
+author
+subtitle
+isbn
+category
+publisher
+year
+edition
+price
 
 Rules:
+- title = actual book title.
+- author = author name or names.
+- subtitle = subtitle if clearly present.
+- isbn = valid ISBN-10 or ISBN-13 if detected.
+- category = academic/general subject category if identifiable.
+- publisher = publisher name.
+- year = publication year.
+- edition = edition if explicitly detected.
+- price = printed/list price if explicitly detected.
+- If a field cannot be reliably detected, return "Not detected".
+- Do not guess.
+- Do not return explanations.
+- Do not use markdown.
 
-1. Title must come primarily from the front cover.
-2. Author must come from visible book information.
-3. ISBN should preferably come from the back cover or barcode area.
-4. Publisher should come from the copyright/publisher information.
-5. Publication year must be a visible publication/copyright year.
-6. Edition must only be returned when visible.
-7. Price must only be returned when visible.
-8. Category should describe the academic/book subject only when it can
-   reasonably be determined from the book.
-9. Do not confuse a price, page number, phone number, or other number
-   with an ISBN.
-10. Do not fabricate missing values.
-11. Return an empty string for information that cannot be determined.
-12. Preserve the actual spelling of the title and author.
+FRONT IMAGE OCR:
+{ocr_data.get("front_text", "")}
+
+BACK IMAGE OCR:
+{ocr_data.get("back_text", "")}
+
+COMBINED OCR:
+{ocr_data.get("combined_text", "")}
 """
 
         response = client.models.generate_content(
-            model=os.environ.get(
-                "GEMINI_MODEL",
-                "gemini-2.5-flash"
-            ),
-            contents=[
-                prompt,
-                front_file,
-                back_file,
-            ],
+            model=model_name,
+            contents=prompt,
         )
 
-        text = getattr(
-            response,
-            "text",
-            ""
+        result = _extract_json(
+            getattr(response, "text", "")
         )
 
-        if not text:
-            return {}
+        if not isinstance(result, dict):
+            return None
 
-        text = text.strip()
-
-        if text.startswith("```"):
-            text = re.sub(
-                r"^```(?:json)?",
-                "",
-                text,
-                flags=re.IGNORECASE
-            )
-
-            text = re.sub(
-                r"```$",
-                "",
-                text
-            ).strip()
-
-        parsed = json.loads(text)
-
-        return normalize_result(
-            parsed
-        )
+        return {
+            "title": _clean_value(result.get("title")),
+            "author": _clean_value(result.get("author")),
+            "subtitle": _clean_value(result.get("subtitle")),
+            "isbn": _normalize_isbn(result.get("isbn")),
+            "category": _clean_value(result.get("category")),
+            "publisher": _clean_value(result.get("publisher")),
+            "year": _clean_value(result.get("year")),
+            "edition": _clean_value(result.get("edition")),
+            "price": _clean_value(result.get("price")),
+        }
 
     except Exception:
-        return {}
+        return None
 
 
-# ============================================================
-# MAIN SCANNER
-# ============================================================
-
-def scan_book_images(
-    front_path: str,
-    back_path: str
-) -> Dict[str, str]:
-
-    result = empty_book_data()
-
+def scan_book_images(front_path, back_path):
     if not os.path.exists(front_path):
-        raise FileNotFoundError(
-            "Front book image was not found."
-        )
+        raise FileNotFoundError("Front book image not found.")
 
     if not os.path.exists(back_path):
-        raise FileNotFoundError(
-            "Back book image was not found."
-        )
+        raise FileNotFoundError("Back book image not found.")
 
-    # --------------------------------------------------------
-    # OCR
-    # --------------------------------------------------------
-
-    front_text = run_local_ocr(
-        front_path
-    )
-
-    back_text = run_local_ocr(
+    ocr_data = ocr_manager.scan_images(
+        front_path,
         back_path
     )
 
-    # --------------------------------------------------------
-    # Basic fallback extraction
-    # --------------------------------------------------------
+    fallback_data = _fallback_from_ocr(ocr_data)
 
-    result.update(
-        fallback_metadata(
-            front_text,
-            back_text
-        )
+    ai_data = _gemini_scan(ocr_data)
+
+    if ai_data:
+        result = ai_data.copy()
+
+        for key in fallback_data:
+            if (
+                result.get(key) in
+                (None, "", "Not detected")
+                and fallback_data.get(key) not in
+                (None, "", "Not detected")
+            ):
+                result[key] = fallback_data[key]
+    else:
+        result = fallback_data
+
+    result["isbn"] = _normalize_isbn(
+        result.get("isbn")
+        or ocr_data.get("isbn")
     )
 
-    # --------------------------------------------------------
-    # AI extraction
-    # --------------------------------------------------------
-
-    ai_result = extract_with_gemini(
-        front_path,
-        back_path,
-        front_text,
-        back_text
-    )
-
-    if ai_result:
-
-        for field in BOOK_FIELDS:
-
-            value = ai_result.get(
-                field,
-                ""
-            )
-
-            if value:
-                result[field] = value
-
-    # --------------------------------------------------------
-    # Final ISBN validation
-    # --------------------------------------------------------
-
-    if not result.get("isbn"):
-
-        result["isbn"] = detect_isbn(
-            f"{front_text}\n{back_text}"
-        )
-
-    result["isbn"] = clean_isbn(
-        result.get("isbn", "")
-    )
-
-    # --------------------------------------------------------
-    # Final year validation
-    # --------------------------------------------------------
-
-    if result.get("year"):
-
-        result["year"] = clean_year(
-            result["year"]
-        )
-
-    # --------------------------------------------------------
-    # Final price normalization
-    # --------------------------------------------------------
-
-    if result.get("price"):
-
-        result["price"] = clean_price(
-            result["price"]
-        )
+    if (
+        result.get("year") in
+        (None, "", "Not detected")
+        and ocr_data.get("year")
+    ):
+        result["year"] = ocr_data["year"]
 
     return result
 
 
-# ============================================================
-# COMPATIBILITY ALIASES
-# ============================================================
+def scan_book(front_path, back_path):
+    return scan_book_images(
+        front_path,
+        back_path
+    )
 
-scan_book = scan_book_images
+
 extract_book_details = scan_book_images
